@@ -1,0 +1,12 @@
+segment,component,parameter,value,unit,low,high,basis,source_id,tag,notes
+loading_terminal,export_terminal,boil_off_rate_at_rest,0.1,%/day,,,"at-rest storage",kawasaki-2026-supplemental,cited,"BOR 0.1 %/d on KHI cost-basis slide"
+loading_terminal,storage_tank,tank_size,64000,m3,,,"per tank",kawasaki-2026-supplemental,cited,"export-side tank size"
+loading_terminal,storage_tank,tank_count,3,unit,,,"Base 2.5B Nm3/y",kawasaki-2026-supplemental,cited,"3 tanks at Base scale"
+loading_terminal,storage_tank,tank_count,4,unit,,,"Large 10B Nm3/y",kawasaki-2026-supplemental,cited,"4 tanks at Large scale"
+loading_terminal,storage_tank,dead_volume_basis,similar to LNG,,,,"pump NPSHr-driven",kawasaki-2026-questionnaire,cited,"KHI reply Q4; broadly similar to LNG tanks"
+loading_terminal,storage_tank,heel_minimization_option,spherical tank + pressurised send-out,,,,"eliminates pump heel",kawasaki-2026-questionnaire,cited,"KHI reply Q4; small keep-cool heel may remain"
+loading_terminal,export_terminal,downstream_bog_handling,re-liquefied,,,,"downstream of liquefaction plant",kawasaki-2026-questionnaire,cited,"KHI reply Q3"
+loading_terminal,loading_arm,loading_arm_size_demonstrated,6,inch,,,"Frontier demonstration",kawasaki-2026-questionnaire,cited,"KHI reply Q19; 6-inch arm, by TBG"
+loading_terminal,loading_arm,loading_arm_trl,,TRL,6,7,"6-inch arm",kawasaki-2026-questionnaire,cited,"KHI reply Q19; pilot demonstration completed"
+loading_terminal,loading_arm,loading_arm_16inch_status,not yet verified,,,,"future commercial scale",kawasaki-2026-questionnaire,cited,"KHI reply Q19; ~3 years to verification, by TBG"
+loading_terminal,export_terminal,capex_specific,,USD/kg,,,"reasonable-size terminal",kawasaki-2026-questionnaire,needs-source,"not separately disclosed by KHI; only IAE aggregate cost stack available"

@@ -60,7 +60,7 @@ Goal: everything needed to start building is in place and agreed.
 | M0.1 | Register Kawasaki source files | rows in `data/references.csv` | sources/raw | ✅ |
 | M0.2 | Lock kickoff decisions D1–D4 | "Locked decisions" table | kickoff | ✅ |
 | M0.3 | This milestone plan + OKR file | `00-milestones.md`, `docs/okr.md` | — | ✅ |
-| M0.4 | Define KR1.1 DB schema (columns, units, id-link rule) for `costs/`, `vessels/`, `properties/` | `data/README.md` (data dictionary) | conventions.md | ⬜ |
+| M0.4 | Define KR1.1 DB schema (columns, units, id-link rule) for `costs/`, `vessels/`, `properties/` | `data/README.md` (data dictionary) | conventions.md | ✅ |
 | M0.5 | User approval of plan | sign-off | **user** | 🔒 |
 
 **Exit criteria:** sources registered, schema documented, plan approved.
@@ -74,14 +74,14 @@ Goal: every key LH2 component cost/energy/performance figure is pullable from
 
 | ID | Task | Output artifact | Source · depends on | Status |
 |----|------|-----------------|---------------------|--------|
-| M1.1 | **Liquefaction** params: SEC 8–9 kWh/kg & 0.55 kWh/Nm³, unit capacity 115 t/d, min economical scale ~10 000 tpa, H2 Claude + N₂ precool, Fe-based O–P catalyst, no degradation | `data/properties/liquefaction.csv` | `kawasaki-2026-questionnaire`, `-supplemental` · M0.4 | ⬜ |
-| M1.2 | **Export/loading terminal**: BOR 0.1 %/d, 64 000 m³/tank ×3–4, dead-volume (≈ LNG, NPSHr-driven), downstream BOG reliquefaction | `data/properties/terminals.csv` | `kawasaki-2026-supplemental`, `-questionnaire` | ⬜ |
-| M1.3 | **Shipping** specs: 160 000 m³ @ 29.6 km/h (16 kn), 40 000 m³ (building), Suiso Frontier 1 250 m³, BOG-as-fuel = BOR, no onboard reliquefaction, load/unload 1–1.5 d | `data/vessels/lh2-carriers.csv` | `kawasaki-2026-supplemental`, `-questionnaire` | ⬜ |
-| M1.4 | **Receiving terminal + regas**: BOR 0.1 %/d, ORV/seawater, heat duty 3.8 MJ/kg-LH2 | `data/properties/regas.csv` | `kawasaki-2026-questionnaire` | ⬜ |
-| M1.5 | **Cost stack table**: IAE per-component USD breakdown, LH2 Base / Large / Tech (liquefier, loading, transport, receiving, regas) | `data/costs/lh2-cost-stack.csv` | `kawasaki-2026-supplemental` → `iae-2019-gigaton` | ⬜ |
-| M1.6 | **LH2 physical properties**: NBP ≈ 20.3 K, ρ ≈ 70.8 kg/m³, LHV/HHV — each cited | `data/properties/lh2-properties.csv` | conventions.md + cited refs | ⬜ |
-| M1.7 | **Data dictionary**: column defs, units, cost-year, id-link rule | `data/README.md` | M0.4 | ⬜ |
-| M1.8 | **Validation**: smoke test loads every table; assert no untagged numbers; cost-stack components reconcile to totals | `tests/test_data_tables.py` | M1.1–M1.6 | ⬜ |
+| M1.1 | **Liquefaction** params: SEC 8–9 kWh/kg & 0.55 kWh/Nm³, unit capacity 115 t/d, min economical scale ~10 000 tpa, H2 Claude + N₂ precool, Fe-based O–P catalyst, no degradation | `data/properties/liquefaction.csv` | `kawasaki-2026-questionnaire`, `-supplemental` · M0.4 | ✅ |
+| M1.2 | **Export/loading terminal**: BOR 0.1 %/d, 64 000 m³/tank ×3–4, dead-volume (≈ LNG, NPSHr-driven), downstream BOG reliquefaction | `data/properties/terminals.csv` | `kawasaki-2026-supplemental`, `-questionnaire` | ✅ |
+| M1.3 | **Shipping** specs: 160 000 m³ @ 29.6 km/h (16 kn), 40 000 m³ (building), Suiso Frontier 1 250 m³, BOG-as-fuel = BOR, no onboard reliquefaction, load/unload 1–1.5 d | `data/vessels/lh2-carriers.csv` | `kawasaki-2026-supplemental`, `-questionnaire` | ✅ |
+| M1.4 | **Receiving terminal + regas**: BOR 0.1 %/d, ORV/seawater, heat duty 3.8 MJ/kg-LH2 | `data/properties/regas.csv` | `kawasaki-2026-questionnaire` | ✅ |
+| M1.5 | **Cost stack table**: IAE per-component breakdown (native JPY/Nm³, ~2019, unit-caveated), LH2 Base / Large / Tech (liquefier, loading, transport, receiving, regas) | `data/costs/lh2-cost-stack.csv` | `kawasaki-2026-supplemental` → `iae-2019-gigaton` | ✅ |
+| M1.6 | **LH2 physical properties**: NBP ≈ 20.3 K, ρ ≈ 70.8 kg/m³, LHV/HHV — tagged `needs-source` pending NIST/CODATA approval | `data/properties/lh2-properties.csv` | conventions.md + cited refs | ✅ |
+| M1.7 | **Data dictionary**: column defs, units, cost-year, id-link rule | `data/README.md` | M0.4 | ✅ |
+| M1.8 | **Validation**: smoke test loads every table; assert no untagged numbers; cost-stack components reconcile to totals | `tests/test_data_tables.py` | M1.1–M1.6 | ✅ |
 
 **Exit criteria:** all tables populated and cited, data dictionary written, smoke
 test green; an analyst can trace every figure to a `references.csv` id.

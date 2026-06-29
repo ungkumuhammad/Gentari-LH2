@@ -27,7 +27,7 @@ Short version:
 
 | KR | Description | Status |
 |----|-------------|--------|
-| KR1.1 | LH2 techno-economic database v1 | 🟡 In progress (M1) |
+| KR1.1 | LH2 techno-economic database v1 | 🟢 v1 built (M1.1–M1.8 ✅); pending NIST citation for physical props |
 | KR1.2 | LH2 shipping functional-requirements spec (for Excel model team) | 🟡 In progress (M2) |
 | KR1.3 | LH2-vs-NH3 long-distance supply-chain comparison | ⬜ Not started (M3) |
 
@@ -126,9 +126,9 @@ Full detail in [`comparison/00-milestones.md`](comparison/00-milestones.md).
 | WP | Description | Status |
 |----|-------------|--------|
 | M0.1–M0.3 | Sources registered, decisions locked, plan + OKR written | ✅ |
-| M0.4 | DB schema / data dictionary | ⬜ |
-| M0.5 | User approval of plan | 🔒 |
-| M1.1–M1.8 | LH2 techno-economic database | ⬜ |
+| M0.4 | DB schema / data dictionary | ✅ (`data/README.md`) |
+| M0.5 | User approval of plan | ✅ (KR1.1 build plan approved) |
+| M1.1–M1.8 | LH2 techno-economic database | ✅ (CSV tables + xlsx + tests, 27 passing) |
 | M2.1 | Capture ammonia model I/O (need user to share) | 🔒 |
 | M2.2–M2.7 | LH2 shipping spec | ⬜ |
 | M3.2 | NH3 LCOH (need internal NH3 dataset) | 🔒 |
@@ -142,7 +142,13 @@ Full detail in [`comparison/00-milestones.md`](comparison/00-milestones.md).
 1. **NH3 internal techno-economic dataset** → drop in `sources/raw/`. Unlocks M3.2 and the full KR1.3 comparison.
 2. **Existing ammonia spreadsheet model** (or I/O tab structure). Unlocks M2.1 and the rest of the KR1.2 spec.
 3. **Named corridor** for D1 re-run: origin → destination, distance (km), annual volume (tpa or Nm³/y). Unlocks M3.8.
-4. **User sign-off on milestone plan** (M0.5).
+4. **Physical-property citation approval (KR1.1):** OK to add NIST/CODATA/ISO as a
+   reference so `data/properties/lh2-properties.csv` rows (NBP, density, LHV/HHV,
+   gas density) become `cited` instead of `needs-source`? Currently tagged off
+   `conventions.md` pending approval.
+5. **IAE primary source (KR1.1):** the cost stack (`data/costs/lh2-cost-stack.csv`)
+   is second-hand via KHI with an **unlabelled axis** — stored as `JPY/Nm³ ~2019`
+   with `[needs source: primary]`. Verify unit/cost-year before any USD/kg LCOH use.
 
 ---
 
@@ -166,3 +172,20 @@ Full detail in [`comparison/00-milestones.md`](comparison/00-milestones.md).
 | `docs/comparison/milestones.xlsx` | Created | One-sheet Excel export of all WPs |
 | `docs/memory.md` | Created | This file |
 | `CLAUDE.md` | Updated | Added OKR callout, repo map entries for okr.md / comparison/ / memory.md |
+
+### KR1.1 build session (2026-06-29)
+
+| File | Action | Purpose |
+|------|--------|---------|
+| `data/properties/liquefaction.csv` | Created | M1.1 liquefaction params (SEC, cycle, O–P catalyst, gaps) |
+| `data/properties/terminals.csv` | Created | M1.2 loading/export terminal (BOR, tanks, loading arm) |
+| `data/vessels/lh2-carriers.csv` | Created | M1.3 carrier specs (160k m³, BOG-as-fuel, fleet) |
+| `data/properties/regas.csv` | Created | M1.4 receiving terminal + regas (ORV, 3.8 MJ/kg) |
+| `data/properties/lh2-properties.csv` | Created | M1.6 physical constants (tagged needs-source) |
+| `data/costs/lh2-cost-stack.csv` | Created | M1.5 IAE per-component stack (native JPY/Nm³) + gap rows |
+| `data/README.md` | Created | M1.7/M0.4 data dictionary (tidy schema, tag rules) |
+| `scripts/build_db_workbook.py` | Created | Re-runnable CSV→xlsx mirror builder |
+| `data/lh2-database.xlsx` | Generated | One-workbook Excel mirror of all tables |
+| `tests/test_data_tables.py` | Created | M1.8 validation (no untagged numbers, ids resolve, cost reconciles) |
+| `pyproject.toml` | Updated | Added `openpyxl` dev dependency |
+| `docs/comparison/00-milestones.md` | Updated | M0.4, M1.1–M1.8 → ✅ |

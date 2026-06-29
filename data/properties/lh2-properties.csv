@@ -1,0 +1,6 @@
+segment,component,parameter,value,unit,low,high,basis,source_id,tag,notes
+properties,lh2,normal_boiling_point,20.3,K,,,"at 1.013 bar(a)",,needs-source,"standard value per docs/conventions.md; confirm NIST/CODATA citation"
+properties,lh2,density_at_nbp,70.8,kg/m3,,,"saturated liquid at NBP",,needs-source,"standard value per docs/conventions.md; confirm NIST/CODATA citation"
+properties,h2,lower_heating_value,120,MJ/kg,,,"mass LHV",,needs-source,"standard value per docs/conventions.md; confirm NIST/ISO citation"
+properties,h2,higher_heating_value,142,MJ/kg,,,"mass HHV",,needs-source,"standard value per docs/conventions.md; confirm NIST/ISO citation"
+properties,h2,gas_density_normal,0.0899,kg/Nm3,,,"gaseous H2 at 0C, 1.013 bar(a)",,needs-source,"normal-condition basis used to convert Nm3 <-> kg; confirm NIST/CODATA citation"

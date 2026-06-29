@@ -1,0 +1,10 @@
+segment,component,parameter,value,unit,low,high,basis,source_id,tag,notes
+regas,receiving_terminal,boil_off_rate_at_rest,0.1,%/day,,,"at-rest storage",kawasaki-2026-supplemental,cited,"BOR 0.1 %/d on KHI cost-basis slide"
+regas,storage_tank,tank_size,65000,m3,,,"per tank",kawasaki-2026-supplemental,cited,"receiving-side tank size"
+regas,storage_tank,tank_count,3,unit,,,"Base 2.5B Nm3/y",kawasaki-2026-supplemental,cited,"3 tanks at Base scale"
+regas,storage_tank,tank_count,11,unit,,,"Large 10B Nm3/y",kawasaki-2026-supplemental,cited,"11 tanks at Large scale"
+regas,vaporiser,vaporiser_type,open-rack vaporiser (ORV),,,,"seawater heat source",kawasaki-2026-questionnaire,cited,"KHI reply Q17; large heat source required"
+regas,vaporiser,alternative_heat_source,dedicated heat-source system,,,,"if cold-seawater discharge constrained",kawasaki-2026-questionnaire,cited,"KHI reply Q17; e.g. nearby aquaculture"
+regas,vaporiser,regas_heat_duty,3.8,MJ/kg,,,"per kg LH2 vaporised",kawasaki-2026-questionnaire,cited,"KHI reply Q18; ~3.8 MJ/kg-LH2"
+regas,receiving_terminal,fsu_ship_to_ship_status,not specifically considered,,,,"current low LH2 carrier count",kawasaki-2026-questionnaire,cited,"KHI reply Q25; considered applicable in principle"
+regas,vaporiser,capex_specific,,USD/kg,,,"reasonable-size terminal",kawasaki-2026-questionnaire,needs-source,"not separately disclosed by KHI; only IAE aggregate cost stack available"
