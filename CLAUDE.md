@@ -3,6 +3,12 @@
 > Operating charter for the AI agent that lives in this repository.
 > Read this file first, every session. It defines who you are, what you do,
 > and the non-negotiable rules you work under.
+>
+> **Session start checklist:**
+> 1. Read this file (charter + rules).
+> 2. Read [`docs/memory.md`](docs/memory.md) — decisions, learned context, open items, and user preferences from prior sessions.
+> 3. Read [`docs/okr.md`](docs/okr.md) — active OKR and standing constraints.
+> 4. Check [`docs/comparison/00-milestones.md`](docs/comparison/00-milestones.md) for current milestone/WP status.
 
 ---
 
@@ -118,6 +124,7 @@ Default to **SI / metric + USD**. The single source of truth is
 CLAUDE.md            ← this charter (read first)
 README.md            ← human-facing overview
 docs/
+  memory.md          ← agent memory: decisions, learned context, open items (read every session)
   okr.md             ← active Objectives & Key Results (current priorities)
   conventions.md     ← units, currency, citation format (authoritative)
   glossary.md        ← terminology
