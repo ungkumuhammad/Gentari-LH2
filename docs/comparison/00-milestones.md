@@ -45,43 +45,92 @@ Any external/public source requires the user's explicit permission before use
 
 ## Milestones
 
+Work is broken into **work packages (WPs)**. Each WP has an ID, an output
+artifact, its source/dependency, and a status. Status legend:
+`✅ done` · `🟡 doing` · `⬜ todo` · `🔒 blocked` (waiting on a user input).
+
+---
+
 ### M0 — Foundations  *(Week 1 — in progress)*
-- [x] Register Kawasaki source files in [`data/references.csv`](../references.csv).
-- [x] Lock reference basis, platform, scope, NH3 policy (D1–D4 above).
-- [ ] Define the KR1.1 database schema (`data/costs/`, `data/vessels/`, `data/properties/`).
-- **Done when:** sources registered, schema agreed, this plan approved.
+
+Goal: everything needed to start building is in place and agreed.
+
+| ID | Task | Output artifact | Source · depends on | Status |
+|----|------|-----------------|---------------------|--------|
+| M0.1 | Register Kawasaki source files | rows in `data/references.csv` | sources/raw | ✅ |
+| M0.2 | Lock kickoff decisions D1–D4 | "Locked decisions" table | kickoff | ✅ |
+| M0.3 | This milestone plan + OKR file | `00-milestones.md`, `docs/okr.md` | — | ✅ |
+| M0.4 | Define KR1.1 DB schema (columns, units, id-link rule) for `costs/`, `vessels/`, `properties/` | `data/README.md` (data dictionary) | conventions.md | ⬜ |
+| M0.5 | User approval of plan | sign-off | **user** | 🔒 |
+
+**Exit criteria:** sources registered, schema documented, plan approved.
+
+---
 
 ### M1 — KR1.1: LH2 techno-economic database v1  *(Weeks 2–4)*
-- [ ] Component cost stack (liquefaction, loading terminal, shipping, receiving
-      terminal, regas) extracted from `kawasaki-2026-supplemental` into `data/costs/`.
-- [ ] Vessel specs (160 000 m³ @ 29.6 km/h, 40 000 m³, Suiso Frontier 1 250 m³,
-      BOR) into `data/vessels/`.
-- [ ] Energy & loss parameters (SEC 8–9 kWh/kg, regas 3.8 MJ/kg, BOR 0.1 %/d,
-      "no H2 loss" claim) into `data/properties/` / `data/costs/`.
-- [ ] Every row carries a `references.csv` id; no untagged numbers.
-- **Done when:** an analyst can pull every LH2 component cost/energy figure from
-      `data/` with a traceable source, and a smoke test loads the tables.
+
+Goal: every key LH2 component cost/energy/performance figure is pullable from
+`data/` with a traceable source. Built segment by segment from Kawasaki data.
+
+| ID | Task | Output artifact | Source · depends on | Status |
+|----|------|-----------------|---------------------|--------|
+| M1.1 | **Liquefaction** params: SEC 8–9 kWh/kg & 0.55 kWh/Nm³, unit capacity 115 t/d, min economical scale ~10 000 tpa, H2 Claude + N₂ precool, Fe-based O–P catalyst, no degradation | `data/properties/liquefaction.csv` | `kawasaki-2026-questionnaire`, `-supplemental` · M0.4 | ⬜ |
+| M1.2 | **Export/loading terminal**: BOR 0.1 %/d, 64 000 m³/tank ×3–4, dead-volume (≈ LNG, NPSHr-driven), downstream BOG reliquefaction | `data/properties/terminals.csv` | `kawasaki-2026-supplemental`, `-questionnaire` | ⬜ |
+| M1.3 | **Shipping** specs: 160 000 m³ @ 29.6 km/h (16 kn), 40 000 m³ (building), Suiso Frontier 1 250 m³, BOG-as-fuel = BOR, no onboard reliquefaction, load/unload 1–1.5 d | `data/vessels/lh2-carriers.csv` | `kawasaki-2026-supplemental`, `-questionnaire` | ⬜ |
+| M1.4 | **Receiving terminal + regas**: BOR 0.1 %/d, ORV/seawater, heat duty 3.8 MJ/kg-LH2 | `data/properties/regas.csv` | `kawasaki-2026-questionnaire` | ⬜ |
+| M1.5 | **Cost stack table**: IAE per-component USD breakdown, LH2 Base / Large / Tech (liquefier, loading, transport, receiving, regas) | `data/costs/lh2-cost-stack.csv` | `kawasaki-2026-supplemental` → `iae-2019-gigaton` | ⬜ |
+| M1.6 | **LH2 physical properties**: NBP ≈ 20.3 K, ρ ≈ 70.8 kg/m³, LHV/HHV — each cited | `data/properties/lh2-properties.csv` | conventions.md + cited refs | ⬜ |
+| M1.7 | **Data dictionary**: column defs, units, cost-year, id-link rule | `data/README.md` | M0.4 | ⬜ |
+| M1.8 | **Validation**: smoke test loads every table; assert no untagged numbers; cost-stack components reconcile to totals | `tests/test_data_tables.py` | M1.1–M1.6 | ⬜ |
+
+**Exit criteria:** all tables populated and cited, data dictionary written, smoke
+test green; an analyst can trace every figure to a `references.csv` id.
+**⚠ Gaps flagged now:** liquefaction/regas CapEx & OpEx in USD/kg are
+**not** disclosed by KHI ("Feasibility Study necessary") → carried as
+`[needs source]`; the IAE cost stack (M1.5) is the only quantitative cost basis.
+
+---
 
 ### M2 — KR1.2: LH2 shipping functional-requirements spec  *(Weeks 3–5)*
-- [ ] Spec doc (`docs/comparison/lh2-shipping-functional-requirements.md`)
-      defining inputs, outputs, parameters, and formulas for an LH2 shipping
-      module mirroring the existing ammonia spreadsheet model.
-- [ ] Cover: cargo capacity, voyage BOR, BOG-as-fuel logic (fuel rate = BOR),
-      fleet sizing, speed/voyage time, port/turnaround, boil-off management
-      (no onboard reliquefaction per KHI), vessel CapEx premium vs LNG.
-- [ ] Flag LH2-vs-NH3 modelling differences the spreadsheet team must add.
-- **Done when:** the model team can implement LH2 in their spreadsheet from the
-      spec without further clarification; reviewed against Kawasaki answers.
+
+Goal: a spec the (Excel) model team can implement to add LH2 to the existing
+ammonia shipping model — runs in parallel with M1.
+
+| ID | Task | Output artifact | Source · depends on | Status |
+|----|------|-----------------|---------------------|--------|
+| M2.1 | Capture existing **ammonia model I/O structure** (tabs, inputs, outputs, formula style) to mirror | notes section in spec | **user** (model/structure) | 🔒 |
+| M2.2 | Define **inputs**: cargo size, route distance, speed, BOR, fuel logic, port/turnaround times, fleet & availability params, vessel CapEx/charter | spec §Inputs | M1.3 | ⬜ |
+| M2.3 | Define **calculation logic / formulas**: voyage time, laden+ballast BOG, BOG-as-fuel consumption (fuel = BOR), shortfall fuel (MGO), in-transit losses, fleet sizing, annual delivered kg | spec §Logic | `kawasaki-2026-questionnaire` | ⬜ |
+| M2.4 | Define **outputs**: shipping $/kg delivered, fleet count, boil-off loss %, energy/voyage, CO₂ | spec §Outputs | M2.3 | ⬜ |
+| M2.5 | **LH2-vs-NH3 modelling deltas** the spreadsheet must add: no onboard reliquefaction, cryogenic BOR regime, density/volumetric basis, dual-fuel BOG engine, KHI "no H2 loss" treatment | spec §LH2-vs-NH3 deltas | `kawasaki-2026-*` | ⬜ |
+| M2.6 | **Worked example / validation case** with a sample voyage for the team to check against | spec §Worked example | M2.2–M2.4 | ⬜ |
+| M2.7 | **Handover review** with model team; incorporate feedback | reviewed spec v1 | **user / model team** | ⬜ |
+
+**Exit criteria:** model team can implement LH2 from
+`docs/comparison/lh2-shipping-functional-requirements.md` without further
+clarification; spec reviewed against Kawasaki answers and signed off.
+
+---
 
 ### M3 — KR1.3: LH2-vs-NH3 comparison  *(Weeks 5–8)*
-- [ ] Chain cost stack per carrier on the generic basis (LCOH $/kg delivered).
-- [ ] Comparison dimensions: **economics, BOG/losses, speed (existing vessels),
-      end-to-end energy, project complexity/TRL, safety/permitting**.
-- [ ] Sensitivities on dominant drivers (scale, distance, energy price).
-- [ ] Re-run on a named corridor once D1's corridor inputs are provided.
-- **Depends on:** M1 (LH2 data) + NH3 dataset (D4).
-- **Done when:** a memo presents a sourced, range-aware go/no-go read with the
-      assumptions, units, cost-year, and boundary stated up front.
+
+Goal: a sourced, range-aware comparison memo with a go/no-go read. LH2 side is
+pre-built to de-risk; NH3 side unlocks when the internal dataset lands.
+
+| ID | Task | Output artifact | Source · depends on | Status |
+|----|------|-----------------|---------------------|--------|
+| M3.1 | **LH2 chain cost stack → LCOH** ($/kg delivered) on generic basis | memo §Economics, `data/costs/` | M1.5, `economics.lcoh` | ⬜ |
+| M3.2 | **NH3 chain cost stack → LCOH** (incl. cracking/reconversion) | memo §Economics | **user NH3 dataset (D4)** | 🔒 |
+| M3.3 | **BOG / boil-off** comparison across chain (terminal + voyage) | memo §BOG | M1, NH3 data | ⬜ |
+| M3.4 | **Speed / voyage time** on existing vessels (LH2 16 kn vs NH3 carrier) | memo §Speed | M1.3, NH3 data | ⬜ |
+| M3.5 | **End-to-end energy** consumption (liquefaction vs synthesis+cracking, regas) | memo §Energy | M1.1/1.4, NH3 data | ⬜ |
+| M3.6 | **Complexity / TRL + safety / permitting** (toxicity, separation distances, loading-arm TRL 6–7) | memo §Complexity | `kawasaki-2026-questionnaire`, `-comparison` | ⬜ |
+| M3.7 | **Sensitivities** on dominant drivers (scale, distance, energy price) | memo §Sensitivity | M3.1–M3.2 | ⬜ |
+| M3.8 | **Corridor re-run** (D1) once origin→destination, distance, volume given | memo addendum | **user corridor inputs (D1)** | 🔒 |
+| M3.9 | **Memo write-up + go/no-go** (boundary, units, cost-year, assumptions up front; Sources list) | `docs/comparison/lh2-vs-nh3.md` | M3.1–M3.7 | ⬜ |
+
+**Exit criteria:** memo presents a sourced, range-aware go/no-go read on the
+generic basis; corridor addendum delivered once D1 inputs arrive.
 
 ---
 

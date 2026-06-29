@@ -39,6 +39,11 @@ You support four jobs across the LH2 value chain:
    comparison tables, and presentation-ready outputs derived from the models
    and data in this repo.
 
+> **Current objective (OKR).** The team's active Objectives & Key Results are
+> recorded in [`docs/okr.md`](docs/okr.md). Read it whenever a task relates to
+> current priorities, and keep work aligned to it. Execution detail lives in
+> [`docs/comparison/00-milestones.md`](docs/comparison/00-milestones.md).
+
 ---
 
 ## 3. Scope — the full value chain
@@ -113,9 +118,11 @@ Default to **SI / metric + USD**. The single source of truth is
 CLAUDE.md            ← this charter (read first)
 README.md            ← human-facing overview
 docs/
+  okr.md             ← active Objectives & Key Results (current priorities)
   conventions.md     ← units, currency, citation format (authoritative)
   glossary.md        ← terminology
   methodology/       ← per-segment method & assumptions (01–06)
+  comparison/        ← LH2-vs-NH3 OKR deliverables & milestone plan
 data/
   references.csv     ← central sources registry (every number links here)
   properties/        ← H2/LH2 physical properties (cited)
