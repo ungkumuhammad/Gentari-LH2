@@ -4,7 +4,7 @@
 > Updated every session. `CLAUDE.md` points here — read this at the start of
 > any session where the user references prior work or continuing a task.
 >
-> Last updated: 2026-06-29
+> Last updated: 2026-07-20
 
 ---
 
@@ -189,3 +189,32 @@ Full detail in [`comparison/00-milestones.md`](comparison/00-milestones.md).
 | `tests/test_data_tables.py` | Created | M1.8 validation (no untagged numbers, ids resolve, cost reconciles) |
 | `pyproject.toml` | Updated | Added `openpyxl` dev dependency |
 | `docs/comparison/00-milestones.md` | Updated | M0.4, M1.1–M1.8 → ✅ |
+
+### KHI database report + project scenario calculator (2026-07-20)
+
+User asked for (1) a database built *from* the KHI questionnaire/assessment
+(not the raw Q&A) delivered as a PDF, and (2) a modeling tool to calculate
+economics for any Gentari project using KHI's solution.
+
+| File | Action | Purpose |
+|------|--------|---------|
+| `docs/reports/khi-lh2-solution-database.md` | Created | Narrative KHI database: per-segment tables, IAE cost stack, LH2-vs-NH3-vs-MCH position, disclosure-gap register (§9), KHI corporate snapshot, source register |
+| `docs/reports/khi-lh2-solution-database.pdf` | Created | PDF render of the above (via markdown → styled HTML → Playwright/Chromium print-to-PDF; no pandoc/weasyprint available in this environment) — delivered to user |
+| `src/lh2/liquefaction.py` | Implemented (was stub) | SEC (KHI 8–9 kWh/kg), train sizing (115 t/d trains, utilization factor derived from KHI's own Base/Large train-count data points ≈0.78) |
+| `src/lh2/storage.py` | Implemented (was stub) | At-rest boil-off (0.1%/day, compounding), KHI tank sizes |
+| `src/lh2/shipping.py` | Implemented (was stub) | Transit/round-trip time, fleet sizing, voyage BOG — **note: KHI never disclosed a standalone voyage BOR figure**, so `voyage_boil_off` has no default and callers must supply a tagged value |
+| `src/lh2/regas.py` | Implemented (was stub) | Regas duty (KHI 3.8 MJ/kg) |
+| `src/lh2/economics.py` | Implemented (was stub) | NPV/IRR (`numpy_financial`), LCOH |
+| `src/lh2/scenario.py` | Created | `ProjectInputs`/`ScenarioResult`/`run_scenario`: full chain calculator for any project (annual tpa + distance → energy/losses/fleet/cost); IAE Base/Large cost stack linearly interpolated to project volume; produces an explicit `gaps` list (CapEx, OpEx, discount rate, voyage BOR, FX rate, carbon intensity) instead of fabricating missing KHI figures |
+| `scripts/run_project_model.py` | Created | CLI wrapper around `scenario.run_scenario` |
+| `tests/test_scenario.py` | Created | 15 tests: unit consistency, reconciles to KHI's own Base/Large points, "no fabricated numbers" invariant |
+| `pyproject.toml` deps | Installed (`pip install -e ".[dev]"`) | `numpy-financial` etc. now actually present in the environment (were declared but not installed) |
+| `docs/comparison/00-milestones.md` | Updated | M2.3/M3.1 status notes + new "Additional artifacts" section |
+
+**Known modeling limitation carried forward:** KHI disclosed no standalone
+shipping/voyage boil-off rate (only that fuel-gas consumption = BOR, and that
+MGO-only sailing holds MARVS "for several days"). The scenario tool treats
+voyage BOR as a required user-supplied `[ASSUMPTION]`/`[ESTIMATE]` — it will
+not silently assume 0.1%/day (that figure is specifically the *at-rest*
+terminal BOR). Likewise CapEx/OpEx/carbon-intensity remain gaps until a
+Feasibility Study or a permitted external benchmark supplies them.

@@ -1,8 +1,5 @@
 """Cross-cutting project economics helpers (LCOH, NPV, IRR, payback).
 
-STUB — signatures and contracts are defined; calculations are to be implemented
-as the cost stack is built. NPV/IRR will use ``numpy_financial`` once wired in.
-
 No fabricated numbers: callers must pass sourced/tagged inputs; nothing here
 invents a discount rate, lifetime, or cost (``CLAUDE.md`` §4).
 """
@@ -10,6 +7,8 @@ invents a discount rate, lifetime, or cost (``CLAUDE.md`` §4).
 from __future__ import annotations
 
 from collections.abc import Sequence
+
+import numpy_financial as npf
 
 
 def npv(rate: float, cashflows: Sequence[float]) -> float:
@@ -22,12 +21,29 @@ def npv(rate: float, cashflows: Sequence[float]) -> float:
     Returns:
         NPV in the same currency/cost-year as the inputs.
     """
-    raise NotImplementedError("TODO: implement via numpy_financial.npv")
+    return float(npf.npv(rate, cashflows))
 
 
 def irr(cashflows: Sequence[float]) -> float:
     """Internal Rate of Return of ``cashflows`` (period 0 first)."""
-    raise NotImplementedError("TODO: implement via numpy_financial.irr")
+    return float(npf.irr(cashflows))
+
+
+def payback_period(cashflows: Sequence[float]) -> float | None:
+    """Simple (undiscounted) payback period in periods, or ``None`` if never.
+
+    Linearly interpolates within the period where cumulative cashflow turns
+    non-negative.
+    """
+    cumulative = 0.0
+    for i, cf in enumerate(cashflows):
+        prev_cumulative = cumulative
+        cumulative += cf
+        if cumulative >= 0 and i > 0 and prev_cumulative < 0:
+            return (i - 1) + (-prev_cumulative / cf) if cf else float(i)
+        if cumulative >= 0 and i == 0:
+            return 0.0
+    return None
 
 
 def lcoh(
@@ -38,17 +54,33 @@ def lcoh(
 ) -> float:
     """Levelized Cost of Hydrogen, in USD/kg (cost-year per inputs).
 
-    LCOH = sum(discounted annual costs) / sum(discounted annual H2 delivered).
-    All inputs must be sourced or tagged; carry boil-off/process losses into
-    ``h2_kg_per_year`` (delivered, not produced).
+    LCOH = (capex + sum(discounted annual opex)) / sum(discounted annual H2
+    delivered). All inputs must be sourced or tagged; ``h2_kg_per_year`` must
+    already be net of losses (boil-off / process losses), i.e. *delivered*,
+    not produced.
 
     Args:
         capex: Total capital cost at period 0 (USD, cost-year noted by caller).
-        opex_per_year: Annual operating cost incl. energy (USD/yr).
-        h2_kg_per_year: H2 *delivered* per year (kg/yr), net of losses.
+        opex_per_year: Annual operating cost incl. energy (USD/yr), one entry
+            per year of project life (period 1 first).
+        h2_kg_per_year: H2 *delivered* per year (kg/yr), net of losses, same
+            length/period alignment as ``opex_per_year``.
         discount_rate: Per ``CLAUDE.md`` §4 — sourced or ``[ASSUMPTION]``.
 
     Returns:
         LCOH in USD/kg H2.
     """
-    raise NotImplementedError("TODO: implement levelized cost calculation")
+    if len(opex_per_year) != len(h2_kg_per_year):
+        raise ValueError("opex_per_year and h2_kg_per_year must be the same length")
+
+    discounted_costs = capex
+    discounted_h2 = 0.0
+    for year, (opex, h2_kg) in enumerate(zip(opex_per_year, h2_kg_per_year), start=1):
+        discount_factor = 1.0 / (1.0 + discount_rate) ** year
+        discounted_costs += opex * discount_factor
+        discounted_h2 += h2_kg * discount_factor
+
+    if discounted_h2 <= 0:
+        raise ValueError("discounted H2 delivered must be positive")
+
+    return discounted_costs / discounted_h2

@@ -100,7 +100,7 @@ ammonia shipping model — runs in parallel with M1.
 |----|------|-----------------|---------------------|--------|
 | M2.1 | Capture existing **ammonia model I/O structure** (tabs, inputs, outputs, formula style) to mirror | notes section in spec | **user** (model/structure) | 🔒 |
 | M2.2 | Define **inputs**: cargo size, route distance, speed, BOR, fuel logic, port/turnaround times, fleet & availability params, vessel CapEx/charter | spec §Inputs | M1.3 | ⬜ |
-| M2.3 | Define **calculation logic / formulas**: voyage time, laden+ballast BOG, BOG-as-fuel consumption (fuel = BOR), shortfall fuel (MGO), in-transit losses, fleet sizing, annual delivered kg | spec §Logic | `kawasaki-2026-questionnaire` | ⬜ |
+| M2.3 | Define **calculation logic / formulas**: voyage time, laden+ballast BOG, BOG-as-fuel consumption (fuel = BOR), shortfall fuel (MGO), in-transit losses, fleet sizing, annual delivered kg | spec §Logic | `kawasaki-2026-questionnaire` | 🟡 reference implementation in `src/lh2/shipping.py`/`scenario.py` (Python, not yet ported to Excel spec) |
 | M2.4 | Define **outputs**: shipping $/kg delivered, fleet count, boil-off loss %, energy/voyage, CO₂ | spec §Outputs | M2.3 | ⬜ |
 | M2.5 | **LH2-vs-NH3 modelling deltas** the spreadsheet must add: no onboard reliquefaction, cryogenic BOR regime, density/volumetric basis, dual-fuel BOG engine, KHI "no H2 loss" treatment | spec §LH2-vs-NH3 deltas | `kawasaki-2026-*` | ⬜ |
 | M2.6 | **Worked example / validation case** with a sample voyage for the team to check against | spec §Worked example | M2.2–M2.4 | ⬜ |
@@ -119,7 +119,7 @@ pre-built to de-risk; NH3 side unlocks when the internal dataset lands.
 
 | ID | Task | Output artifact | Source · depends on | Status |
 |----|------|-----------------|---------------------|--------|
-| M3.1 | **LH2 chain cost stack → LCOH** ($/kg delivered) on generic basis | memo §Economics, `data/costs/` | M1.5, `economics.lcoh` | ⬜ |
+| M3.1 | **LH2 chain cost stack → LCOH** ($/kg delivered) on generic basis | memo §Economics, `data/costs/` | M1.5, `economics.lcoh` | 🟡 `economics.lcoh` + `scenario.run_scenario` implemented and runnable (`scripts/run_project_model.py`); still gated on user-supplied CapEx/OpEx since KHI has not disclosed them |
 | M3.2 | **NH3 chain cost stack → LCOH** (incl. cracking/reconversion) | memo §Economics | **user NH3 dataset (D4)** | 🔒 |
 | M3.3 | **BOG / boil-off** comparison across chain (terminal + voyage) | memo §BOG | M1, NH3 data | ⬜ |
 | M3.4 | **Speed / voyage time** on existing vessels (LH2 16 kn vs NH3 carrier) | memo §Speed | M1.3, NH3 data | ⬜ |
@@ -154,6 +154,25 @@ M0 ──> M1 (LH2 DB) ─────────────┐
 2. **Named corridor** for D1 re-run: origin → destination, distance, annual volume.
 3. **Existing ammonia spreadsheet model** (or its I/O structure) to mirror in the M2 spec.
 4. Confirmation of this milestone plan.
+
+---
+
+## Additional artifacts (2026-07-20, ad hoc user request)
+
+Requested directly by the user, outside the sequential M0–M3 plan above —
+tracked here rather than renumbering the plan:
+
+| Artifact | What it is | Status |
+|----------|-------------|--------|
+| `docs/reports/khi-lh2-solution-database.md` / `.pdf` | Narrative, shareable rendering of the M1 database (KHI's disclosed figures by segment, IAE cost stack, qualitative LH2-vs-NH3-vs-MCH position, disclosure-gap register) — not a reproduction of the raw questionnaire | ✅ |
+| `src/lh2/{liquefaction,storage,shipping,regas,economics}.py` implemented | Real (no-longer-stub) functions: SEC energy, train sizing, at-rest/voyage boil-off, fleet sizing, regas duty, NPV/IRR/LCOH — every default sourced or tagged per `CLAUDE.md` §4 | ✅ |
+| `src/lh2/scenario.py` + `scripts/run_project_model.py` | Project-level calculator: annual liquefaction throughput + shipping distance → energy, boil-off, fleet size, indicative IAE cost stack (interpolated), and LCOH if the user supplies CapEx/OpEx/discount rate. Missing KHI disclosures (CapEx, OpEx, carbon intensity, voyage BOR, FX rate) surface as an explicit `gaps` list rather than being fabricated | ✅ v1 |
+| `tests/test_scenario.py` | 15 tests covering unit consistency, KHI-figure reconciliation, and the "no fabricated numbers" invariant in code | ✅ |
+
+**Relationship to KR1.2/KR1.3:** this Python calculator is a working reference
+implementation of much of what M2.3 (shipping calc logic) and M3.1 (LCOH)
+need — it does not replace the Excel deliverable D2 locks in for the model
+team, but can be mirrored into it.
 
 ---
 
