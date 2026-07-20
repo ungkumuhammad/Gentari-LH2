@@ -314,3 +314,29 @@ calculation the same as fresh-feed liquefaction?
   `theoretical_min_specific_work_bog_reliquefaction` (1.71 kWh/kg, tag
   ASSUMPTION: derived, source_id doe-2009-h2-liquefaction-energy).
   `data/lh2-database.xlsx` regenerated.
+
+### MJ units + storage-days-driven BOG energy in the calculator, then merge to main (2026-07-20, same session)
+
+User asked for three things: (1) show MJ alongside kWh throughout the HTML
+calculator (H2 LHV = 120 MJ/kg); (2) let storage days (export/import
+terminal hold time) drive BOG mass *and* the energy needed to manage that
+BOG, using the fresh-feed-vs-BOG ideal-work ratio derived earlier, added to
+the total energy requirement — same treatment for shipping's voyage BOG;
+(3) merge everything to `main`.
+
+| Change | Detail |
+|--------|--------|
+| `docs/reports/khi-lh2-reliq-shipping-regas-bfd.html` | Every kWh/kg value now shows its MJ/kg equivalent (`fmtKwhMj()`); every annual GWh/y total now shows TJ/y (`fmtAnnualEnergy()`), incl. regas duty (previously TJ-only). Export/import terminal "storage days" promoted from the collapsed advanced section to primary inputs, since they now drive a headline output. New `BOG_SEC_RATIO` (≈0.438) scales the user's own reliq SEC by the ratio of BOG's ideal condensation-only work (1.71 kWh/kg) to fresh-feed ideal work (3.9 kWh/kg) — applied to export BOG, import BOG, *and* shipping voyage BOG for a consistent "energy cost of managing boil-off" figure, with an explicit caveat (both inline and in the dynamic gaps list) that KHI's ships actually burn voyage BOG as engine fuel rather than electrically re-liquefying it. New rows: per-block "BOG re-liq energy (derived)" in the Export/Import/Shipping cards, "+ BOG management (all locations)" / "= Total incl. BOG" in the Reliquefaction card, and a "+ BOG management (per kg delivered)" row folded into the Well-to-LH2 efficiency card's total (now `electrolyzer + reliq + BOG`, all expressed per kg *delivered* rather than per kg produced, for full consistency). Added footnote (26). |
+| `src/lh2/scenario.py` | Mirrored the same BOG-management-energy math in Python (`BOG_IDEAL_KWH_PER_KG`, `FRESH_IDEAL_PARA_KWH_PER_KG`, `BOG_SEC_RATIO`, new `ScenarioResult` fields `bog_management_sec_kwh_per_kg`, `*_bog_energy_kwh_per_year`, `total_energy_incl_bog_kwh_per_year`), since the tool's own UI text claims to mirror this module — kept the claim true rather than letting it drift. `format_report()` updated to print the new BOG energy lines. |
+| Verified | Ran identical inputs (300 KTPA, 6000 km, export/import hold 5 d each, voyage BOR 0.2%) through both the CLI and the HTML calculator via Playwright — BOG energies matched to rounding (export 5.58 GWh/y, import 5.49 GWh/y, shipping 18.75 GWh/y, total 29.81 GWh/y, grand total 2,580 GWh/y in both). Also checked the default (0 hold days) state shows 0 BOG energy cleanly, no spurious gap text, no console errors; checked layout in light/dark and at narrow (420px) width. |
+| `git merge` | Branch `claude/khi-kawasaki-questionnaire-db-xj1wnw` merged into `main` and pushed, per explicit user instruction — see git log for the merge commit. |
+
+**Running list of what's now in this repo from this multi-turn session:**
+KHI LH2 solution database (report + PDF), a Python project-scenario
+calculator (`src/lh2/scenario.py` + CLI), an interactive HTML block-flow
+diagram with a full viability calculator (demand volume → per-block energy/
+BOG/fleet/cost/LCOH, electrolyzer efficiency → LHV well-to-LH2 efficiency,
+storage-days → BOG management energy), and two thermodynamics deep-dives
+(theoretical liquefaction work vs KHI's SEC, and BOG re-liquefaction's
+smaller ideal-work requirement) folded into `docs/methodology/02-liquefaction.md`
+and `data/properties/liquefaction.csv` as cited/tagged database rows.

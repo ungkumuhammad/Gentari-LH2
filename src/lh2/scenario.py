@@ -29,6 +29,25 @@ GAS_DENSITY_KG_PER_NM3 = 0.0899
 #: ref: data/properties/lh2-properties.csv, tagged needs-source (same item).
 LH2_DENSITY_KG_PER_M3 = 70.8
 
+#: H2 lower heating value, kWh/kg (120 MJ/kg / 3.6).
+#: ref: data/properties/lh2-properties.csv, tagged needs-source.
+H2_LHV_KWH_PER_KG = 120.0 / 3.6
+
+#: BOG is already at ~20.3 K and near-equilibrium para fraction when it boils
+#: off, so its ideal (theoretical minimum) work is only the condensation
+#: step, not the full fresh-feed cool-down + O-P conversion. See
+#: docs/methodology/02-liquefaction.md "BOG re-liquefaction is a different
+#: (smaller) calculation" and data/properties/liquefaction.csv
+#: theoretical_min_specific_work_bog_reliquefaction.
+BOG_IDEAL_KWH_PER_KG = 1.71
+#: Ideal work, para-H2 basis, fresh ambient feed -> LH2 (doe-2009-h2-liquefaction-energy).
+FRESH_IDEAL_PARA_KWH_PER_KG = 3.9
+#: [ASSUMPTION: derived] Scales the caller's own reliquefaction SEC by the
+#: ratio of the two ideal-work figures above -- i.e. assumes BOG management
+#: shares the main liquefier's real-world exergetic efficiency. KHI discloses
+#: no separate SEC for BOG handling.
+BOG_SEC_RATIO = BOG_IDEAL_KWH_PER_KG / FRESH_IDEAL_PARA_KWH_PER_KG
+
 #: IAE per-component cost stack, JPY/Nm3, ~2019 vintage (unverified unit and
 #: cost-year — see data/costs/lh2-cost-stack.csv and docs/reports/
 #: khi-lh2-solution-database.md §7). Reproduced second-hand via KHI.
@@ -182,6 +201,12 @@ class ScenarioResult:
     round_trip_days: float
     import_terminal_bog_kg_per_year: float
     regas_duty_mj_per_year: float
+    bog_management_sec_kwh_per_kg: float
+    export_terminal_bog_energy_kwh_per_year: float
+    import_terminal_bog_energy_kwh_per_year: float
+    shipping_bog_energy_kwh_per_year: float | None
+    total_bog_management_energy_kwh_per_year: float
+    total_energy_incl_bog_kwh_per_year: float
     cost_stack_jpy_per_nm3: dict[str, float]
     cost_stack_usd_per_kg: dict[str, float] | None
     cost_stack_warnings: list[str]
@@ -236,6 +261,36 @@ def run_scenario(inputs: ProjectInputs) -> ScenarioResult:
     )
 
     duty = regas.regas_duty(Q_(delivered_mass_kg, "kg"))
+
+    # BOG management energy: derived, not KHI-disclosed (see BOG_SEC_RATIO).
+    bog_sec_kwh_per_kg = inputs.sec_kwh_per_kg * BOG_SEC_RATIO
+    export_bog_energy_kwh = export_bog.to("kg").magnitude * bog_sec_kwh_per_kg
+    import_bog_energy_kwh = import_bog.to("kg").magnitude * bog_sec_kwh_per_kg
+    shipping_bog_energy_kwh = (
+        voyage_bog * bog_sec_kwh_per_kg if voyage_bog is not None else None
+    )
+    total_bog_energy_kwh = (
+        export_bog_energy_kwh
+        + import_bog_energy_kwh
+        + (shipping_bog_energy_kwh or 0.0)
+    )
+    if shipping_bog_energy_kwh:
+        gaps.append(
+            "Voyage BOG 'management energy' is shown for consistent energy "
+            "accounting across the chain, but KHI's ships do not electrically "
+            "re-liquefy it -- the BOG is burned as dual-fuel engine propulsion "
+            "fuel instead (reply Q23/Q32), displacing MGO rather than drawing "
+            "extra power."
+        )
+    gaps.append(
+        f"bog_management_sec_kwh_per_kg ({bog_sec_kwh_per_kg:.2f} kWh/kg) is "
+        "derived by scaling sec_kwh_per_kg by the ratio of BOG's ideal "
+        f"condensation-only work ({BOG_IDEAL_KWH_PER_KG} kWh/kg) to fresh-feed "
+        f"ideal work ({FRESH_IDEAL_PARA_KWH_PER_KG} kWh/kg, para-H2 basis) -- "
+        "assumes BOG management shares the main liquefier's real-world "
+        "exergetic efficiency; KHI discloses no separate SEC for BOG "
+        "handling. [ASSUMPTION: derived]"
+    )
 
     nm3_per_year = annual_kg / GAS_DENSITY_KG_PER_NM3
     cost_stack, cost_warnings = interpolate_iae_cost_stack(nm3_per_year)
@@ -302,6 +357,12 @@ def run_scenario(inputs: ProjectInputs) -> ScenarioResult:
         round_trip_days=round_trip,
         import_terminal_bog_kg_per_year=import_bog.to("kg").magnitude,
         regas_duty_mj_per_year=duty.to("MJ").magnitude,
+        bog_management_sec_kwh_per_kg=bog_sec_kwh_per_kg,
+        export_terminal_bog_energy_kwh_per_year=export_bog_energy_kwh,
+        import_terminal_bog_energy_kwh_per_year=import_bog_energy_kwh,
+        shipping_bog_energy_kwh_per_year=shipping_bog_energy_kwh,
+        total_bog_management_energy_kwh_per_year=total_bog_energy_kwh,
+        total_energy_incl_bog_kwh_per_year=energy.to("kWh").magnitude + total_bog_energy_kwh,
         cost_stack_jpy_per_nm3=cost_stack,
         cost_stack_usd_per_kg=cost_stack_usd,
         cost_stack_warnings=cost_warnings,
@@ -325,8 +386,10 @@ def format_report(result: ScenarioResult) -> str:
         f"Annual liquefaction energy      : {result.liquefaction_energy_kwh_per_year:,.0f} kWh/y",
         "",
         "-- Terminals & storage (BOR 0.1%/day, re-liquefied per KHI) --",
-        f"Export-terminal BOG (informational): {result.export_terminal_bog_kg_per_year:,.1f} kg/y",
-        f"Import-terminal BOG (informational): {result.import_terminal_bog_kg_per_year:,.1f} kg/y",
+        f"Export-terminal BOG: {result.export_terminal_bog_kg_per_year:,.1f} kg/y "
+        f"-> {result.export_terminal_bog_energy_kwh_per_year:,.0f} kWh/y to re-liquefy (derived)",
+        f"Import-terminal BOG: {result.import_terminal_bog_kg_per_year:,.1f} kg/y "
+        f"-> {result.import_terminal_bog_energy_kwh_per_year:,.0f} kWh/y to re-liquefy (derived)",
         "",
         "-- Shipping --",
         f"Round-trip cycle time           : {result.round_trip_days:.2f} days",
@@ -341,6 +404,17 @@ def format_report(result: ScenarioResult) -> str:
         "",
         "-- Regasification --",
         f"Annual regas heat duty          : {result.regas_duty_mj_per_year:,.0f} MJ/y",
+        "",
+        "-- BOG management energy (derived, not KHI-disclosed; see gaps) --",
+        f"Derived BOG-management SEC      : {result.bog_management_sec_kwh_per_kg:.2f} kWh/kg",
+        "Voyage BOG energy-equivalent    : "
+        + (
+            f"{result.shipping_bog_energy_kwh_per_year:,.0f} kWh/y"
+            if result.shipping_bog_energy_kwh_per_year is not None
+            else "not modeled (see gaps)"
+        ),
+        f"Total BOG management energy     : {result.total_bog_management_energy_kwh_per_year:,.0f} kWh/y",
+        f"Liquefaction + BOG management    : {result.total_energy_incl_bog_kwh_per_year:,.0f} kWh/y",
         "",
         "-- Indicative cost stack (JPY/Nm3, ~2019, IAE via KHI, unverified) --",
     ]
@@ -371,6 +445,10 @@ __all__ = [
     "IAE_COST_STACK",
     "GAS_DENSITY_KG_PER_NM3",
     "LH2_DENSITY_KG_PER_M3",
+    "H2_LHV_KWH_PER_KG",
+    "BOG_IDEAL_KWH_PER_KG",
+    "FRESH_IDEAL_PARA_KWH_PER_KG",
+    "BOG_SEC_RATIO",
     "interpolate_iae_cost_stack",
     "ProjectInputs",
     "ScenarioResult",

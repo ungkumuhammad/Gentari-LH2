@@ -490,6 +490,16 @@
           <span class="hint">kWh/kg H₂ — user input; production is outside KHI's LH2 offer, leave blank to skip</span>
           <input type="number" id="in-electrolyzer-sec" value="" min="0" step="0.5" placeholder="e.g. 55–65" oninput="calculate()">
         </div>
+        <div class="field field-primary">
+          <label for="in-export-hold">Export terminal storage days</label>
+          <span class="hint">days at rest before loading — drives export BOG &amp; its re-liquefaction energy</span>
+          <input type="number" id="in-export-hold" value="0" min="0" step="0.5" oninput="calculate()">
+        </div>
+        <div class="field field-primary">
+          <label for="in-import-hold">Import terminal storage days</label>
+          <span class="hint">days at rest after discharge — drives import BOG &amp; its re-liquefaction energy</span>
+          <input type="number" id="in-import-hold" value="0" min="0" step="0.5" oninput="calculate()">
+        </div>
       </div>
 
       <details class="advanced">
@@ -509,16 +519,6 @@
             <label for="in-cargo">Vessel cargo capacity</label>
             <span class="hint">m³ — KHI commercial target 160,000</span>
             <input type="number" id="in-cargo" value="160000" min="1" step="1000" oninput="calculate()">
-          </div>
-          <div class="field">
-            <label for="in-export-hold">Export terminal hold time</label>
-            <span class="hint">days at rest before loading</span>
-            <input type="number" id="in-export-hold" value="0" min="0" step="0.5" oninput="calculate()">
-          </div>
-          <div class="field">
-            <label for="in-import-hold">Import terminal hold time</label>
-            <span class="hint">days at rest after discharge</span>
-            <input type="number" id="in-import-hold" value="0" min="0" step="0.5" oninput="calculate()">
           </div>
           <div class="field">
             <label for="in-voyage-bor">Voyage BOR</label>
@@ -786,8 +786,10 @@
         <h3>② Reliquefaction plant</h3>
         <div class="row"><span class="k">Trains required (115 t/d)</span><span class="v" id="r-trains">—</span></div>
         <div class="row"><span class="k">SEC used</span><span class="v" id="r-sec">—</span></div>
-        <div class="row"><span class="k">Annual energy</span><span class="v" id="r-liq-energy">—</span></div>
+        <div class="row"><span class="k">Annual energy (fresh feed)</span><span class="v" id="r-liq-energy">—</span></div>
         <div class="row"><span class="k">Average power draw</span><span class="v" id="r-liq-power">—</span></div>
+        <div class="row"><span class="k">+ BOG management (all locations)</span><span class="v" id="r-liq-bog-total">—</span></div>
+        <div class="row"><span class="k">= Total incl. BOG</span><span class="v" id="r-liq-grand-total">—</span></div>
       </div>
 
       <div class="result-card">
@@ -795,6 +797,7 @@
         <div class="row"><span class="k">BOG generated (at rest)</span><span class="v" id="r-export-bog">—</span></div>
         <div class="row"><span class="k">Hold time modeled</span><span class="v" id="r-export-hold">—</span></div>
         <div class="row"><span class="k">Fate</span><span class="v">re-liquefied (recycle)</span></div>
+        <div class="row"><span class="k">BOG re-liq energy (derived)</span><span class="v" id="r-export-bog-energy">—</span></div>
       </div>
 
       <div class="result-card card-shipping">
@@ -803,6 +806,7 @@
         <div class="row"><span class="k">Round-trip cycle</span><span class="v" id="r-roundtrip">—</span></div>
         <div class="row"><span class="k">Fleet required</span><span class="v" id="r-fleet">—</span></div>
         <div class="row"><span class="k">Voyage BOG (fuel draw)</span><span class="v" id="r-voyage-bog">—</span></div>
+        <div class="row"><span class="k">BOG energy-equiv. (derived)</span><span class="v" id="r-shipping-bog-energy">—</span></div>
       </div>
 
       <div class="result-card">
@@ -810,6 +814,7 @@
         <div class="row"><span class="k">Delivered mass</span><span class="v" id="r-delivered">—</span></div>
         <div class="row"><span class="k">BOG generated (at rest)</span><span class="v" id="r-import-bog">—</span></div>
         <div class="row"><span class="k">Hold time modeled</span><span class="v" id="r-import-hold">—</span></div>
+        <div class="row"><span class="k">BOG re-liq energy (derived)</span><span class="v" id="r-import-bog-energy">—</span></div>
       </div>
 
       <div class="result-card">
@@ -827,10 +832,11 @@
 
       <div class="result-card card-energy">
         <h3>⚡ Well-to-LH2 energy efficiency (LHV basis)</h3>
-        <div class="row"><span class="k">Electrolyzer input</span><span class="v" id="r-energy-electrolyzer">—</span></div>
-        <div class="row"><span class="k">+ Reliquefaction SEC</span><span class="v" id="r-energy-reliq">—</span></div>
+        <div class="row"><span class="k">Electrolyzer input (per kg delivered)</span><span class="v" id="r-energy-electrolyzer">—</span></div>
+        <div class="row"><span class="k">+ Reliquefaction (per kg delivered)</span><span class="v" id="r-energy-reliq">—</span></div>
+        <div class="row"><span class="k">+ BOG management (per kg delivered)</span><span class="v" id="r-energy-bog">—</span></div>
         <div class="row"><span class="k">= Total input energy</span><span class="v" id="r-energy-total">—</span></div>
-        <div class="row"><span class="k">H₂ LHV (reference)</span><span class="v" id="r-energy-lhv">33.33 kWh/kg (25)</span></div>
+        <div class="row"><span class="k">H₂ LHV (reference)</span><span class="v" id="r-energy-lhv">33.33 kWh/kg = 120 MJ/kg (25)</span></div>
         <div class="row"><span class="k">Overall efficiency (LHV ÷ input)</span><span class="v" id="r-energy-eff-overall">—</span></div>
         <div class="row"><span class="k">Overall loss</span><span class="v" id="r-energy-loss-overall">—</span></div>
         <div class="row"><span class="k">Annual input energy</span><span class="v" id="r-energy-annual-input">—</span></div>
@@ -872,6 +878,7 @@
       <li>Liquefaction train sizing uses a derived utilization factor of 0.78 (KHI's own Base/Large train-count disclosures back-solved against their stated deal volumes) — see <i>src/lh2/liquefaction.py</i>. <span class="tag assumption">ASSUMPTION: derived</span></li>
       <li>Fleet sizing assumes a 90% fleet-wide operational availability (dry-docking/weather/maintenance margin) — not a KHI-disclosed figure. <span class="tag assumption">ASSUMPTION</span></li>
       <li>H₂ lower heating value (LHV) ≈ 120 MJ/kg = 33.33 kWh/kg — <i>data/properties/lh2-properties.csv</i>, tagged <span class="tag assumption">needs-source</span> pending a formal NIST/ISO citation (same open item as note 20). Used as the energy-efficiency reference in the "Well-to-LH2 energy efficiency" card. Electrolyzer specific energy consumption itself is a <b>user-supplied calculator input</b>, not a KHI figure — production is segment [1], upstream of and outside this diagram's KHI-sourced boundary.</li>
+      <li><b>BOG management energy is derived, not KHI-disclosed.</b> BOG is already at ~20.3 K and near-equilibrium para fraction when it boils off, so its ideal (theoretical minimum) energy is only the condensation step (≈1.71 kWh/kg), not the full fresh-feed cool-down + ortho-para conversion (≈3.9 kWh/kg, para-H2 basis) — see <i>docs/methodology/02-liquefaction.md</i> "BOG re-liquefaction is a different (smaller) calculation." This calculator scales your own reliquefaction SEC input by the ratio of those two ideal-work figures (≈0.438) to estimate a real-world BOG-management specific energy, applied to export-terminal, import-terminal, <i>and</i> shipping boil-off for consistent energy accounting — even though KHI's ships actually burn voyage BOG as propulsion fuel rather than electrically re-liquefying it (reply Q23/Q32). <span class="tag assumption">ASSUMPTION: derived</span></li>
     </ol>
   </div>
 
@@ -900,6 +907,19 @@
   const FLEET_AVAILABILITY = 0.90;         // assumption, see notes (24)
   const LOAD_UNLOAD_DAYS_MID = 1.25;       // midpoint of KHI's 1-1.5 day range
   const H2_LHV_KWH_PER_KG = 120 / 3.6;     // 120 MJ/kg / 3.6 = 33.33 kWh/kg, data/properties/lh2-properties.csv, needs-source (25)
+  const MJ_PER_KWH = 3.6;
+  //  BOG (boil-off gas) re-liquefaction/management specific energy is derived,
+  //  not KHI-disclosed: BOG is already cold (~20.3K) and near-equilibrium para
+  //  fraction when it boils off, so its ideal (theoretical minimum) work is
+  //  only the condensation step, not the full fresh-feed cool-down + O-P
+  //  conversion. See docs/methodology/02-liquefaction.md "BOG re-liquefaction
+  //  is a different (smaller) calculation" (26).
+  const BOG_IDEAL_KWH_PER_KG = 1.71;        // condensation-only exergy vs 300K dead state, derived (26)
+  const FRESH_IDEAL_PARA_KWH_PER_KG = 3.9;  // ideal work, para-H2 basis, doe-2009-h2-liquefaction-energy
+  //  Scales the user's own reliq SEC input down by the same ratio as the two
+  //  ideal-work figures -- i.e. assumes BOG management shares the main
+  //  liquefier's real-world exergetic efficiency. [ASSUMPTION: derived]
+  const BOG_SEC_RATIO = BOG_IDEAL_KWH_PER_KG / FRESH_IDEAL_PARA_KWH_PER_KG; // ~=0.438
 
   const IAE = {
     Base:  { v: 2.5e9,  production: 10.1, liquefaction: 10.3, loading_terminal: 5.6, seaborne_transport: 4.0, receiving_terminal: 6.3, dehydrogenation: 0.0, other: 1.3 },
@@ -960,6 +980,18 @@
     el.textContent = text;
     el.className = 'v' + (flagClass ? ' ' + flagClass : '');
   }
+  // Per-kg energy: "8.50 kWh/kg (30.6 MJ/kg)"
+  function fmtKwhMj(kwhPerKg, kd = 2, md = 1) {
+    if (!isFinite(kwhPerKg)) return '—';
+    return fmt(kwhPerKg, kd) + ' kWh/kg (' + fmt(kwhPerKg * MJ_PER_KWH, md) + ' MJ/kg)';
+  }
+  // Annual energy total: "2,550 GWh/y (9,180 TJ/y)"
+  function fmtAnnualEnergy(totalKwh, digits = 0) {
+    if (!isFinite(totalKwh)) return '—';
+    const gwh = totalKwh / 1e6;
+    const tj = gwh * MJ_PER_KWH;
+    return fmt(gwh, digits) + ' GWh/y (' + fmt(tj, digits) + ' TJ/y)';
+  }
 
   function calculate() {
     const ktpa = parseFloat(document.getElementById('in-ktpa').value) || 0;
@@ -996,7 +1028,7 @@
     if (electrolyzerSec !== null && !isNaN(electrolyzerSec) && electrolyzerSec > 0) {
       electrolyzerEffPct = (H2_LHV_KWH_PER_KG / electrolyzerSec) * 100;
       electrolyzerLossPct = 100 - electrolyzerEffPct;
-      val('r-electrolyzer-sec', electrolyzerSec.toFixed(2) + ' kWh/kg');
+      val('r-electrolyzer-sec', fmtKwhMj(electrolyzerSec));
       val('r-electrolyzer-eff', electrolyzerEffPct.toFixed(2) + ' %');
       val('r-electrolyzer-loss', electrolyzerLossPct.toFixed(2) + ' %', 'flag-assumption');
     } else {
@@ -1011,15 +1043,18 @@
     const liqEnergyKwh = annualKg * sec;
     const liqEnergyGwh = liqEnergyKwh / 1e6;
     const liqAvgMw = liqEnergyKwh / 8760 / 1000;
+    const bogSecKwhPerKg = sec * BOG_SEC_RATIO; // derived BOG-management SEC, see constants above (26)
     val('r-trains', fmt(trains) + ' × 115 t/d');
-    val('r-sec', sec.toFixed(2) + ' kWh/kg');
-    val('r-liq-energy', fmt(liqEnergyGwh, 0) + ' GWh/y');
+    val('r-sec', fmtKwhMj(sec));
+    val('r-liq-energy', fmtAnnualEnergy(liqEnergyKwh));
     val('r-liq-power', '≈ ' + fmt(liqAvgMw, 0) + ' MW avg');
 
     // ---- Export terminal ----
     const exportBog = boilOffAtRest(annualKg, exportHold);
+    const exportBogEnergyKwh = exportBog * bogSecKwhPerKg;
     val('r-export-bog', fmt(exportBog, 0) + ' kg/y');
     val('r-export-hold', fmt(exportHold, 1) + ' d');
+    val('r-export-bog-energy', fmtAnnualEnergy(exportBogEnergyKwh, 1));
 
     // ---- Shipping ----
     const shippedKg = annualKg; // export BOG re-liquefied, not subtracted (reply Q3/Q14)
@@ -1030,26 +1065,39 @@
     val('r-roundtrip', isFinite(roundTrip) ? fmt(roundTrip, 1) + ' d' : '—');
     val('r-fleet', isFinite(fleet) ? fmt(fleet) + ' vessel(s)' : '—');
 
-    let voyageBog = null, deliveredKg = shippedKg;
+    let voyageBog = null, deliveredKg = shippedKg, shippingBogEnergyKwh = null;
     if (voyageBor !== null && !isNaN(voyageBor) && isFinite(transitDays)) {
       voyageBog = voyageBoilOff(shippedKg, transitDays, voyageBor);
       deliveredKg = shippedKg - voyageBog;
+      shippingBogEnergyKwh = voyageBog * bogSecKwhPerKg;
       val('r-voyage-bog', fmt(voyageBog, 0) + ' kg/y');
+      val('r-shipping-bog-energy', fmtAnnualEnergy(shippingBogEnergyKwh, 1), 'flag-assumption');
+      gaps.push('Voyage BOG "management energy" is shown for consistent energy accounting across the chain, but KHI\'s ships do not electrically re-liquefy it — the BOG is burned as dual-fuel engine propulsion fuel instead (reply Q23/Q32), displacing MGO rather than drawing extra power.');
     } else {
       val('r-voyage-bog', 'not modeled', 'flag-gap');
+      val('r-shipping-bog-energy', 'not modeled', 'flag-gap');
       gaps.push('Voyage BOR not supplied — KHI disclosed no standalone shipping boil-off figure (reply Q23: fuel-gas consumption equals the BOR, no %/day value given). Delivered mass below assumes zero in-transit loss, which is optimistic.');
     }
 
     // ---- Import terminal ----
     const importBog = boilOffAtRest(deliveredKg, importHold);
+    const importBogEnergyKwh = importBog * bogSecKwhPerKg;
     val('r-delivered', fmt(deliveredKg / 1000, 0) + ' t/y (' + fmt(deliveredKg / 1e6, 1) + ' KTPA)');
     val('r-import-bog', fmt(importBog, 0) + ' kg/y');
     val('r-import-hold', fmt(importHold, 1) + ' d');
+    val('r-import-bog-energy', fmtAnnualEnergy(importBogEnergyKwh, 1));
+
+    // ---- Total BOG management energy across the chain (26) ----
+    const totalBogEnergyKwh = exportBogEnergyKwh + importBogEnergyKwh + (shippingBogEnergyKwh !== null ? shippingBogEnergyKwh : 0);
+    const bogEnergyPerKgDelivered = deliveredKg > 0 ? totalBogEnergyKwh / deliveredKg : NaN;
+    val('r-liq-bog-total', fmtAnnualEnergy(totalBogEnergyKwh, 1));
+    val('r-liq-grand-total', fmtAnnualEnergy(liqEnergyKwh + totalBogEnergyKwh));
 
     // ---- Regasification ----
     const regasDutyMj = deliveredKg * REGAS_DUTY_MJ_PER_KG;
+    const regasDutyKwh = regasDutyMj / MJ_PER_KWH;
     const regasAvgMwTh = (regasDutyMj * 1000) / (365 * 24 * 3600) ; // MJ/y -> kJ/y /(s/y) = kW
-    val('r-regas-duty', fmt(regasDutyMj / 1e6, 2) + ' TJ/y');
+    val('r-regas-duty', fmtAnnualEnergy(regasDutyKwh, 1));
     val('r-regas-power', '≈ ' + fmt(regasAvgMwTh / 1000, 0) + ' MWth avg');
 
     // ---- Cost stack ----
@@ -1088,23 +1136,27 @@
     gaps.push('Carbon intensity (kgCO₂e/kg) is not modeled — KHI declined to disclose this (reply Q11: "Feasibility Study is necessary").');
     gaps.push('Import-side BOG handling is modeled as re-liquefied by analogy with the export terminal — not explicitly confirmed by KHI for the receiving side.');
 
-    // ---- Well-to-LH2 energy efficiency (LHV basis) ----
-    val('r-energy-reliq', sec.toFixed(2) + ' kWh/kg');
+    // ---- Well-to-LH2 energy efficiency (LHV basis), now including BOG management energy ----
+    const reliqPerKgDelivered = deliveredKg > 0 ? (annualKg * sec) / deliveredKg : NaN;
+    val('r-energy-reliq', fmtKwhMj(reliqPerKgDelivered));
+    val('r-energy-bog', fmtKwhMj(bogEnergyPerKgDelivered), totalBogEnergyKwh > 0 ? 'flag-assumption' : undefined);
+
     let totalInputKwhPerKg = null, overallEffPct = null, overallLossPct = null;
     if (electrolyzerSec !== null && !isNaN(electrolyzerSec) && electrolyzerSec > 0) {
-      totalInputKwhPerKg = electrolyzerSec + sec;
+      const electrolyzerPerKgDelivered = (annualKg * electrolyzerSec) / deliveredKg;
+      totalInputKwhPerKg = electrolyzerPerKgDelivered + reliqPerKgDelivered + bogEnergyPerKgDelivered;
       overallEffPct = (H2_LHV_KWH_PER_KG / totalInputKwhPerKg) * 100;
       overallLossPct = 100 - overallEffPct;
-      val('r-energy-electrolyzer', electrolyzerSec.toFixed(2) + ' kWh/kg');
-      val('r-energy-total', totalInputKwhPerKg.toFixed(2) + ' kWh/kg');
+      val('r-energy-electrolyzer', fmtKwhMj(electrolyzerPerKgDelivered));
+      val('r-energy-total', fmtKwhMj(totalInputKwhPerKg));
       val('r-energy-eff-overall', overallEffPct.toFixed(2) + ' %');
       val('r-energy-loss-overall', overallLossPct.toFixed(2) + ' %', 'flag-assumption');
-      const annualInputGwh = (annualKg * totalInputKwhPerKg) / 1e6;
-      const annualLhvGwh = (annualKg * H2_LHV_KWH_PER_KG) / 1e6;
-      val('r-energy-annual-input', fmt(annualInputGwh, 0) + ' GWh/y');
-      val('r-energy-annual-lhv', fmt(annualLhvGwh, 0) + ' GWh/y');
+      const annualInputKwh = annualKg * electrolyzerSec + annualKg * sec + totalBogEnergyKwh;
+      const annualLhvKwh = deliveredKg * H2_LHV_KWH_PER_KG;
+      val('r-energy-annual-input', fmtAnnualEnergy(annualInputKwh));
+      val('r-energy-annual-lhv', fmtAnnualEnergy(annualLhvKwh));
       document.getElementById('kpi-eff').textContent = overallEffPct.toFixed(1) + ' %';
-      document.getElementById('kpi-eff-sub').textContent = overallLossPct.toFixed(1) + '% loss vs LHV · ' + totalInputKwhPerKg.toFixed(1) + ' kWh/kg total input';
+      document.getElementById('kpi-eff-sub').textContent = overallLossPct.toFixed(1) + '% loss vs LHV · ' + fmt(totalInputKwhPerKg, 1) + ' kWh/kg total input';
       document.getElementById('kpi-eff-tile').classList.remove('warn');
     } else {
       val('r-energy-electrolyzer', 'not supplied', 'flag-gap');
@@ -1112,10 +1164,14 @@
       val('r-energy-eff-overall', '—');
       val('r-energy-loss-overall', '—');
       val('r-energy-annual-input', '—');
-      val('r-energy-annual-lhv', fmt((annualKg * H2_LHV_KWH_PER_KG) / 1e6, 0) + ' GWh/y');
+      val('r-energy-annual-lhv', fmtAnnualEnergy(deliveredKg * H2_LHV_KWH_PER_KG));
       document.getElementById('kpi-eff').textContent = '—';
       document.getElementById('kpi-eff-sub').textContent = 'supply electrolyzer input';
       document.getElementById('kpi-eff-tile').classList.add('warn');
+    }
+
+    if (totalBogEnergyKwh > 0) {
+      gaps.push('BOG management energy (' + fmtAnnualEnergy(totalBogEnergyKwh, 1) + ') uses a derived specific energy of ' + fmt(bogSecKwhPerKg, 2) + ' kWh/kg (' + fmt(bogSecKwhPerKg * MJ_PER_KWH, 1) + ' MJ/kg) — scaled from your reliquefaction SEC by the ratio of BOG\'s ideal condensation-only work (1.71 kWh/kg) to fresh-feed ideal work (3.9 kWh/kg, para-H2 basis). This assumes BOG management shares the main liquefier\'s real-world exergetic efficiency; KHI discloses no separate SEC for BOG handling. [ASSUMPTION: derived]');
     }
 
     // ---- KPI bar ----
