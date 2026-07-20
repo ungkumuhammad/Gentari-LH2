@@ -267,3 +267,24 @@ vs LHV = 33.33/69 = 48.3%/51.7% loss.
 | New final results card "⚡ Well-to-LH2 energy efficiency (LHV basis)" | Walks through electrolyzer input + reliq SEC = total input energy, then overall efficiency/loss vs LHV, plus annual GWh figures (total input energy vs. the LHV energy content of the H2 actually delivered). |
 | New 5th KPI tile "Well-to-LH2 efficiency" | Headline %, with loss% and total kWh/kg in the subtext; turns to the warn (red-top) state when the electrolyzer input is missing, same pattern as the LCOH tile. |
 | Verified against the user's worked example | 60 + 9 = 69 kWh/kg; 55.56%/44.44% (electrolyzer stage) and 48.31%/51.69% (overall) — confirmed via Playwright, matches exactly. |
+
+### Theoretical minimum liquefaction work vs KHI's SEC (2026-07-20, same session)
+
+User asked for the theoretical (first-principles) kWh/kg to liquefy H2 and a
+comparison against KHI's disclosed 8-9 kWh/kg. First use of `WebSearch` in
+this repo — added two new institutional-tier references since this is a
+knowledge question, not project-specific data (`CLAUDE.md` workflow (c)).
+
+| File | Action | Purpose |
+|------|--------|---------|
+| `data/references.csv` | Added 2 rows | `doe-2009-h2-liquefaction-energy` (DOE H2 Program Record #9013, Gardiner 2009 — ideal work 3.3/3.9 kWh/kg normal/para basis) and `hull-2024-orthopara-exergy` (Int. J. Hydrogen Energy 2024 — cross-check via LH2 exergy ≈11.5% of LHV). Both direct-PDF-fetch attempts returned HTTP 403; figures corroborated across multiple independent search results before citing. |
+| `data/properties/liquefaction.csv` | Added 4 rows | `theoretical_min_specific_work_normal` (3.3 kWh/kg, cited), `_para` (3.9 kWh/kg, cited), `khi_second_law_efficiency_normal_basis` (37-41%, ASSUMPTION: derived), `_para_basis` (43-49%, ASSUMPTION: derived) |
+| `docs/methodology/02-liquefaction.md` | Added section | "Theoretical minimum work vs KHI's disclosed SEC" — table + the important caveat that KHI never confirmed its feed-pressure basis, so the 37-49% efficiency range is an **upper bound**, not confirmed (a pressurised feed, like this project's 30 barg BFD assumption, would lower the true ideal-work baseline and thus the true efficiency below this range) |
+| `data/lh2-database.xlsx` | Regenerated | via `scripts/build_db_workbook.py` after the CSV edits |
+
+**Answer given to user:** ideal/reversible liquefaction work ≈3.3 kWh/kg
+(normal-H2) to ≈3.9 kWh/kg (para-H2, the fairer comparison since KHI's
+process does O-P conversion) — KHI's 8-9 kWh/kg therefore implies ~37-49%
+second-law efficiency, at or above the ~30-40% literature benchmark for
+today's state-of-the-art plants, but flagged as an upper bound pending
+KHI's feed-pressure confirmation.
