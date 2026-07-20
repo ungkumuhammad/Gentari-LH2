@@ -288,3 +288,29 @@ process does O-P conversion) — KHI's 8-9 kWh/kg therefore implies ~37-49%
 second-law efficiency, at or above the ~30-40% literature benchmark for
 today's state-of-the-art plants, but flagged as an upper bound pending
 KHI's feed-pressure confirmation.
+
+### Layman exergy explanation + worked derivation, then BOG comparison (2026-07-20, same session)
+
+Follow-up questions: (1) explain exergy in plain language and show the actual
+calculation behind the 3.3 kWh/kg figure; (2) is the BOG re-liquefaction
+calculation the same as fresh-feed liquefaction?
+
+- Answered (1) with the coffee-cooling-to-room-temperature analogy, the
+  formula `w_ideal = Δh - T0*Δs`, and a full worked two-step calculation
+  (sensible cooling, Cp≈11.5 kWh/kg·K illustrative average + condensation,
+  L≈445.6 kJ/kg) that reproduces ≈3.39 kWh/kg — added to
+  `docs/methodology/02-liquefaction.md` as an explicitly-flagged illustrative
+  appendix (not a replacement for the cited DOE figure).
+- Answered (2): **no**, BOG is a smaller problem — it's already at ~20.3 K and
+  already near-equilibrium para fraction (it boiled off the liquid), so only
+  the condensation step applies (no sensible-cooling, no O-P conversion).
+  Same formula, condensation-only Δh/Δs → **≈1.71 kWh/kg**, about half of
+  fresh-feed liquefaction. Flagged two real-world gaps this excludes: (a) real
+  compression work to route low-pressure BOG into the cycle (KHI's
+  ejector/compressor, no SEC disclosed), (b) BOG-reliquefaction's real
+  exergetic efficiency is unknown (if it matched the main train's ~40-46%,
+  real energy would be ≈3.7-4.3 kWh/kg — an extrapolation, not a KHI figure).
+- `data/properties/liquefaction.csv`: added
+  `theoretical_min_specific_work_bog_reliquefaction` (1.71 kWh/kg, tag
+  ASSUMPTION: derived, source_id doe-2009-h2-liquefaction-energy).
+  `data/lh2-database.xlsx` regenerated.

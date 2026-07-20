@@ -90,6 +90,39 @@ temperature-dependent entropy of ortho-para conversion, which this
 simplified two-step model does not capture reliably; that figure is taken
 directly from `doe-2009-h2-liquefaction-energy` / `hull-2024-orthopara-exergy`.
 
+### BOG re-liquefaction is a different (smaller) calculation
+
+`[ESTIMATE — derived]`. BOG (boil-off gas, `downstream_bog_handling` /
+`kawasaki-2026-questionnaire` reply Q3/Q14) is **not** ambient-temperature
+feed gas — it is saturated vapor that boiled off the liquid, so it is
+already at ~20.3 K and already close to the liquid's equilibrium para
+fraction. Re-liquefying it therefore skips both the sensible-cooling step
+*and* the ortho-para conversion that fresh feed gas needs — only the
+condensation step applies:
+
+| | Δh (kJ/kg) | Δs (kJ/kg·K) |
+|---|---|---|
+| Condense saturated vapor → liquid @ 20.3 K (only) | −446 | −21.95 |
+
+```
+w_ideal,BOG = (−446) − 300×(−21.95) = −446 + 6,585 = 6,139 kJ/kg
+            = 6.14 MJ/kg ≈ 1.71 kWh/kg
+```
+
+**≈1.7 kWh/kg — roughly half** the ideal work of liquefying fresh feed gas
+from ambient (3.3–3.9 kWh/kg), because the "climb down from 300 K" has
+already been paid for once; only the condensation leg (≈41% of fresh gas's
+total entropy drop) remains.
+
+Two gaps this doesn't capture: (1) real BOG handling likely needs additional
+compression work to route low-pressure tank vapor back into the cycle (KHI's
+"ejector in the liquefier or a compressor with cryogenic-rated suction" —
+reply Q3/Q14), which this pure phase-change exergy figure excludes; (2) KHI
+discloses no separate SEC for BOG re-liquefaction, so its real exergetic
+efficiency is unknown — if it matched the main liquefier's ~40–46% (see
+above), real BOG re-liquefaction energy would be ≈3.7–4.3 kWh/kg, but that is
+an extrapolation, not a KHI figure.
+
 ## Outputs
 Liquefaction energy use (`liquefaction_energy()`), train sizing
 (`train_count()`). Liquefaction cost ($/kg) is **not** computable from KHI
