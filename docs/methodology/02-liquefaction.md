@@ -50,6 +50,46 @@ ideal-work baseline and therefore *lowers* KHI's true second-law efficiency
 below the figures above. Treat the 37–49% range as an **upper bound**, not a
 confirmed value, until KHI's feed-pressure basis is clarified.
 
+### Illustrative derivation (order-of-magnitude check, not the database's cited value)
+
+`[ESTIMATE — illustrative]`. The formula (verified via `doe-2009-h2-liquefaction-energy`
+and the RSC review *"Hydrogen liquefaction: a review of the fundamental
+physics, engineering practice and future opportunities"*, Energy Environ. Sci.
+2022) is:
+
+```
+w_ideal = Δh − T0·Δs
+```
+
+where Δh/Δs are the enthalpy/entropy change from ambient gas to liquid at
+NBP, and T0 ≈ 300 K is the ambient reference. Building Δh/Δs from two steps
+(sensible cooling of the gas, then condensation), using an **illustrative**
+average gas heat capacity Cp ≈ 11.5 kJ/kg·K (below H2's room-temperature
+value of ~14.3 kJ/kg·K because its rotational heat capacity "freezes out"
+quantum-mechanically at cryogenic temperature — physically bounded below by
+the translational-only limit (5/2)R_specific ≈ 10.3 kJ/kg·K) and the latent
+heat of vaporization L ≈ 445.6 kJ/kg:
+
+| Step | Δh (kJ/kg) | Δs (kJ/kg·K) |
+|---|---|---|
+| Cool gas 300 K → 20.3 K: Cp·ΔT / Cp·ln(T2/T1) | −3,216 | −31.0 |
+| Condense at 20.3 K: −L / −L/T | −446 | −21.95 |
+| **Total** | **−3,662** | **−52.9** |
+
+```
+w_ideal = (−3,662) − 300×(−52.9) = −3,662 + 15,873 = 12,211 kJ/kg
+        = 12.2 MJ/kg ≈ 3.39 kWh/kg
+```
+
+This reproduces the cited ≈3.3 kWh/kg (normal-H2 basis) to within rounding —
+a useful sanity check, but **not** a substitute for the real-gas
+(NIST/REFPROP) property tables behind the cited DOE figure, since Cp above is
+an illustrative average, not a verified tabulated value. The para-H2
+increment (→3.9 kWh/kg) is not re-derived here — it requires the
+temperature-dependent entropy of ortho-para conversion, which this
+simplified two-step model does not capture reliably; that figure is taken
+directly from `doe-2009-h2-liquefaction-energy` / `hull-2024-orthopara-exergy`.
+
 ## Outputs
 Liquefaction energy use (`liquefaction_energy()`), train sizing
 (`train_count()`). Liquefaction cost ($/kg) is **not** computable from KHI
