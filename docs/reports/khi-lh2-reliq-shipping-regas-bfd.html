@@ -1,4 +1,4 @@
-<title>LH2 Value Chain — Block Flow Diagram</title>
+<title>LH2 Value Chain — Block Flow Diagram & Viability Calculator</title>
 <style>
   :root {
     --bg: #eef1f0;
@@ -15,6 +15,8 @@
     --assumption-soft: #f6ead2;
     --gap: #a83a3a;
     --gap-soft: #f6dede;
+    --good: #2f7d4f;
+    --good-soft: #e3f2e8;
     --grid-line: rgba(20, 108, 140, 0.10);
     --font-display: -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
     --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Consolas, "Liberation Mono", monospace;
@@ -36,6 +38,8 @@
       --assumption-soft: #2c2311;
       --gap: #e58080;
       --gap-soft: #2c1717;
+      --good: #7cc79e;
+      --good-soft: #142a1c;
       --grid-line: rgba(85, 183, 220, 0.08);
     }
   }
@@ -54,6 +58,8 @@
     --assumption-soft: #2c2311;
     --gap: #e58080;
     --gap-soft: #2c1717;
+    --good: #7cc79e;
+    --good-soft: #142a1c;
     --grid-line: rgba(85, 183, 220, 0.08);
   }
   :root[data-theme="light"] {
@@ -71,6 +77,8 @@
     --assumption-soft: #f6ead2;
     --gap: #a83a3a;
     --gap-soft: #f6dede;
+    --good: #2f7d4f;
+    --good-soft: #e3f2e8;
     --grid-line: rgba(20, 108, 140, 0.10);
   }
 
@@ -121,6 +129,146 @@
   }
   .scope-line b { color: var(--ink); font-weight: 600; }
 
+  /* ---- Tabs ---- */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--line);
+  }
+  .tab-btn {
+    font-family: var(--font-display);
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--muted);
+    background: none;
+    border: none;
+    border-bottom: 2.5px solid transparent;
+    padding: 10px 16px 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .tab-btn .num {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--muted);
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    width: 18px; height: 18px;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .tab-btn[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-btn[aria-selected="true"] .num { color: var(--accent); border-color: var(--accent); }
+  .tab-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ---- Inputs form ---- */
+  .form-card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 22px 24px;
+    margin-bottom: 18px;
+  }
+  .form-card h2 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin: 0 0 4px;
+  }
+  .form-card .form-sub { font-size: 12.5px; color: var(--muted); margin: 0 0 18px; }
+  .field-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px 20px;
+  }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field label {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .field .hint { font-size: 11px; color: var(--muted); font-weight: 400; }
+  .field input {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 14px;
+    padding: 8px 10px;
+    border-radius: 5px;
+    border: 1px solid var(--line);
+    background: var(--panel-2);
+    color: var(--ink);
+    width: 100%;
+  }
+  .field input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .field .unit-suffix { position: relative; }
+  .field-primary input { border-color: var(--accent); border-width: 1.6px; }
+
+  details.advanced { margin-top: 20px; }
+  details.advanced summary {
+    cursor: pointer;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--accent);
+    padding: 4px 0;
+    list-style: none;
+  }
+  details.advanced summary::-webkit-details-marker { display: none; }
+  details.advanced summary::before { content: "▸ "; }
+  details.advanced[open] summary::before { content: "▾ "; }
+  details.advanced .field-grid { margin-top: 16px; }
+
+  .go-btn {
+    margin-top: 22px;
+    font-family: var(--font-display);
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #fff;
+    background: var(--accent);
+    border: none;
+    border-radius: 6px;
+    padding: 11px 20px;
+    cursor: pointer;
+  }
+  .go-btn:hover { filter: brightness(1.08); }
+  .go-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+  /* ---- KPI bar ---- */
+  .kpi-bar {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .kpi-tile {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-top: 3px solid var(--accent);
+    border-radius: 6px;
+    padding: 12px 14px;
+  }
+  .kpi-tile.warn { border-top-color: var(--gap); }
+  .kpi-tile .kpi-label {
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin-bottom: 5px;
+  }
+  .kpi-tile .kpi-value {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 19px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .kpi-tile .kpi-sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
   .legend {
     display: flex;
     flex-wrap: wrap;
@@ -155,7 +303,7 @@
   .diagram-caption {
     font-size: 11.5px;
     color: var(--muted);
-    margin: 6px 0 34px;
+    margin: 6px 0 28px;
   }
 
   /* ---- SVG theme bindings ---- */
@@ -174,6 +322,67 @@
   .mini-arrow { stroke: var(--accent); stroke-width: 1.6; fill: none; }
   .recycle-arrow { stroke: var(--recycle); stroke-width: 2; fill: none; stroke-dasharray: 7 5; }
   .divider { stroke: var(--line); stroke-width: 1; }
+
+  /* ---- Results grid ---- */
+  .results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 14px;
+    margin: 22px 0;
+  }
+  .result-card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    padding: 15px 17px;
+    border-top: 3px solid var(--accent);
+  }
+  .result-card.card-shipping { border-top-color: var(--accent); }
+  .result-card.card-econ { border-top-color: var(--assumption); }
+  .result-card h3 {
+    font-size: 12.5px;
+    margin: 0 0 10px;
+    color: var(--ink);
+    font-weight: 700;
+  }
+  .result-card dl { margin: 0; }
+  .result-card .row {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    font-size: 12px;
+    padding: 5px 0;
+    border-bottom: 1px dashed var(--line);
+  }
+  .result-card .row:last-child { border-bottom: none; }
+  .result-card .row .k { color: var(--muted); }
+  .result-card .row .v {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+    font-weight: 600;
+    text-align: right;
+    white-space: nowrap;
+  }
+  .result-card .row .v.flag-gap { color: var(--gap); font-weight: 700; }
+  .result-card .row .v.flag-assumption { color: var(--assumption); }
+
+  .gaps-panel {
+    background: var(--gap-soft);
+    border: 1px solid var(--gap);
+    border-radius: 7px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+  }
+  .gaps-panel h3 {
+    font-size: 12.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--gap);
+    margin: 0 0 10px;
+  }
+  .gaps-panel ul { margin: 0; padding-left: 1.2em; font-size: 12.5px; color: var(--ink); }
+  .gaps-panel li { margin-bottom: 6px; }
 
   main .notes {
     background: var(--panel);
@@ -228,12 +437,14 @@
 
 <div class="wrap">
   <p class="eyebrow">Gentari · LH2 Value Chain</p>
-  <h1>Reliquefaction → Shipping → Regasification — Block Flow Diagram</h1>
+  <h1>Reliquefaction → Shipping → Regasification — Block Flow Diagram &amp; Viability Calculator</h1>
   <p class="dek">
     Gate-to-gate technology block flow, from gaseous H<sub>2</sub> supplied by
     an electrolyzer plant through KHI's liquefaction (reliquefaction) process,
-    marine transport, and regasification. Built from the KHI questionnaire
-    replies and technical decks registered in this repository — see
+    marine transport, and regasification. Enter an annual demand volume to
+    size each block and see indicative energy, boil-off, and fleet
+    requirements. Built from the KHI questionnaire replies and technical decks
+    registered in this repository — see
     <span class="mono-inline">docs/reports/khi-lh2-solution-database.md</span>.
   </p>
   <div class="scope-line">
@@ -243,186 +454,369 @@
     <span><b>Prepared:</b> 2026-07-20</span>
   </div>
 
-  <div class="legend">
-    <span class="legend-item"><span class="swatch"></span>KHI-disclosed (cited)</span>
-    <span class="legend-item"><span class="swatch assumption"></span>Assumption / not KHI-confirmed</span>
-    <span class="legend-item"><span class="swatch gap"></span>Gap — not disclosed by KHI</span>
-    <span class="legend-item"><span class="swatch recycle"></span>BOG recycle / reuse stream</span>
+  <div class="tabs" role="tablist">
+    <button class="tab-btn" id="tabbtn-inputs" role="tab" aria-selected="true" aria-controls="tab-inputs" onclick="showTab('inputs')"><span class="num">1</span> Inputs</button>
+    <button class="tab-btn" id="tabbtn-results" role="tab" aria-selected="false" aria-controls="tab-results" onclick="showTab('results')"><span class="num">2</span> Diagram &amp; Results</button>
   </div>
 
-  <div class="diagram-scroll">
-    <svg viewBox="0 0 2560 700" width="2560" height="700" role="img" aria-label="Block flow diagram of the LH2 value chain from electrolyzer feed through reliquefaction, shipping, and regasification">
-      <defs>
-        <pattern id="gridPattern" width="26" height="26" patternUnits="userSpaceOnUse">
-          <path d="M26 0H0V26" fill="none" stroke="var(--grid-line)" stroke-width="1"/>
-        </pattern>
-        <marker id="arrowHead" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto">
-          <path d="M0,0 L8,4 L0,8 Z" fill="var(--accent)"/>
-        </marker>
-        <marker id="arrowHeadRecycle" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto">
-          <path d="M0,0 L8,4 L0,8 Z" fill="var(--recycle)"/>
-        </marker>
-      </defs>
+  <!-- ============================================================ -->
+  <!-- TAB 1 — INPUTS                                                -->
+  <!-- ============================================================ -->
+  <section class="tab-panel active" id="tab-inputs" role="tabpanel" aria-labelledby="tabbtn-inputs">
+    <div class="form-card">
+      <h2>Project inputs</h2>
+      <p class="form-sub">
+        Modeled as the annual H₂ throughput at the liquefaction plant
+        (gate-to-gate); delivered volume at the import terminal nets out
+        shipping BOG below. Formulas mirror
+        <code>src/lh2/scenario.py</code> in this repository — every default
+        traces to a KHI-disclosed figure or is flagged where KHI hasn't
+        disclosed one (see the Gaps panel on the Results tab).
+      </p>
+      <div class="field-grid">
+        <div class="field field-primary">
+          <label for="in-ktpa">Total demand volume</label>
+          <span class="hint">KTPA-H₂ (thousand tonnes H₂ per year)</span>
+          <input type="number" id="in-ktpa" value="300" min="1" step="1" oninput="calculate()">
+        </div>
+        <div class="field field-primary">
+          <label for="in-distance">Shipping distance (one-way)</label>
+          <span class="hint">km, export → import terminal</span>
+          <input type="number" id="in-distance" value="6000" min="1" step="50" oninput="calculate()">
+        </div>
+      </div>
 
-      <rect x="0" y="0" width="2560" height="700" class="bg-grid"/>
+      <details class="advanced">
+        <summary>Advanced parameters (liquefaction, shipping, economics)</summary>
+        <div class="field-grid">
+          <div class="field">
+            <label for="in-sec">Liquefaction SEC</label>
+            <span class="hint">kWh/kg — KHI range 8–9, default midpoint</span>
+            <input type="number" id="in-sec" value="8.5" min="0" step="0.1" oninput="calculate()">
+          </div>
+          <div class="field">
+            <label for="in-speed">Vessel speed</label>
+            <span class="hint">km/h — KHI commercial target 29.6</span>
+            <input type="number" id="in-speed" value="29.6" min="1" step="0.1" oninput="calculate()">
+          </div>
+          <div class="field">
+            <label for="in-cargo">Vessel cargo capacity</label>
+            <span class="hint">m³ — KHI commercial target 160,000</span>
+            <input type="number" id="in-cargo" value="160000" min="1" step="1000" oninput="calculate()">
+          </div>
+          <div class="field">
+            <label for="in-export-hold">Export terminal hold time</label>
+            <span class="hint">days at rest before loading</span>
+            <input type="number" id="in-export-hold" value="0" min="0" step="0.5" oninput="calculate()">
+          </div>
+          <div class="field">
+            <label for="in-import-hold">Import terminal hold time</label>
+            <span class="hint">days at rest after discharge</span>
+            <input type="number" id="in-import-hold" value="0" min="0" step="0.5" oninput="calculate()">
+          </div>
+          <div class="field">
+            <label for="in-voyage-bor">Voyage BOR</label>
+            <span class="hint">%/day — KHI discloses no figure; leave blank to flag as a gap</span>
+            <input type="number" id="in-voyage-bor" value="" min="0" step="0.05" placeholder="not disclosed by KHI" oninput="calculate()">
+          </div>
+          <div class="field">
+            <label for="in-capex">CapEx</label>
+            <span class="hint">million USD — KHI: Feasibility Study required</span>
+            <input type="number" id="in-capex" value="" min="0" step="10" placeholder="not disclosed by KHI" oninput="calculate()">
+          </div>
+          <div class="field">
+            <label for="in-opex">OpEx (per year)</label>
+            <span class="hint">million USD/y</span>
+            <input type="number" id="in-opex" value="" min="0" step="1" placeholder="not disclosed by KHI" oninput="calculate()">
+          </div>
+          <div class="field">
+            <label for="in-discount">Discount rate</label>
+            <span class="hint">% per year, real</span>
+            <input type="number" id="in-discount" value="" min="0" step="0.5" placeholder="e.g. 8" oninput="calculate()">
+          </div>
+          <div class="field">
+            <label for="in-years">Project life</label>
+            <span class="hint">years, for LCOH</span>
+            <input type="number" id="in-years" value="20" min="1" step="1" oninput="calculate()">
+          </div>
+          <div class="field">
+            <label for="in-fx">FX rate</label>
+            <span class="hint">JPY per USD — to convert the IAE cost stack</span>
+            <input type="number" id="in-fx" value="" min="1" step="1" placeholder="e.g. 150" oninput="calculate()">
+          </div>
+        </div>
+      </details>
 
-      <!-- ============ MAIN FLOW ARROWS ============ -->
-      <line x1="200" y1="265" x2="338" y2="265" class="flow-arrow" marker-end="url(#arrowHead)"/>
-      <line x1="650" y1="265" x2="788" y2="265" class="flow-arrow" marker-end="url(#arrowHead)"/>
-      <line x1="1020" y1="265" x2="1158" y2="265" class="flow-arrow" marker-end="url(#arrowHead)"/>
-      <line x1="1560" y1="265" x2="1698" y2="265" class="flow-arrow" marker-end="url(#arrowHead)"/>
-      <line x1="1930" y1="265" x2="2068" y2="265" class="flow-arrow" marker-end="url(#arrowHead)"/>
-      <line x1="2280" y1="265" x2="2388" y2="265" class="flow-arrow" marker-end="url(#arrowHead)"/>
+      <button class="go-btn" onclick="calculate(); showTab('results')">Calculate → View diagram &amp; results</button>
+    </div>
+  </section>
 
-      <!-- ============ 1. FEED ============ -->
-      <rect x="30" y="180" width="170" height="170" rx="5" class="box-assumption-fill"/>
-      <text x="115" y="205" text-anchor="middle" class="hdr-text" font-size="13.5">ELECTROLYZER</text>
-      <text x="115" y="221" text-anchor="middle" class="hdr-text" font-size="13.5">GH₂ FEED</text>
-      <text x="115" y="250" text-anchor="middle" class="body-text" font-size="11.5">Battery limit supply</text>
-      <text x="115" y="267" text-anchor="middle" class="mono-text" font-size="11.5">30 barg / 30°C</text>
-      <text x="115" y="298" text-anchor="middle" class="note-text" font-size="10" fill="var(--assumption)">Project-specified feed</text>
-      <text x="115" y="311" text-anchor="middle" class="note-text" font-size="10" fill="var(--assumption)">condition, not KHI data (21)</text>
+  <!-- ============================================================ -->
+  <!-- TAB 2 — DIAGRAM & RESULTS                                     -->
+  <!-- ============================================================ -->
+  <section class="tab-panel" id="tab-results" role="tabpanel" aria-labelledby="tabbtn-results">
 
-      <!-- ============ 2. RELIQUEFACTION PLANT ============ -->
-      <rect x="340" y="85" width="310" height="360" rx="6" class="box-outer"/>
-      <text x="495" y="112" text-anchor="middle" class="hdr-text" font-size="14.5">RELIQUEFACTION PLANT</text>
-      <text x="495" y="128" text-anchor="middle" class="note-text" font-size="10.5">[2] gaseous H₂ → LH₂, ~20 K / ~1 bar</text>
+    <div class="kpi-bar" id="kpi-bar">
+      <div class="kpi-tile">
+        <div class="kpi-label">Delivered H₂</div>
+        <div class="kpi-value" id="kpi-delivered">—</div>
+        <div class="kpi-sub" id="kpi-delivered-sub"></div>
+      </div>
+      <div class="kpi-tile">
+        <div class="kpi-label">Liquefaction energy</div>
+        <div class="kpi-value" id="kpi-energy">—</div>
+        <div class="kpi-sub" id="kpi-energy-sub"></div>
+      </div>
+      <div class="kpi-tile">
+        <div class="kpi-label">Fleet required</div>
+        <div class="kpi-value" id="kpi-fleet">—</div>
+        <div class="kpi-sub" id="kpi-fleet-sub"></div>
+      </div>
+      <div class="kpi-tile" id="kpi-lcoh-tile">
+        <div class="kpi-label">LCOH</div>
+        <div class="kpi-value" id="kpi-lcoh">—</div>
+        <div class="kpi-sub" id="kpi-lcoh-sub"></div>
+      </div>
+    </div>
 
-      <rect x="360" y="152" width="85" height="62" rx="4" class="box-cited"/>
-      <text x="402" y="176" text-anchor="middle" class="body-text" font-size="10.5">N₂</text>
-      <text x="402" y="189" text-anchor="middle" class="body-text" font-size="10.5">PRE-COOL</text>
-      <text x="402" y="204" text-anchor="middle" class="mono-text" font-size="9">(2)</text>
+    <div class="legend">
+      <span class="legend-item"><span class="swatch"></span>KHI-disclosed (cited)</span>
+      <span class="legend-item"><span class="swatch assumption"></span>Assumption / not KHI-confirmed</span>
+      <span class="legend-item"><span class="swatch gap"></span>Gap — not disclosed by KHI</span>
+      <span class="legend-item"><span class="swatch recycle"></span>BOG recycle / reuse stream</span>
+    </div>
 
-      <line x1="445" y1="183" x2="457" y2="183" class="mini-arrow" marker-end="url(#arrowHead)"/>
+    <div class="diagram-scroll">
+      <svg viewBox="0 0 2560 700" width="2560" height="700" role="img" aria-label="Block flow diagram of the LH2 value chain from electrolyzer feed through reliquefaction, shipping, and regasification">
+        <defs>
+          <pattern id="gridPattern" width="26" height="26" patternUnits="userSpaceOnUse">
+            <path d="M26 0H0V26" fill="none" stroke="var(--grid-line)" stroke-width="1"/>
+          </pattern>
+          <marker id="arrowHead" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto">
+            <path d="M0,0 L8,4 L0,8 Z" fill="var(--accent)"/>
+          </marker>
+          <marker id="arrowHeadRecycle" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto">
+            <path d="M0,0 L8,4 L0,8 Z" fill="var(--recycle)"/>
+          </marker>
+        </defs>
 
-      <rect x="457" y="152" width="95" height="62" rx="4" class="box-cited"/>
-      <text x="504.5" y="176" text-anchor="middle" class="body-text" font-size="10.5">O–P CONVERSION</text>
-      <text x="504.5" y="189" text-anchor="middle" class="body-text" font-size="10.5">(Fe catalyst)</text>
-      <text x="504.5" y="204" text-anchor="middle" class="mono-text" font-size="9">(3)</text>
+        <rect x="0" y="0" width="2560" height="700" class="bg-grid"/>
 
-      <line x1="552" y1="183" x2="564" y2="183" class="mini-arrow" marker-end="url(#arrowHead)"/>
+        <!-- ============ MAIN FLOW ARROWS ============ -->
+        <line x1="200" y1="265" x2="338" y2="265" class="flow-arrow" marker-end="url(#arrowHead)"/>
+        <line x1="650" y1="265" x2="788" y2="265" class="flow-arrow" marker-end="url(#arrowHead)"/>
+        <line x1="1020" y1="265" x2="1158" y2="265" class="flow-arrow" marker-end="url(#arrowHead)"/>
+        <line x1="1560" y1="265" x2="1698" y2="265" class="flow-arrow" marker-end="url(#arrowHead)"/>
+        <line x1="1930" y1="265" x2="2068" y2="265" class="flow-arrow" marker-end="url(#arrowHead)"/>
+        <line x1="2280" y1="265" x2="2388" y2="265" class="flow-arrow" marker-end="url(#arrowHead)"/>
 
-      <rect x="564" y="152" width="75" height="62" rx="4" class="box-cited"/>
-      <text x="601.5" y="172" text-anchor="middle" class="body-text" font-size="10.5">CRYO</text>
-      <text x="601.5" y="185" text-anchor="middle" class="body-text" font-size="10.5">LIQUEFACTION</text>
-      <text x="601.5" y="198" text-anchor="middle" class="note-text" font-size="9">(H₂ Claude cycle)</text>
-      <text x="601.5" y="210" text-anchor="middle" class="mono-text" font-size="9">(4)</text>
+        <!-- ============ 1. FEED ============ -->
+        <rect x="30" y="180" width="170" height="170" rx="5" class="box-assumption-fill"/>
+        <text x="115" y="205" text-anchor="middle" class="hdr-text" font-size="13.5">ELECTROLYZER</text>
+        <text x="115" y="221" text-anchor="middle" class="hdr-text" font-size="13.5">GH₂ FEED</text>
+        <text x="115" y="250" text-anchor="middle" class="body-text" font-size="11.5">Battery limit supply</text>
+        <text x="115" y="267" text-anchor="middle" class="mono-text" font-size="11.5">30 barg / 30°C</text>
+        <text x="115" y="298" text-anchor="middle" class="note-text" font-size="10" fill="var(--assumption)">Project-specified feed</text>
+        <text x="115" y="311" text-anchor="middle" class="note-text" font-size="10" fill="var(--assumption)">condition, not KHI data (21)</text>
 
-      <text x="495" y="238" text-anchor="middle" class="mono-text" font-size="12">SEC ≈ 8–9 kWh/kg (1)</text>
+        <!-- ============ 2. RELIQUEFACTION PLANT ============ -->
+        <rect x="340" y="85" width="310" height="360" rx="6" class="box-outer"/>
+        <text x="495" y="112" text-anchor="middle" class="hdr-text" font-size="14.5">RELIQUEFACTION PLANT</text>
+        <text x="495" y="128" text-anchor="middle" class="note-text" font-size="10.5">[2] gaseous H₂ → LH₂, ~20 K / ~1 bar</text>
 
-      <rect x="370" y="252" width="250" height="34" rx="4" class="box-gap-fill"/>
-      <text x="495" y="266" text-anchor="middle" class="note-text" font-size="9.8" fill="var(--gap)">Full PFD / heat &amp; mass balance not disclosed</text>
-      <text x="495" y="279" text-anchor="middle" class="note-text" font-size="9.8" fill="var(--gap)">by KHI — sub-steps shown are disclosed only (5)</text>
+        <rect x="360" y="152" width="85" height="62" rx="4" class="box-cited"/>
+        <text x="402" y="176" text-anchor="middle" class="body-text" font-size="10.5">N₂</text>
+        <text x="402" y="189" text-anchor="middle" class="body-text" font-size="10.5">PRE-COOL</text>
+        <text x="402" y="204" text-anchor="middle" class="mono-text" font-size="9">(2)</text>
 
-      <text x="495" y="308" text-anchor="middle" class="body-text" font-size="10.5">No H₂ loss claimed in plant concept</text>
-      <text x="495" y="321" text-anchor="middle" class="body-text" font-size="10.5">no expected performance degradation</text>
+        <line x1="445" y1="183" x2="457" y2="183" class="mini-arrow" marker-end="url(#arrowHead)"/>
 
-      <text x="495" y="345" text-anchor="middle" class="note-text" font-size="10" fill="var(--recycle)">↑ BOG recycle inlet (see below)</text>
+        <rect x="457" y="152" width="95" height="62" rx="4" class="box-cited"/>
+        <text x="504.5" y="176" text-anchor="middle" class="body-text" font-size="10.5">O–P CONVERSION</text>
+        <text x="504.5" y="189" text-anchor="middle" class="body-text" font-size="10.5">(Fe catalyst)</text>
+        <text x="504.5" y="204" text-anchor="middle" class="mono-text" font-size="9">(3)</text>
 
-      <!-- ============ 3. EXPORT / LOADING TERMINAL ============ -->
-      <rect x="790" y="180" width="230" height="170" rx="5" class="box-cited"/>
-      <text x="905" y="206" text-anchor="middle" class="hdr-text" font-size="13">EXPORT / LOADING</text>
-      <text x="905" y="222" text-anchor="middle" class="hdr-text" font-size="13">TERMINAL</text>
-      <text x="905" y="246" text-anchor="middle" class="body-text" font-size="11">Storage: 64,000 m³/tank</text>
-      <text x="905" y="260" text-anchor="middle" class="body-text" font-size="11">× 3 (Base) / 4 (Large) (7)</text>
-      <text x="905" y="278" text-anchor="middle" class="mono-text" font-size="11">BOR 0.1 %/day at rest (7)</text>
-      <text x="905" y="300" text-anchor="middle" class="body-text" font-size="11">Loading arm: 6″ TRL 6–7 /</text>
-      <text x="905" y="314" text-anchor="middle" class="body-text" font-size="11">16″ not yet verified (8)</text>
-      <text x="905" y="336" text-anchor="middle" class="note-text" font-size="10" fill="var(--recycle)">BOG → re-liquefied (6)</text>
+        <line x1="552" y1="183" x2="564" y2="183" class="mini-arrow" marker-end="url(#arrowHead)"/>
 
-      <!-- ============ 4. SHIPPING ============ -->
-      <rect x="1160" y="85" width="400" height="360" rx="6" class="box-outer"/>
-      <text x="1360" y="112" text-anchor="middle" class="hdr-text" font-size="14.5">SHIPPING — LH₂ CARRIER</text>
-      <text x="1360" y="128" text-anchor="middle" class="note-text" font-size="10.5">[4] loaded → discharged, incl. BOG management</text>
+        <rect x="564" y="152" width="75" height="62" rx="4" class="box-cited"/>
+        <text x="601.5" y="172" text-anchor="middle" class="body-text" font-size="10.5">CRYO</text>
+        <text x="601.5" y="185" text-anchor="middle" class="body-text" font-size="10.5">LIQUEFACTION</text>
+        <text x="601.5" y="198" text-anchor="middle" class="note-text" font-size="9">(H₂ Claude cycle)</text>
+        <text x="601.5" y="210" text-anchor="middle" class="mono-text" font-size="9">(4)</text>
 
-      <rect x="1185" y="150" width="160" height="64" rx="4" class="box-cited"/>
-      <text x="1265" y="170" text-anchor="middle" class="body-text" font-size="10.5">CARGO TANKS</text>
-      <text x="1265" y="184" text-anchor="middle" class="mono-text" font-size="10">160,000 m³ @ 29.6 km/h</text>
-      <text x="1265" y="197" text-anchor="middle" class="note-text" font-size="9">(~16 kn, commercial target) (9)</text>
-      <text x="1265" y="209" text-anchor="middle" class="note-text" font-size="9">No filling-ratio restriction (10)</text>
+        <text x="495" y="238" text-anchor="middle" class="mono-text" font-size="12">SEC ≈ 8–9 kWh/kg (1)</text>
 
-      <line x1="1265" y1="214" x2="1265" y2="236" class="mini-arrow" marker-end="url(#arrowHead)"/>
+        <rect x="370" y="252" width="250" height="34" rx="4" class="box-gap-fill"/>
+        <text x="495" y="266" text-anchor="middle" class="note-text" font-size="9.8" fill="var(--gap)">Full PFD / heat &amp; mass balance not disclosed</text>
+        <text x="495" y="279" text-anchor="middle" class="note-text" font-size="9.8" fill="var(--gap)">by KHI — sub-steps shown are disclosed only (5)</text>
 
-      <rect x="1175" y="238" width="180" height="46" rx="4" class="box-gap-fill"/>
-      <text x="1265" y="256" text-anchor="middle" class="body-text" font-size="10.5" fill="var(--gap)">BOG GENERATION (voyage)</text>
-      <text x="1265" y="270" text-anchor="middle" class="note-text" font-size="9.5" fill="var(--gap)">rate not disclosed by KHI (11) — GAP</text>
+        <text x="495" y="308" text-anchor="middle" class="body-text" font-size="10.5">No H₂ loss claimed in plant concept</text>
+        <text x="495" y="321" text-anchor="middle" class="body-text" font-size="10.5">no expected performance degradation</text>
 
-      <line x1="1225" y1="284" x2="1195" y2="322" class="mini-arrow" marker-end="url(#arrowHead)"/>
-      <line x1="1305" y1="284" x2="1345" y2="322" class="mini-arrow" marker-end="url(#arrowHead)"/>
+        <text x="495" y="345" text-anchor="middle" class="note-text" font-size="10" fill="var(--recycle)">↑ BOG recycle inlet (see below)</text>
 
-      <rect x="1175" y="324" width="170" height="70" rx="4" class="box-cited"/>
-      <text x="1260" y="343" text-anchor="middle" class="body-text" font-size="10.3">DUAL-FUEL (DF) ENGINE</text>
-      <text x="1260" y="356" text-anchor="middle" class="note-text" font-size="9.3">BOG + MGO/VLSFO → propulsion (12)</text>
-      <text x="1260" y="368" text-anchor="middle" class="note-text" font-size="9.3">fuel-gas rate = BOR; range limited</text>
-      <text x="1260" y="380" text-anchor="middle" class="note-text" font-size="9.3">by MGO tank, not BOG (15)</text>
+        <!-- ============ 3. EXPORT / LOADING TERMINAL ============ -->
+        <rect x="790" y="180" width="230" height="170" rx="5" class="box-cited"/>
+        <text x="905" y="206" text-anchor="middle" class="hdr-text" font-size="13">EXPORT / LOADING</text>
+        <text x="905" y="222" text-anchor="middle" class="hdr-text" font-size="13">TERMINAL</text>
+        <text x="905" y="246" text-anchor="middle" class="body-text" font-size="11">Storage: 64,000 m³/tank</text>
+        <text x="905" y="260" text-anchor="middle" class="body-text" font-size="11">× 3 (Base) / 4 (Large) (7)</text>
+        <text x="905" y="278" text-anchor="middle" class="mono-text" font-size="11">BOR 0.1 %/day at rest (7)</text>
+        <text x="905" y="300" text-anchor="middle" class="body-text" font-size="11">Loading arm: 6″ TRL 6–7 /</text>
+        <text x="905" y="314" text-anchor="middle" class="body-text" font-size="11">16″ not yet verified (8)</text>
+        <text x="905" y="336" text-anchor="middle" class="note-text" font-size="10" fill="var(--recycle)">BOG → re-liquefied (6)</text>
 
-      <rect x="1360" y="324" width="160" height="70" rx="4" class="box-cited"/>
-      <text x="1440" y="343" text-anchor="middle" class="body-text" font-size="10.3">GCU (contingency)</text>
-      <text x="1440" y="357" text-anchor="middle" class="note-text" font-size="9.3">Burns excess BOG if tank</text>
-      <text x="1440" y="369" text-anchor="middle" class="note-text" font-size="9.3">pressure exceeds MARVS</text>
-      <text x="1440" y="381" text-anchor="middle" class="note-text" font-size="9.3">on MGO-only ops (13)</text>
+        <!-- ============ 4. SHIPPING ============ -->
+        <rect x="1160" y="85" width="400" height="360" rx="6" class="box-outer"/>
+        <text x="1360" y="112" text-anchor="middle" class="hdr-text" font-size="14.5">SHIPPING — LH₂ CARRIER</text>
+        <text x="1360" y="128" text-anchor="middle" class="note-text" font-size="10.5">[4] loaded → discharged, incl. BOG management</text>
 
-      <rect x="1175" y="404" width="345" height="30" rx="4" class="box-muted"/>
-      <text x="1347.5" y="423" text-anchor="middle" class="note-text" font-size="10.5">⊘ Onboard reliquefaction — NOT ADOPTED (14): energy + space constraint</text>
+        <rect x="1185" y="150" width="160" height="64" rx="4" class="box-cited"/>
+        <text x="1265" y="170" text-anchor="middle" class="body-text" font-size="10.5">CARGO TANKS</text>
+        <text x="1265" y="184" text-anchor="middle" class="mono-text" font-size="10">160,000 m³ @ 29.6 km/h</text>
+        <text x="1265" y="197" text-anchor="middle" class="note-text" font-size="9">(~16 kn, commercial target) (9)</text>
+        <text x="1265" y="209" text-anchor="middle" class="note-text" font-size="9">No filling-ratio restriction (10)</text>
 
-      <!-- ============ 5. IMPORT / RECEIVING TERMINAL ============ -->
-      <rect x="1700" y="180" width="230" height="170" rx="5" class="box-cited"/>
-      <text x="1815" y="206" text-anchor="middle" class="hdr-text" font-size="13">IMPORT / RECEIVING</text>
-      <text x="1815" y="222" text-anchor="middle" class="hdr-text" font-size="13">TERMINAL</text>
-      <text x="1815" y="246" text-anchor="middle" class="body-text" font-size="11">Storage: 65,000 m³/tank</text>
-      <text x="1815" y="260" text-anchor="middle" class="body-text" font-size="11">× 3 (Base) / 11 (Large) (16)</text>
-      <text x="1815" y="278" text-anchor="middle" class="mono-text" font-size="11">BOR 0.1 %/day at rest (16)</text>
+        <line x1="1265" y1="214" x2="1265" y2="236" class="mini-arrow" marker-end="url(#arrowHead)"/>
 
-      <rect x="1720" y="292" width="190" height="40" rx="4" class="box-assumption-fill"/>
-      <text x="1815" y="308" text-anchor="middle" class="note-text" font-size="9.7" fill="var(--assumption)">BOG assumed re-liquefied — not</text>
-      <text x="1815" y="321" text-anchor="middle" class="note-text" font-size="9.7" fill="var(--assumption)">explicitly confirmed by KHI (17)</text>
+        <rect x="1175" y="238" width="180" height="46" rx="4" class="box-gap-fill"/>
+        <text x="1265" y="256" text-anchor="middle" class="body-text" font-size="10.5" fill="var(--gap)">BOG GENERATION (voyage)</text>
+        <text x="1265" y="270" text-anchor="middle" class="note-text" font-size="9.5" fill="var(--gap)">rate not disclosed by KHI (11) — GAP</text>
 
-      <!-- ============ 6. REGASIFICATION PLANT ============ -->
-      <rect x="2070" y="180" width="210" height="170" rx="5" class="box-cited"/>
-      <text x="2175" y="206" text-anchor="middle" class="hdr-text" font-size="13">REGASIFICATION</text>
-      <text x="2175" y="222" text-anchor="middle" class="hdr-text" font-size="13">PLANT</text>
-      <text x="2175" y="246" text-anchor="middle" class="body-text" font-size="11">Vaporizer: ORV, seawater</text>
-      <text x="2175" y="260" text-anchor="middle" class="body-text" font-size="11">heat source (18)</text>
-      <text x="2175" y="278" text-anchor="middle" class="note-text" font-size="10">Alt: dedicated heat source if</text>
-      <text x="2175" y="290" text-anchor="middle" class="note-text" font-size="10">seawater discharge constrained</text>
-      <text x="2175" y="312" text-anchor="middle" class="mono-text" font-size="11.5">Heat duty ≈ 3.8 MJ/kg-LH₂ (19)</text>
+        <line x1="1225" y1="284" x2="1195" y2="322" class="mini-arrow" marker-end="url(#arrowHead)"/>
+        <line x1="1305" y1="284" x2="1345" y2="322" class="mini-arrow" marker-end="url(#arrowHead)"/>
 
-      <!-- ============ END-USE (out of scope) ============ -->
-      <rect x="2390" y="210" width="120" height="110" rx="5" class="box-muted"/>
-      <text x="2450" y="255" text-anchor="middle" class="note-text" font-size="10.5">TO DISTRIBUTION</text>
-      <text x="2450" y="270" text-anchor="middle" class="note-text" font-size="10.5">/ END-USE</text>
-      <text x="2450" y="292" text-anchor="middle" class="note-text" font-size="9.5">(out of scope of</text>
-      <text x="2450" y="304" text-anchor="middle" class="note-text" font-size="9.5">KHI's offer)</text>
+        <rect x="1175" y="324" width="170" height="70" rx="4" class="box-cited"/>
+        <text x="1260" y="343" text-anchor="middle" class="body-text" font-size="10.3">DUAL-FUEL (DF) ENGINE</text>
+        <text x="1260" y="356" text-anchor="middle" class="note-text" font-size="9.3">BOG + MGO/VLSFO → propulsion (12)</text>
+        <text x="1260" y="368" text-anchor="middle" class="note-text" font-size="9.3">fuel-gas rate = BOR; range limited</text>
+        <text x="1260" y="380" text-anchor="middle" class="note-text" font-size="9.3">by MGO tank, not BOG (15)</text>
 
-      <!-- ============ RECYCLE LOOP: Export Terminal BOG -> Reliq Plant ============ -->
-      <path d="M905,350 V480 H495 V347" class="recycle-arrow" marker-end="url(#arrowHeadRecycle)"/>
-      <text x="700" y="500" text-anchor="middle" class="note-text" font-size="11" fill="var(--recycle)">Export-terminal BOG re-liquefied and returned to liquefaction plant inlet (6)</text>
+        <rect x="1360" y="324" width="160" height="70" rx="4" class="box-cited"/>
+        <text x="1440" y="343" text-anchor="middle" class="body-text" font-size="10.3">GCU (contingency)</text>
+        <text x="1440" y="357" text-anchor="middle" class="note-text" font-size="9.3">Burns excess BOG if tank</text>
+        <text x="1440" y="369" text-anchor="middle" class="note-text" font-size="9.3">pressure exceeds MARVS</text>
+        <text x="1440" y="381" text-anchor="middle" class="note-text" font-size="9.3">on MGO-only ops (13)</text>
 
-      <!-- ============ STREAM ANNOTATION LABELS (painted last so they always stay on top of box fills) ============ -->
-      <g>
-        <rect x="222" y="228" width="98" height="30" rx="3" fill="var(--bg)" opacity="0.001"/>
-        <text x="269" y="240" text-anchor="middle" class="stream-label" font-size="11">GH₂ 30 barg/30°C</text>
-        <text x="269" y="253" text-anchor="middle" font-size="9.5" fill="var(--assumption)" font-family="var(--font-mono)">[assumption · 21]</text>
+        <rect x="1175" y="404" width="345" height="30" rx="4" class="box-muted"/>
+        <text x="1347.5" y="423" text-anchor="middle" class="note-text" font-size="10.5">⊘ Onboard reliquefaction — NOT ADOPTED (14): energy + space constraint</text>
 
-        <text x="719" y="240" text-anchor="middle" class="stream-label" font-size="11">LH₂ ~1 bar(a) / ~20.3 K</text>
-        <text x="719" y="253" text-anchor="middle" font-size="9.5" fill="var(--accent)" font-family="var(--font-mono)">[cited · 20]</text>
+        <!-- ============ 5. IMPORT / RECEIVING TERMINAL ============ -->
+        <rect x="1700" y="180" width="230" height="170" rx="5" class="box-cited"/>
+        <text x="1815" y="206" text-anchor="middle" class="hdr-text" font-size="13">IMPORT / RECEIVING</text>
+        <text x="1815" y="222" text-anchor="middle" class="hdr-text" font-size="13">TERMINAL</text>
+        <text x="1815" y="246" text-anchor="middle" class="body-text" font-size="11">Storage: 65,000 m³/tank</text>
+        <text x="1815" y="260" text-anchor="middle" class="body-text" font-size="11">× 3 (Base) / 11 (Large) (16)</text>
+        <text x="1815" y="278" text-anchor="middle" class="mono-text" font-size="11">BOR 0.1 %/day at rest (16)</text>
 
-        <text x="1089" y="240" text-anchor="middle" class="stream-label" font-size="11">LH₂ loaded aboard ship</text>
+        <rect x="1720" y="292" width="190" height="40" rx="4" class="box-assumption-fill"/>
+        <text x="1815" y="308" text-anchor="middle" class="note-text" font-size="9.7" fill="var(--assumption)">BOG assumed re-liquefied — not</text>
+        <text x="1815" y="321" text-anchor="middle" class="note-text" font-size="9.7" fill="var(--assumption)">explicitly confirmed by KHI (17)</text>
 
-        <text x="1629" y="240" text-anchor="middle" class="stream-label" font-size="11">LH₂ discharged</text>
-        <text x="1629" y="253" text-anchor="middle" font-size="9.5" fill="var(--muted)" font-family="var(--font-mono)">(net of voyage BOG · 11)</text>
+        <!-- ============ 6. REGASIFICATION PLANT ============ -->
+        <rect x="2070" y="180" width="210" height="170" rx="5" class="box-cited"/>
+        <text x="2175" y="206" text-anchor="middle" class="hdr-text" font-size="13">REGASIFICATION</text>
+        <text x="2175" y="222" text-anchor="middle" class="hdr-text" font-size="13">PLANT</text>
+        <text x="2175" y="246" text-anchor="middle" class="body-text" font-size="11">Vaporizer: ORV, seawater</text>
+        <text x="2175" y="260" text-anchor="middle" class="body-text" font-size="11">heat source (18)</text>
+        <text x="2175" y="278" text-anchor="middle" class="note-text" font-size="10">Alt: dedicated heat source if</text>
+        <text x="2175" y="290" text-anchor="middle" class="note-text" font-size="10">seawater discharge constrained</text>
+        <text x="2175" y="312" text-anchor="middle" class="mono-text" font-size="11.5">Heat duty ≈ 3.8 MJ/kg-LH₂ (19)</text>
 
-        <text x="1999" y="240" text-anchor="middle" class="stream-label" font-size="11">LH₂ to vaporizer feed</text>
+        <!-- ============ END-USE (out of scope) ============ -->
+        <rect x="2390" y="210" width="120" height="110" rx="5" class="box-muted"/>
+        <text x="2450" y="255" text-anchor="middle" class="note-text" font-size="10.5">TO DISTRIBUTION</text>
+        <text x="2450" y="270" text-anchor="middle" class="note-text" font-size="10.5">/ END-USE</text>
+        <text x="2450" y="292" text-anchor="middle" class="note-text" font-size="9.5">(out of scope of</text>
+        <text x="2450" y="304" text-anchor="middle" class="note-text" font-size="9.5">KHI's offer)</text>
 
-        <text x="2334" y="240" text-anchor="middle" class="stream-label" font-size="11">GH₂ send-out</text>
-        <text x="2334" y="253" text-anchor="middle" font-size="9.5" fill="var(--assumption)" font-family="var(--font-mono)">[pressure TBD · 22]</text>
-      </g>
-    </svg>
-  </div>
-  <p class="diagram-caption">
-    Scroll horizontally to see the full chain on narrow screens. Numbers in
-    parentheses reference the notes below.
-  </p>
+        <!-- ============ RECYCLE LOOP: Export Terminal BOG -> Reliq Plant ============ -->
+        <path d="M905,350 V480 H495 V347" class="recycle-arrow" marker-end="url(#arrowHeadRecycle)"/>
+        <text x="700" y="500" text-anchor="middle" class="note-text" font-size="11" fill="var(--recycle)">Export-terminal BOG re-liquefied and returned to liquefaction plant inlet (6)</text>
+
+        <!-- ============ STREAM ANNOTATION LABELS (painted last so they always stay on top of box fills) ============ -->
+        <g>
+          <text x="269" y="240" text-anchor="middle" class="stream-label" font-size="11">GH₂ 30 barg/30°C</text>
+          <text x="269" y="253" text-anchor="middle" font-size="9.5" fill="var(--assumption)" font-family="var(--font-mono)">[assumption · 21]</text>
+
+          <text x="719" y="240" text-anchor="middle" class="stream-label" font-size="11">LH₂ ~1 bar(a) / ~20.3 K</text>
+          <text x="719" y="253" text-anchor="middle" font-size="9.5" fill="var(--accent)" font-family="var(--font-mono)">[cited · 20]</text>
+
+          <text x="1089" y="240" text-anchor="middle" class="stream-label" font-size="11">LH₂ loaded aboard ship</text>
+
+          <text x="1629" y="240" text-anchor="middle" class="stream-label" font-size="11">LH₂ discharged</text>
+          <text x="1629" y="253" text-anchor="middle" font-size="9.5" fill="var(--muted)" font-family="var(--font-mono)">(net of voyage BOG · 11)</text>
+
+          <text x="1999" y="240" text-anchor="middle" class="stream-label" font-size="11">LH₂ to vaporizer feed</text>
+
+          <text x="2334" y="240" text-anchor="middle" class="stream-label" font-size="11">GH₂ send-out</text>
+          <text x="2334" y="253" text-anchor="middle" font-size="9.5" fill="var(--assumption)" font-family="var(--font-mono)">[pressure TBD · 22]</text>
+        </g>
+      </svg>
+    </div>
+    <p class="diagram-caption">
+      Scroll horizontally to see the full chain on narrow screens. Numbers in
+      parentheses reference the notes below. Per-block numbers for your
+      current inputs are in the cards below.
+    </p>
+
+    <div class="results-grid" id="results-grid">
+      <div class="result-card">
+        <h3>① Electrolyzer feed</h3>
+        <div class="row"><span class="k">Annual demand</span><span class="v" id="r-feed-ktpa">—</span></div>
+        <div class="row"><span class="k">= tonnes / year</span><span class="v" id="r-feed-tpa">—</span></div>
+        <div class="row"><span class="k">Feed condition</span><span class="v">30 barg / 30°C</span></div>
+      </div>
+
+      <div class="result-card">
+        <h3>② Reliquefaction plant</h3>
+        <div class="row"><span class="k">Trains required (115 t/d)</span><span class="v" id="r-trains">—</span></div>
+        <div class="row"><span class="k">SEC used</span><span class="v" id="r-sec">—</span></div>
+        <div class="row"><span class="k">Annual energy</span><span class="v" id="r-liq-energy">—</span></div>
+        <div class="row"><span class="k">Average power draw</span><span class="v" id="r-liq-power">—</span></div>
+      </div>
+
+      <div class="result-card">
+        <h3>③ Export / loading terminal</h3>
+        <div class="row"><span class="k">BOG generated (at rest)</span><span class="v" id="r-export-bog">—</span></div>
+        <div class="row"><span class="k">Hold time modeled</span><span class="v" id="r-export-hold">—</span></div>
+        <div class="row"><span class="k">Fate</span><span class="v">re-liquefied (recycle)</span></div>
+      </div>
+
+      <div class="result-card card-shipping">
+        <h3>④ Shipping</h3>
+        <div class="row"><span class="k">One-way transit</span><span class="v" id="r-transit">—</span></div>
+        <div class="row"><span class="k">Round-trip cycle</span><span class="v" id="r-roundtrip">—</span></div>
+        <div class="row"><span class="k">Fleet required</span><span class="v" id="r-fleet">—</span></div>
+        <div class="row"><span class="k">Voyage BOG (fuel draw)</span><span class="v" id="r-voyage-bog">—</span></div>
+      </div>
+
+      <div class="result-card">
+        <h3>⑤ Import / receiving terminal</h3>
+        <div class="row"><span class="k">Delivered mass</span><span class="v" id="r-delivered">—</span></div>
+        <div class="row"><span class="k">BOG generated (at rest)</span><span class="v" id="r-import-bog">—</span></div>
+        <div class="row"><span class="k">Hold time modeled</span><span class="v" id="r-import-hold">—</span></div>
+      </div>
+
+      <div class="result-card">
+        <h3>⑥ Regasification plant</h3>
+        <div class="row"><span class="k">Annual heat duty</span><span class="v" id="r-regas-duty">—</span></div>
+        <div class="row"><span class="k">Average thermal duty</span><span class="v" id="r-regas-power">—</span></div>
+      </div>
+
+      <div class="result-card card-econ">
+        <h3>Indicative economics</h3>
+        <div class="row"><span class="k">IAE cost stack total</span><span class="v" id="r-cost-jpy">—</span></div>
+        <div class="row"><span class="k">Same, in USD/kg</span><span class="v" id="r-cost-usd">—</span></div>
+        <div class="row"><span class="k">LCOH</span><span class="v" id="r-lcoh">—</span></div>
+      </div>
+    </div>
+
+    <div class="gaps-panel">
+      <h3>Gaps &amp; caveats for these inputs</h3>
+      <ul id="gaps-list"></ul>
+    </div>
+  </section>
 
   <div class="notes">
     <h2>Notes &amp; sources</h2>
@@ -449,12 +843,224 @@
       <li>LH₂ normal boiling point ≈ 20.3 K / ≈ 1 bar(a) — <i>data/properties/lh2-properties.csv</i>, tagged <span class="tag assumption">needs-source</span> pending a formal NIST/CODATA citation (see <i>docs/memory.md</i> open item).</li>
       <li>Feed condition (30 barg / 30°C) is a <b>Gentari project-specified</b> boundary condition for this diagram, not a figure disclosed by KHI. <span class="tag assumption">ASSUMPTION</span></li>
       <li>Delivery (send-out) pressure at the regas outlet has not been specified by KHI or by the project yet. <span class="tag assumption">ASSUMPTION until specified</span></li>
+      <li>Liquefaction train sizing uses a derived utilization factor of 0.78 (KHI's own Base/Large train-count disclosures back-solved against their stated deal volumes) — see <i>src/lh2/liquefaction.py</i>. <span class="tag assumption">ASSUMPTION: derived</span></li>
+      <li>Fleet sizing assumes a 90% fleet-wide operational availability (dry-docking/weather/maintenance margin) — not a KHI-disclosed figure. <span class="tag assumption">ASSUMPTION</span></li>
     </ol>
   </div>
 
   <footer>
     <p><b>System boundary:</b> gate-to-gate, electrolyzer GH₂ battery limit → regasification GH₂ send-out. Production (electrolysis) and downstream distribution/end-use are out of scope.</p>
-    <p><b>Cardinal rule applied:</b> every block/stream label is either cited to a KHI/IAE source or flagged as an assumption/gap — nothing on this diagram is an invented process detail (see <code>CLAUDE.md</code> §4).</p>
+    <p><b>Cardinal rule applied:</b> every block/stream label is either cited to a KHI/IAE source or flagged as an assumption/gap — nothing on this diagram is an invented process detail (see <code>CLAUDE.md</code> §4). The calculator mirrors <code>src/lh2/scenario.py</code>; it is a screening tool, not a substitute for a KHI Feasibility Study.</p>
     <p class="sources">Sources: kawasaki-2026-questionnaire · kawasaki-2026-questionnaire-r0 · kawasaki-2026-supplemental · kawasaki-hydrogen-activities · data/properties/lh2-properties.csv — full register in data/references.csv</p>
   </footer>
 </div>
+
+<script>
+  function showTab(name) {
+    document.getElementById('tab-inputs').classList.toggle('active', name === 'inputs');
+    document.getElementById('tab-results').classList.toggle('active', name === 'results');
+    document.getElementById('tabbtn-inputs').setAttribute('aria-selected', name === 'inputs');
+    document.getElementById('tabbtn-results').setAttribute('aria-selected', name === 'results');
+  }
+
+  // ---- constants (mirrors src/lh2/*.py — see notes list for citations) ----
+  const GAS_DENSITY_KG_PER_NM3 = 0.0899;   // data/properties/lh2-properties.csv
+  const LH2_DENSITY_KG_PER_M3 = 70.8;      // data/properties/lh2-properties.csv
+  const TRAIN_CAPACITY_TPD = 115;          // kawasaki-2026-supplemental
+  const TRAIN_UTILIZATION = 0.78;          // derived, see notes (23)
+  const TERMINAL_BOR_PCT_PER_DAY = 0.1;    // kawasaki-2026-supplemental
+  const REGAS_DUTY_MJ_PER_KG = 3.8;        // reply Q18
+  const FLEET_AVAILABILITY = 0.90;         // assumption, see notes (24)
+  const LOAD_UNLOAD_DAYS_MID = 1.25;       // midpoint of KHI's 1-1.5 day range
+
+  const IAE = {
+    Base:  { v: 2.5e9,  production: 10.1, liquefaction: 10.3, loading_terminal: 5.6, seaborne_transport: 4.0, receiving_terminal: 6.3, dehydrogenation: 0.0, other: 1.3 },
+    Large: { v: 10.0e9, production: 10.1, liquefaction: 10.0, loading_terminal: 1.9, seaborne_transport: 4.0, receiving_terminal: 3.4, dehydrogenation: 0.0, other: 1.3 },
+  };
+  const COST_COMPONENTS = ['production','liquefaction','loading_terminal','seaborne_transport','receiving_terminal','dehydrogenation','other'];
+
+  function interpolateCostStack(nm3PerYear) {
+    const lo = IAE.Base, hi = IAE.Large;
+    let v = nm3PerYear;
+    let clipped = false;
+    if (v < lo.v || v > hi.v) { clipped = true; v = Math.min(Math.max(v, lo.v), hi.v); }
+    const t = (v - lo.v) / (hi.v - lo.v);
+    const stack = {};
+    let total = 0;
+    COST_COMPONENTS.forEach(c => { stack[c] = lo[c] + t * (hi[c] - lo[c]); total += stack[c]; });
+    stack.TOTAL = total;
+    return { stack, clipped };
+  }
+
+  function trainCount(annualTpa) {
+    const annualTrainCapacity = TRAIN_CAPACITY_TPD * 365 * TRAIN_UTILIZATION;
+    return Math.ceil(annualTpa / annualTrainCapacity);
+  }
+  function boilOffAtRest(inventoryKg, days, borPctPerDay = TERMINAL_BOR_PCT_PER_DAY) {
+    const retained = Math.pow(1 - borPctPerDay / 100, days);
+    return inventoryKg * (1 - retained);
+  }
+  function oneWayTransitDays(distanceKm, speedKmh) { return distanceKm / (speedKmh * 24); }
+  function roundTripDays(distanceKm, speedKmh) {
+    return 2 * oneWayTransitDays(distanceKm, speedKmh) + 2 * LOAD_UNLOAD_DAYS_MID;
+  }
+  function voyageBoilOff(cargoKg, days, borPctPerDay) {
+    const retained = Math.pow(1 - borPctPerDay / 100, days);
+    return cargoKg * (1 - retained);
+  }
+  function fleetSize(annualVolumeKg, roundTrip, cargoCapacityM3, densityKgM3) {
+    const cargoMassPerVoyage = cargoCapacityM3 * densityKgM3;
+    const tripsPerYearPerShip = (365 / roundTrip) * FLEET_AVAILABILITY;
+    return Math.ceil(annualVolumeKg / (cargoMassPerVoyage * tripsPerYearPerShip));
+  }
+  function lcohCalc(capexUsd, opexUsdPerYear, h2KgPerYear, discountRate, years) {
+    let discCosts = capexUsd, discH2 = 0;
+    for (let y = 1; y <= years; y++) {
+      const df = 1 / Math.pow(1 + discountRate, y);
+      discCosts += opexUsdPerYear * df;
+      discH2 += h2KgPerYear * df;
+    }
+    return discCosts / discH2;
+  }
+
+  function fmt(n, digits = 0) {
+    if (!isFinite(n)) return '—';
+    return n.toLocaleString(undefined, { maximumFractionDigits: digits, minimumFractionDigits: digits });
+  }
+  function val(id, text, flagClass) {
+    const el = document.getElementById(id);
+    el.textContent = text;
+    el.className = 'v' + (flagClass ? ' ' + flagClass : '');
+  }
+
+  function calculate() {
+    const ktpa = parseFloat(document.getElementById('in-ktpa').value) || 0;
+    const distanceKm = parseFloat(document.getElementById('in-distance').value) || 0;
+    const sec = parseFloat(document.getElementById('in-sec').value) || 8.5;
+    const speed = parseFloat(document.getElementById('in-speed').value) || 29.6;
+    const cargoCap = parseFloat(document.getElementById('in-cargo').value) || 160000;
+    const exportHold = parseFloat(document.getElementById('in-export-hold').value) || 0;
+    const importHold = parseFloat(document.getElementById('in-import-hold').value) || 0;
+    const voyageBorRaw = document.getElementById('in-voyage-bor').value;
+    const voyageBor = voyageBorRaw === '' ? null : parseFloat(voyageBorRaw);
+    const capexRaw = document.getElementById('in-capex').value;
+    const capex = capexRaw === '' ? null : parseFloat(capexRaw);
+    const opexRaw = document.getElementById('in-opex').value;
+    const opex = opexRaw === '' ? null : parseFloat(opexRaw);
+    const discountRaw = document.getElementById('in-discount').value;
+    const discountPct = discountRaw === '' ? null : parseFloat(discountRaw);
+    const years = parseFloat(document.getElementById('in-years').value) || 20;
+    const fxRaw = document.getElementById('in-fx').value;
+    const fx = fxRaw === '' ? null : parseFloat(fxRaw);
+
+    const gaps = [];
+
+    const annualTpa = ktpa * 1000;
+    const annualKg = annualTpa * 1000;
+
+    // ---- Feed ----
+    val('r-feed-ktpa', fmt(ktpa) + ' KTPA/y');
+    val('r-feed-tpa', fmt(annualTpa) + ' t/y');
+
+    // ---- Reliquefaction ----
+    const trains = trainCount(annualTpa);
+    const liqEnergyKwh = annualKg * sec;
+    const liqEnergyGwh = liqEnergyKwh / 1e6;
+    const liqAvgMw = liqEnergyKwh / 8760 / 1000;
+    val('r-trains', fmt(trains) + ' × 115 t/d');
+    val('r-sec', sec.toFixed(2) + ' kWh/kg');
+    val('r-liq-energy', fmt(liqEnergyGwh, 0) + ' GWh/y');
+    val('r-liq-power', '≈ ' + fmt(liqAvgMw, 0) + ' MW avg');
+
+    // ---- Export terminal ----
+    const exportBog = boilOffAtRest(annualKg, exportHold);
+    val('r-export-bog', fmt(exportBog, 0) + ' kg/y');
+    val('r-export-hold', fmt(exportHold, 1) + ' d');
+
+    // ---- Shipping ----
+    const shippedKg = annualKg; // export BOG re-liquefied, not subtracted (reply Q3/Q14)
+    const transitDays = distanceKm > 0 ? oneWayTransitDays(distanceKm, speed) : NaN;
+    const roundTrip = distanceKm > 0 ? roundTripDays(distanceKm, speed) : NaN;
+    const fleet = distanceKm > 0 ? fleetSize(shippedKg, roundTrip, cargoCap, LH2_DENSITY_KG_PER_M3) : NaN;
+    val('r-transit', isFinite(transitDays) ? fmt(transitDays, 1) + ' d' : '—');
+    val('r-roundtrip', isFinite(roundTrip) ? fmt(roundTrip, 1) + ' d' : '—');
+    val('r-fleet', isFinite(fleet) ? fmt(fleet) + ' vessel(s)' : '—');
+
+    let voyageBog = null, deliveredKg = shippedKg;
+    if (voyageBor !== null && !isNaN(voyageBor) && isFinite(transitDays)) {
+      voyageBog = voyageBoilOff(shippedKg, transitDays, voyageBor);
+      deliveredKg = shippedKg - voyageBog;
+      val('r-voyage-bog', fmt(voyageBog, 0) + ' kg/y');
+    } else {
+      val('r-voyage-bog', 'not modeled', 'flag-gap');
+      gaps.push('Voyage BOR not supplied — KHI disclosed no standalone shipping boil-off figure (reply Q23: fuel-gas consumption equals the BOR, no %/day value given). Delivered mass below assumes zero in-transit loss, which is optimistic.');
+    }
+
+    // ---- Import terminal ----
+    const importBog = boilOffAtRest(deliveredKg, importHold);
+    val('r-delivered', fmt(deliveredKg / 1000, 0) + ' t/y (' + fmt(deliveredKg / 1e6, 1) + ' KTPA)');
+    val('r-import-bog', fmt(importBog, 0) + ' kg/y');
+    val('r-import-hold', fmt(importHold, 1) + ' d');
+
+    // ---- Regasification ----
+    const regasDutyMj = deliveredKg * REGAS_DUTY_MJ_PER_KG;
+    const regasAvgMwTh = (regasDutyMj * 1000) / (365 * 24 * 3600) ; // MJ/y -> kJ/y /(s/y) = kW
+    val('r-regas-duty', fmt(regasDutyMj / 1e6, 2) + ' TJ/y');
+    val('r-regas-power', '≈ ' + fmt(regasAvgMwTh / 1000, 0) + ' MWth avg');
+
+    // ---- Cost stack ----
+    const nm3PerYear = annualKg / GAS_DENSITY_KG_PER_NM3;
+    const { stack, clipped } = interpolateCostStack(nm3PerYear);
+    val('r-cost-jpy', stack.TOTAL.toFixed(1) + ' JPY/Nm³');
+    if (clipped) {
+      const loKtpa = (IAE.Base.v * GAS_DENSITY_KG_PER_NM3) / 1e6;
+      const hiKtpa = (IAE.Large.v * GAS_DENSITY_KG_PER_NM3) / 1e6;
+      gaps.push('Your demand volume (' + fmt(ktpa) + ' KTPA) is outside KHI\'s disclosed Base–Large range (~' + fmt(loKtpa) + '–' + fmt(hiKtpa) + ' KTPA); the cost stack is clipped to the nearest endpoint rather than extrapolated.');
+    }
+    if (fx !== null && !isNaN(fx) && fx > 0) {
+      const usdPerKg = (stack.TOTAL / fx) / GAS_DENSITY_KG_PER_NM3;
+      val('r-cost-usd', '$' + usdPerKg.toFixed(3) + '/kg');
+      gaps.push('USD cost-stack conversion uses your supplied FX rate on top of the unverified JPY/Nm³ IAE stack (see §7 caveat in the source database) — indicative only.');
+    } else {
+      val('r-cost-usd', 'supply FX rate', 'flag-gap');
+      gaps.push('FX rate not supplied — the IAE/KHI cost stack is kept in its native JPY/Nm³ (~2019, unverified unit/cost-year).');
+    }
+
+    // ---- LCOH ----
+    if (capex !== null && !isNaN(capex) && opex !== null && !isNaN(opex) && discountPct !== null && !isNaN(discountPct)) {
+      const lcohValue = lcohCalc(capex * 1e6, opex * 1e6, deliveredKg, discountPct / 100, years);
+      val('r-lcoh', '$' + lcohValue.toFixed(2) + '/kg');
+      document.getElementById('kpi-lcoh').textContent = '$' + lcohValue.toFixed(2) + '/kg';
+      document.getElementById('kpi-lcoh-sub').textContent = years + '-year project life, ' + discountPct + '% discount rate';
+      document.getElementById('kpi-lcoh-tile').classList.remove('warn');
+    } else {
+      val('r-lcoh', 'not computed', 'flag-gap');
+      document.getElementById('kpi-lcoh').textContent = '—';
+      document.getElementById('kpi-lcoh-sub').textContent = 'supply CapEx, OpEx, discount rate';
+      document.getElementById('kpi-lcoh-tile').classList.add('warn');
+      gaps.push('LCOH not computed — KHI did not disclose CapEx or OpEx for liquefaction, terminals, or the carrier newbuild ("a Feasibility Study is necessary"); supply project-specific figures above to unlock it.');
+    }
+
+    gaps.push('Carbon intensity (kgCO₂e/kg) is not modeled — KHI declined to disclose this (reply Q11: "Feasibility Study is necessary").');
+    gaps.push('Import-side BOG handling is modeled as re-liquefied by analogy with the export terminal — not explicitly confirmed by KHI for the receiving side.');
+
+    // ---- KPI bar ----
+    document.getElementById('kpi-delivered').textContent = fmt(deliveredKg / 1e6, 1) + ' KTPA/y';
+    document.getElementById('kpi-delivered-sub').textContent = fmt(deliveredKg / 1000, 0) + ' t/y at import terminal';
+    document.getElementById('kpi-energy').textContent = fmt(liqEnergyGwh, 0) + ' GWh/y';
+    document.getElementById('kpi-energy-sub').textContent = '≈ ' + fmt(liqAvgMw, 0) + ' MW average, ' + trains + ' train(s)';
+    document.getElementById('kpi-fleet').textContent = isFinite(fleet) ? fleet + ' vessel(s)' : '—';
+    document.getElementById('kpi-fleet-sub').textContent = isFinite(roundTrip) ? fmt(roundTrip, 1) + ' d round trip' : 'enter shipping distance';
+
+    // ---- Gaps list ----
+    const gapsList = document.getElementById('gaps-list');
+    gapsList.innerHTML = '';
+    gaps.forEach(g => {
+      const li = document.createElement('li');
+      li.textContent = g;
+      gapsList.appendChild(li);
+    });
+  }
+
+  calculate();
+</script>

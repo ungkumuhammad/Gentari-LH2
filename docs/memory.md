@@ -237,3 +237,16 @@ Fixed by widening every inter-block gap (~140px) and moving all stream-label
 `<text>` elements to render last in the SVG so they're never occluded.
 Verified visually via Playwright screenshots (both themes, full horizontal
 scroll) before publishing.
+
+### Interactive viability calculator added to the BFD (2026-07-20, same session)
+
+User asked for an input tab where they enter total demand volume (KTPA-H2)
+and get total energy/etc required for each block, to gauge viability.
+
+| Change | Detail |
+|--------|--------|
+| Added a 2-tab UI to `docs/reports/khi-lh2-reliq-shipping-regas-bfd.html` | Tab 1 "Inputs" (KTPA-H2 demand + shipping distance as primary fields; an advanced/collapsible section for SEC, vessel speed/capacity, hold times, voyage BOR, CapEx/OpEx/discount rate/project years/FX rate). Tab 2 "Diagram & Results": KPI bar (delivered H2, liquefaction energy, fleet, LCOH), the same static diagram, a 7-card results grid (one per block + an economics card), and a dynamic gaps/caveats list. |
+| Client-side JS re-implements `src/lh2/scenario.py`'s math | Train count (115 t/d, 0.78 utilization), liquefaction energy, at-rest BOG (compounding), transit/round-trip days, fleet sizing, voyage BOG (only if a BOR is supplied), regas duty, IAE Base/Large cost-stack interpolation, and LCOH — same constants and formulas as the Python module, so results should stay consistent with the CLI tool. |
+| Verified against `scripts/run_project_model.py` | Ran both with identical inputs (300 KTPA, 6000 km, capex 1200/opex 60/discount 8%/voyage BOR 0.2%/fx 150/hold 5+5 days) via Playwright — every number matched the Python output exactly (trains, GWh/y, BOG masses, fleet, LCOH $0.62/kg, cost stack). |
+| Bug caught and fixed during build | The regas annual-duty tile was labeled "PJ/y" but the JS divided MJ by 1e6, which is TJ, not PJ (1 PJ = 1e9 MJ). Fixed the label to "TJ/y" to match the actual computed value. |
+| Gaps list is now dynamic | Only shows the caveats that actually apply to the current inputs (e.g. the voyage-BOR gap disappears once the user supplies one; the LCOH gap disappears once CapEx/OpEx/discount rate are all filled in). |
