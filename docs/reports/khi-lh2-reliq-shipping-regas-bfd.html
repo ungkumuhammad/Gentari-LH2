@@ -339,6 +339,7 @@
   }
   .result-card.card-shipping { border-top-color: var(--accent); }
   .result-card.card-econ { border-top-color: var(--assumption); }
+  .result-card.card-energy { border-top-color: var(--good); }
   .result-card h3 {
     font-size: 12.5px;
     margin: 0 0 10px;
@@ -484,6 +485,11 @@
           <span class="hint">km, export → import terminal</span>
           <input type="number" id="in-distance" value="6000" min="1" step="50" oninput="calculate()">
         </div>
+        <div class="field field-primary">
+          <label for="in-electrolyzer-sec">Electrolyzer plant efficiency</label>
+          <span class="hint">kWh/kg H₂ — user input; production is outside KHI's LH2 offer, leave blank to skip</span>
+          <input type="number" id="in-electrolyzer-sec" value="" min="0" step="0.5" placeholder="e.g. 55–65" oninput="calculate()">
+        </div>
       </div>
 
       <details class="advanced">
@@ -576,6 +582,11 @@
         <div class="kpi-label">LCOH</div>
         <div class="kpi-value" id="kpi-lcoh">—</div>
         <div class="kpi-sub" id="kpi-lcoh-sub"></div>
+      </div>
+      <div class="kpi-tile" id="kpi-eff-tile">
+        <div class="kpi-label">Well-to-LH2 efficiency</div>
+        <div class="kpi-value" id="kpi-eff">—</div>
+        <div class="kpi-sub" id="kpi-eff-sub">supply electrolyzer input</div>
       </div>
     </div>
 
@@ -766,6 +777,9 @@
         <div class="row"><span class="k">Annual demand</span><span class="v" id="r-feed-ktpa">—</span></div>
         <div class="row"><span class="k">= tonnes / year</span><span class="v" id="r-feed-tpa">—</span></div>
         <div class="row"><span class="k">Feed condition</span><span class="v">30 barg / 30°C</span></div>
+        <div class="row"><span class="k">Electrolyzer input</span><span class="v" id="r-electrolyzer-sec">—</span></div>
+        <div class="row"><span class="k">Efficiency vs LHV</span><span class="v" id="r-electrolyzer-eff">—</span></div>
+        <div class="row"><span class="k">Loss vs LHV</span><span class="v" id="r-electrolyzer-loss">—</span></div>
       </div>
 
       <div class="result-card">
@@ -810,6 +824,18 @@
         <div class="row"><span class="k">Same, in USD/kg</span><span class="v" id="r-cost-usd">—</span></div>
         <div class="row"><span class="k">LCOH</span><span class="v" id="r-lcoh">—</span></div>
       </div>
+
+      <div class="result-card card-energy">
+        <h3>⚡ Well-to-LH2 energy efficiency (LHV basis)</h3>
+        <div class="row"><span class="k">Electrolyzer input</span><span class="v" id="r-energy-electrolyzer">—</span></div>
+        <div class="row"><span class="k">+ Reliquefaction SEC</span><span class="v" id="r-energy-reliq">—</span></div>
+        <div class="row"><span class="k">= Total input energy</span><span class="v" id="r-energy-total">—</span></div>
+        <div class="row"><span class="k">H₂ LHV (reference)</span><span class="v" id="r-energy-lhv">33.33 kWh/kg (25)</span></div>
+        <div class="row"><span class="k">Overall efficiency (LHV ÷ input)</span><span class="v" id="r-energy-eff-overall">—</span></div>
+        <div class="row"><span class="k">Overall loss</span><span class="v" id="r-energy-loss-overall">—</span></div>
+        <div class="row"><span class="k">Annual input energy</span><span class="v" id="r-energy-annual-input">—</span></div>
+        <div class="row"><span class="k">Annual H₂ energy content (LHV)</span><span class="v" id="r-energy-annual-lhv">—</span></div>
+      </div>
     </div>
 
     <div class="gaps-panel">
@@ -845,6 +871,7 @@
       <li>Delivery (send-out) pressure at the regas outlet has not been specified by KHI or by the project yet. <span class="tag assumption">ASSUMPTION until specified</span></li>
       <li>Liquefaction train sizing uses a derived utilization factor of 0.78 (KHI's own Base/Large train-count disclosures back-solved against their stated deal volumes) — see <i>src/lh2/liquefaction.py</i>. <span class="tag assumption">ASSUMPTION: derived</span></li>
       <li>Fleet sizing assumes a 90% fleet-wide operational availability (dry-docking/weather/maintenance margin) — not a KHI-disclosed figure. <span class="tag assumption">ASSUMPTION</span></li>
+      <li>H₂ lower heating value (LHV) ≈ 120 MJ/kg = 33.33 kWh/kg — <i>data/properties/lh2-properties.csv</i>, tagged <span class="tag assumption">needs-source</span> pending a formal NIST/ISO citation (same open item as note 20). Used as the energy-efficiency reference in the "Well-to-LH2 energy efficiency" card. Electrolyzer specific energy consumption itself is a <b>user-supplied calculator input</b>, not a KHI figure — production is segment [1], upstream of and outside this diagram's KHI-sourced boundary.</li>
     </ol>
   </div>
 
@@ -872,6 +899,7 @@
   const REGAS_DUTY_MJ_PER_KG = 3.8;        // reply Q18
   const FLEET_AVAILABILITY = 0.90;         // assumption, see notes (24)
   const LOAD_UNLOAD_DAYS_MID = 1.25;       // midpoint of KHI's 1-1.5 day range
+  const H2_LHV_KWH_PER_KG = 120 / 3.6;     // 120 MJ/kg / 3.6 = 33.33 kWh/kg, data/properties/lh2-properties.csv, needs-source (25)
 
   const IAE = {
     Base:  { v: 2.5e9,  production: 10.1, liquefaction: 10.3, loading_terminal: 5.6, seaborne_transport: 4.0, receiving_terminal: 6.3, dehydrogenation: 0.0, other: 1.3 },
@@ -952,6 +980,8 @@
     const years = parseFloat(document.getElementById('in-years').value) || 20;
     const fxRaw = document.getElementById('in-fx').value;
     const fx = fxRaw === '' ? null : parseFloat(fxRaw);
+    const electrolyzerRaw = document.getElementById('in-electrolyzer-sec').value;
+    const electrolyzerSec = electrolyzerRaw === '' ? null : parseFloat(electrolyzerRaw);
 
     const gaps = [];
 
@@ -961,6 +991,20 @@
     // ---- Feed ----
     val('r-feed-ktpa', fmt(ktpa) + ' KTPA/y');
     val('r-feed-tpa', fmt(annualTpa) + ' t/y');
+
+    let electrolyzerEffPct = null, electrolyzerLossPct = null;
+    if (electrolyzerSec !== null && !isNaN(electrolyzerSec) && electrolyzerSec > 0) {
+      electrolyzerEffPct = (H2_LHV_KWH_PER_KG / electrolyzerSec) * 100;
+      electrolyzerLossPct = 100 - electrolyzerEffPct;
+      val('r-electrolyzer-sec', electrolyzerSec.toFixed(2) + ' kWh/kg');
+      val('r-electrolyzer-eff', electrolyzerEffPct.toFixed(2) + ' %');
+      val('r-electrolyzer-loss', electrolyzerLossPct.toFixed(2) + ' %', 'flag-assumption');
+    } else {
+      val('r-electrolyzer-sec', 'not supplied', 'flag-gap');
+      val('r-electrolyzer-eff', '—');
+      val('r-electrolyzer-loss', '—');
+      gaps.push('Electrolyzer specific energy consumption not supplied — production is outside KHI\'s LH2 offer (segment [1], upstream of this diagram\'s boundary); supply a value to see well-to-LH2 efficiency vs LHV.');
+    }
 
     // ---- Reliquefaction ----
     const trains = trainCount(annualTpa);
@@ -1043,6 +1087,36 @@
 
     gaps.push('Carbon intensity (kgCO₂e/kg) is not modeled — KHI declined to disclose this (reply Q11: "Feasibility Study is necessary").');
     gaps.push('Import-side BOG handling is modeled as re-liquefied by analogy with the export terminal — not explicitly confirmed by KHI for the receiving side.');
+
+    // ---- Well-to-LH2 energy efficiency (LHV basis) ----
+    val('r-energy-reliq', sec.toFixed(2) + ' kWh/kg');
+    let totalInputKwhPerKg = null, overallEffPct = null, overallLossPct = null;
+    if (electrolyzerSec !== null && !isNaN(electrolyzerSec) && electrolyzerSec > 0) {
+      totalInputKwhPerKg = electrolyzerSec + sec;
+      overallEffPct = (H2_LHV_KWH_PER_KG / totalInputKwhPerKg) * 100;
+      overallLossPct = 100 - overallEffPct;
+      val('r-energy-electrolyzer', electrolyzerSec.toFixed(2) + ' kWh/kg');
+      val('r-energy-total', totalInputKwhPerKg.toFixed(2) + ' kWh/kg');
+      val('r-energy-eff-overall', overallEffPct.toFixed(2) + ' %');
+      val('r-energy-loss-overall', overallLossPct.toFixed(2) + ' %', 'flag-assumption');
+      const annualInputGwh = (annualKg * totalInputKwhPerKg) / 1e6;
+      const annualLhvGwh = (annualKg * H2_LHV_KWH_PER_KG) / 1e6;
+      val('r-energy-annual-input', fmt(annualInputGwh, 0) + ' GWh/y');
+      val('r-energy-annual-lhv', fmt(annualLhvGwh, 0) + ' GWh/y');
+      document.getElementById('kpi-eff').textContent = overallEffPct.toFixed(1) + ' %';
+      document.getElementById('kpi-eff-sub').textContent = overallLossPct.toFixed(1) + '% loss vs LHV · ' + totalInputKwhPerKg.toFixed(1) + ' kWh/kg total input';
+      document.getElementById('kpi-eff-tile').classList.remove('warn');
+    } else {
+      val('r-energy-electrolyzer', 'not supplied', 'flag-gap');
+      val('r-energy-total', '—');
+      val('r-energy-eff-overall', '—');
+      val('r-energy-loss-overall', '—');
+      val('r-energy-annual-input', '—');
+      val('r-energy-annual-lhv', fmt((annualKg * H2_LHV_KWH_PER_KG) / 1e6, 0) + ' GWh/y');
+      document.getElementById('kpi-eff').textContent = '—';
+      document.getElementById('kpi-eff-sub').textContent = 'supply electrolyzer input';
+      document.getElementById('kpi-eff-tile').classList.add('warn');
+    }
 
     // ---- KPI bar ----
     document.getElementById('kpi-delivered').textContent = fmt(deliveredKg / 1e6, 1) + ' KTPA/y';

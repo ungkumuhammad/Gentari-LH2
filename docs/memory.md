@@ -250,3 +250,20 @@ and get total energy/etc required for each block, to gauge viability.
 | Verified against `scripts/run_project_model.py` | Ran both with identical inputs (300 KTPA, 6000 km, capex 1200/opex 60/discount 8%/voyage BOR 0.2%/fx 150/hold 5+5 days) via Playwright — every number matched the Python output exactly (trains, GWh/y, BOG masses, fleet, LCOH $0.62/kg, cost stack). |
 | Bug caught and fixed during build | The regas annual-duty tile was labeled "PJ/y" but the JS divided MJ by 1e6, which is TJ, not PJ (1 PJ = 1e9 MJ). Fixed the label to "TJ/y" to match the actual computed value. |
 | Gaps list is now dynamic | Only shows the caveats that actually apply to the current inputs (e.g. the voyage-BOR gap disappears once the user supplies one; the LCOH gap disappears once CapEx/OpEx/discount rate are all filled in). |
+
+### Electrolyzer efficiency + LHV well-to-LH2 energy accounting (2026-07-20, same session)
+
+User asked to add electrolyzer plant efficiency (kWh/kg H2) as an input, and
+at the end reference H2's LHV to compute overall energy efficiency/loss —
+worked example given: electrolyzer 60 kWh/kg vs LHV 33.33 kWh/kg = 55.55%
+efficient/44.45% loss; + reliq 9 kWh/kg = 69 kWh/kg total; final efficiency
+vs LHV = 33.33/69 = 48.3%/51.7% loss.
+
+| Change | Detail |
+|--------|--------|
+| New primary input: "Electrolyzer plant efficiency" (kWh/kg H₂) | Left blank by default (no sourced default exists — production is segment [1], outside KHI's LH2 offer/this diagram's boundary); if blank, the efficiency card and KPI tile show a gap instead of guessing. |
+| `H2_LHV_KWH_PER_KG = 120/3.6 = 33.33` | Same LHV figure already in `data/properties/lh2-properties.csv` (120 MJ/kg, tagged needs-source); added as footnote (25) alongside the existing NBP citation (20). |
+| Feed card (①) now shows | Electrolyzer input, efficiency vs LHV, loss vs LHV (stage-level). |
+| New final results card "⚡ Well-to-LH2 energy efficiency (LHV basis)" | Walks through electrolyzer input + reliq SEC = total input energy, then overall efficiency/loss vs LHV, plus annual GWh figures (total input energy vs. the LHV energy content of the H2 actually delivered). |
+| New 5th KPI tile "Well-to-LH2 efficiency" | Headline %, with loss% and total kWh/kg in the subtext; turns to the warn (red-top) state when the electrolyzer input is missing, same pattern as the LCOH tile. |
+| Verified against the user's worked example | 60 + 9 = 69 kWh/kg; 55.56%/44.44% (electrolyzer stage) and 48.31%/51.69% (overall) — confirmed via Playwright, matches exactly. |
