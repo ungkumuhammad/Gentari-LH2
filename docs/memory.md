@@ -218,3 +218,22 @@ voyage BOR as a required user-supplied `[ASSUMPTION]`/`[ESTIMATE]` — it will
 not silently assume 0.1%/day (that figure is specifically the *at-rest*
 terminal BOR). Likewise CapEx/OpEx/carbon-intensity remain gaps until a
 Feasibility Study or a permitted external benchmark supplies them.
+
+### Reliquefaction → shipping → regas block flow diagram (2026-07-20, same session)
+
+User asked for a Block Flow Diagram (HTML) of the reliquefaction process,
+starting from electrolyzer GH2 at 30 barg/30°C, through shipping (as its own
+detailed block including BOG handling) to regasification.
+
+| File | Action | Purpose |
+|------|--------|---------|
+| `docs/reports/khi-lh2-reliq-shipping-regas-bfd.html` | Created | Self-contained HTML/SVG block flow diagram: Electrolyzer GH₂ feed (30 barg/30°C, user-specified) → Reliquefaction Plant (N₂ precool → O–P conversion → cryo liquefaction, SEC 8–9 kWh/kg) → Export/Loading Terminal (BOR 0.1%/day, BOG re-liquefied, recycle loop drawn back to the liquefaction inlet) → **Shipping block with its own expanded sub-flow** (cargo tanks → BOG generation [flagged gap — KHI never disclosed a standalone voyage BOR] → split to dual-fuel engine / GCU, explicit "onboard reliquefaction NOT ADOPTED" callout) → Import/Receiving Terminal → Regasification Plant (ORV, 3.8 MJ/kg-LH2) → end-use (out of scope). 22 numbered footnotes tie every label to a KHI reply/source or an explicit `[ASSUMPTION]`/`[GAP]` tag; light/dark theme supported. Published as a Claude Artifact. |
+
+**Layout bug caught and fixed during build:** the first draft used narrow
+gaps between blocks for the stream-condition labels (e.g. "LH₂ ~1 bar(a)/
+~20.3 K"), so the labels overflowed into the neighboring block and were
+partially painted over by that block's fill (SVG paints in document order).
+Fixed by widening every inter-block gap (~140px) and moving all stream-label
+`<text>` elements to render last in the SVG so they're never occluded.
+Verified visually via Playwright screenshots (both themes, full horizontal
+scroll) before publishing.

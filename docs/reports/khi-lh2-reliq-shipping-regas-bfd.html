@@ -1,0 +1,460 @@
+<title>LH2 Value Chain — Block Flow Diagram</title>
+<style>
+  :root {
+    --bg: #eef1f0;
+    --panel: #ffffff;
+    --panel-2: #f4f7f6;
+    --ink: #16222c;
+    --muted: #55666f;
+    --line: #c7d2d3;
+    --accent: #146c8c;
+    --accent-soft: #dbeaef;
+    --recycle: #3f7d5c;
+    --recycle-soft: #e2f0e8;
+    --assumption: #a8710f;
+    --assumption-soft: #f6ead2;
+    --gap: #a83a3a;
+    --gap-soft: #f6dede;
+    --grid-line: rgba(20, 108, 140, 0.10);
+    --font-display: -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Consolas, "Liberation Mono", monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0e171c;
+      --panel: #152128;
+      --panel-2: #101a1f;
+      --ink: #e7eef1;
+      --muted: #93a7ae;
+      --line: #2a3a41;
+      --accent: #55b7dc;
+      --accent-soft: #17323b;
+      --recycle: #7cc79e;
+      --recycle-soft: #16281f;
+      --assumption: #e3ab54;
+      --assumption-soft: #2c2311;
+      --gap: #e58080;
+      --gap-soft: #2c1717;
+      --grid-line: rgba(85, 183, 220, 0.08);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0e171c;
+    --panel: #152128;
+    --panel-2: #101a1f;
+    --ink: #e7eef1;
+    --muted: #93a7ae;
+    --line: #2a3a41;
+    --accent: #55b7dc;
+    --accent-soft: #17323b;
+    --recycle: #7cc79e;
+    --recycle-soft: #16281f;
+    --assumption: #e3ab54;
+    --assumption-soft: #2c2311;
+    --gap: #e58080;
+    --gap-soft: #2c1717;
+    --grid-line: rgba(85, 183, 220, 0.08);
+  }
+  :root[data-theme="light"] {
+    --bg: #eef1f0;
+    --panel: #ffffff;
+    --panel-2: #f4f7f6;
+    --ink: #16222c;
+    --muted: #55666f;
+    --line: #c7d2d3;
+    --accent: #146c8c;
+    --accent-soft: #dbeaef;
+    --recycle: #3f7d5c;
+    --recycle-soft: #e2f0e8;
+    --assumption: #a8710f;
+    --assumption-soft: #f6ead2;
+    --gap: #a83a3a;
+    --gap-soft: #f6dede;
+    --grid-line: rgba(20, 108, 140, 0.10);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-display);
+    line-height: 1.5;
+  }
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 34px 24px 48px;
+  }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 6px;
+  }
+  h1 {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0 0 8px;
+    text-wrap: balance;
+  }
+  .dek {
+    color: var(--muted);
+    font-size: 14.5px;
+    max-width: 68ch;
+    margin: 0 0 18px;
+  }
+  .scope-line {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 22px;
+    font-size: 12.5px;
+    color: var(--muted);
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    padding: 10px 0;
+    margin-bottom: 22px;
+  }
+  .scope-line b { color: var(--ink); font-weight: 600; }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 18px;
+    margin: 0 0 18px;
+    font-size: 12px;
+  }
+  .legend-item { display: flex; align-items: center; gap: 7px; color: var(--muted); }
+  .swatch {
+    width: 22px; height: 12px; border-radius: 2px; flex: none;
+    border: 1.6px solid var(--accent); background: var(--accent-soft);
+  }
+  .swatch.assumption { border-color: var(--assumption); background: var(--assumption-soft); border-style: dashed; }
+  .swatch.gap { border-color: var(--gap); background: var(--gap-soft); border-style: dashed; }
+  .swatch.recycle { border: none; background: none; position: relative; }
+  .swatch.recycle::before {
+    content: ""; position: absolute; left: 0; right: 0; top: 5px; height: 2px;
+    background-image: linear-gradient(90deg, var(--recycle) 60%, transparent 0);
+    background-size: 7px 2px; background-repeat: repeat-x;
+  }
+
+  .diagram-scroll {
+    overflow-x: auto;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 6px;
+    margin-bottom: 8px;
+  }
+  .diagram-scroll svg { display: block; }
+
+  .diagram-caption {
+    font-size: 11.5px;
+    color: var(--muted);
+    margin: 6px 0 34px;
+  }
+
+  /* ---- SVG theme bindings ---- */
+  .bg-grid { fill: url(#gridPattern); }
+  .box-cited { fill: var(--panel-2); stroke: var(--accent); stroke-width: 1.6; }
+  .box-outer { fill: var(--panel); stroke: var(--accent); stroke-width: 1.8; }
+  .box-muted { fill: var(--panel-2); stroke: var(--line); stroke-width: 1.4; stroke-dasharray: 5 4; }
+  .box-gap-fill { fill: var(--gap-soft); stroke: var(--gap); stroke-width: 1.4; stroke-dasharray: 4 3; }
+  .box-assumption-fill { fill: var(--assumption-soft); stroke: var(--assumption); stroke-width: 1.4; stroke-dasharray: 4 3; }
+  .hdr-text { fill: var(--ink); font-family: var(--font-display); font-weight: 700; }
+  .body-text { fill: var(--ink); font-family: var(--font-display); font-weight: 400; }
+  .mono-text { fill: var(--muted); font-family: var(--font-mono); }
+  .note-text { fill: var(--muted); font-family: var(--font-display); }
+  .stream-label { fill: var(--muted); font-family: var(--font-mono); }
+  .flow-arrow { stroke: var(--accent); stroke-width: 2.2; fill: none; }
+  .mini-arrow { stroke: var(--accent); stroke-width: 1.6; fill: none; }
+  .recycle-arrow { stroke: var(--recycle); stroke-width: 2; fill: none; stroke-dasharray: 7 5; }
+  .divider { stroke: var(--line); stroke-width: 1; }
+
+  main .notes {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 20px 24px;
+    margin-bottom: 22px;
+  }
+  .notes h2 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin: 0 0 12px;
+  }
+  .notes ol {
+    columns: 2;
+    column-gap: 32px;
+    margin: 0;
+    padding-left: 1.4em;
+    font-size: 12.5px;
+    color: var(--ink);
+  }
+  .notes li { break-inside: avoid; margin-bottom: 8px; padding-left: 2px; }
+  .notes li b { font-weight: 600; }
+  .tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    padding: 1px 5px;
+    border-radius: 3px;
+    margin-left: 5px;
+    white-space: nowrap;
+  }
+  .tag.gap { color: var(--gap); background: var(--gap-soft); }
+  .tag.assumption { color: var(--assumption); background: var(--assumption-soft); }
+
+  footer {
+    font-size: 12px;
+    color: var(--muted);
+    border-top: 1px solid var(--line);
+    padding-top: 16px;
+  }
+  footer p { margin: 0 0 6px; }
+  footer .sources { font-family: var(--font-mono); font-size: 11px; }
+
+  @media (max-width: 720px) {
+    .notes ol { columns: 1; }
+  }
+</style>
+
+<div class="wrap">
+  <p class="eyebrow">Gentari · LH2 Value Chain</p>
+  <h1>Reliquefaction → Shipping → Regasification — Block Flow Diagram</h1>
+  <p class="dek">
+    Gate-to-gate technology block flow, from gaseous H<sub>2</sub> supplied by
+    an electrolyzer plant through KHI's liquefaction (reliquefaction) process,
+    marine transport, and regasification. Built from the KHI questionnaire
+    replies and technical decks registered in this repository — see
+    <span class="mono-inline">docs/reports/khi-lh2-solution-database.md</span>.
+  </p>
+  <div class="scope-line">
+    <span><b>Boundary:</b> GH<sub>2</sub> at electrolyzer battery limit → GH<sub>2</sub> at regas send-out</span>
+    <span><b>Basis:</b> KHI-disclosed process elements only — no fabricated PFD detail</span>
+    <span><b>Units:</b> SI / metric</span>
+    <span><b>Prepared:</b> 2026-07-20</span>
+  </div>
+
+  <div class="legend">
+    <span class="legend-item"><span class="swatch"></span>KHI-disclosed (cited)</span>
+    <span class="legend-item"><span class="swatch assumption"></span>Assumption / not KHI-confirmed</span>
+    <span class="legend-item"><span class="swatch gap"></span>Gap — not disclosed by KHI</span>
+    <span class="legend-item"><span class="swatch recycle"></span>BOG recycle / reuse stream</span>
+  </div>
+
+  <div class="diagram-scroll">
+    <svg viewBox="0 0 2560 700" width="2560" height="700" role="img" aria-label="Block flow diagram of the LH2 value chain from electrolyzer feed through reliquefaction, shipping, and regasification">
+      <defs>
+        <pattern id="gridPattern" width="26" height="26" patternUnits="userSpaceOnUse">
+          <path d="M26 0H0V26" fill="none" stroke="var(--grid-line)" stroke-width="1"/>
+        </pattern>
+        <marker id="arrowHead" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8 Z" fill="var(--accent)"/>
+        </marker>
+        <marker id="arrowHeadRecycle" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8 Z" fill="var(--recycle)"/>
+        </marker>
+      </defs>
+
+      <rect x="0" y="0" width="2560" height="700" class="bg-grid"/>
+
+      <!-- ============ MAIN FLOW ARROWS ============ -->
+      <line x1="200" y1="265" x2="338" y2="265" class="flow-arrow" marker-end="url(#arrowHead)"/>
+      <line x1="650" y1="265" x2="788" y2="265" class="flow-arrow" marker-end="url(#arrowHead)"/>
+      <line x1="1020" y1="265" x2="1158" y2="265" class="flow-arrow" marker-end="url(#arrowHead)"/>
+      <line x1="1560" y1="265" x2="1698" y2="265" class="flow-arrow" marker-end="url(#arrowHead)"/>
+      <line x1="1930" y1="265" x2="2068" y2="265" class="flow-arrow" marker-end="url(#arrowHead)"/>
+      <line x1="2280" y1="265" x2="2388" y2="265" class="flow-arrow" marker-end="url(#arrowHead)"/>
+
+      <!-- ============ 1. FEED ============ -->
+      <rect x="30" y="180" width="170" height="170" rx="5" class="box-assumption-fill"/>
+      <text x="115" y="205" text-anchor="middle" class="hdr-text" font-size="13.5">ELECTROLYZER</text>
+      <text x="115" y="221" text-anchor="middle" class="hdr-text" font-size="13.5">GH₂ FEED</text>
+      <text x="115" y="250" text-anchor="middle" class="body-text" font-size="11.5">Battery limit supply</text>
+      <text x="115" y="267" text-anchor="middle" class="mono-text" font-size="11.5">30 barg / 30°C</text>
+      <text x="115" y="298" text-anchor="middle" class="note-text" font-size="10" fill="var(--assumption)">Project-specified feed</text>
+      <text x="115" y="311" text-anchor="middle" class="note-text" font-size="10" fill="var(--assumption)">condition, not KHI data (21)</text>
+
+      <!-- ============ 2. RELIQUEFACTION PLANT ============ -->
+      <rect x="340" y="85" width="310" height="360" rx="6" class="box-outer"/>
+      <text x="495" y="112" text-anchor="middle" class="hdr-text" font-size="14.5">RELIQUEFACTION PLANT</text>
+      <text x="495" y="128" text-anchor="middle" class="note-text" font-size="10.5">[2] gaseous H₂ → LH₂, ~20 K / ~1 bar</text>
+
+      <rect x="360" y="152" width="85" height="62" rx="4" class="box-cited"/>
+      <text x="402" y="176" text-anchor="middle" class="body-text" font-size="10.5">N₂</text>
+      <text x="402" y="189" text-anchor="middle" class="body-text" font-size="10.5">PRE-COOL</text>
+      <text x="402" y="204" text-anchor="middle" class="mono-text" font-size="9">(2)</text>
+
+      <line x1="445" y1="183" x2="457" y2="183" class="mini-arrow" marker-end="url(#arrowHead)"/>
+
+      <rect x="457" y="152" width="95" height="62" rx="4" class="box-cited"/>
+      <text x="504.5" y="176" text-anchor="middle" class="body-text" font-size="10.5">O–P CONVERSION</text>
+      <text x="504.5" y="189" text-anchor="middle" class="body-text" font-size="10.5">(Fe catalyst)</text>
+      <text x="504.5" y="204" text-anchor="middle" class="mono-text" font-size="9">(3)</text>
+
+      <line x1="552" y1="183" x2="564" y2="183" class="mini-arrow" marker-end="url(#arrowHead)"/>
+
+      <rect x="564" y="152" width="75" height="62" rx="4" class="box-cited"/>
+      <text x="601.5" y="172" text-anchor="middle" class="body-text" font-size="10.5">CRYO</text>
+      <text x="601.5" y="185" text-anchor="middle" class="body-text" font-size="10.5">LIQUEFACTION</text>
+      <text x="601.5" y="198" text-anchor="middle" class="note-text" font-size="9">(H₂ Claude cycle)</text>
+      <text x="601.5" y="210" text-anchor="middle" class="mono-text" font-size="9">(4)</text>
+
+      <text x="495" y="238" text-anchor="middle" class="mono-text" font-size="12">SEC ≈ 8–9 kWh/kg (1)</text>
+
+      <rect x="370" y="252" width="250" height="34" rx="4" class="box-gap-fill"/>
+      <text x="495" y="266" text-anchor="middle" class="note-text" font-size="9.8" fill="var(--gap)">Full PFD / heat &amp; mass balance not disclosed</text>
+      <text x="495" y="279" text-anchor="middle" class="note-text" font-size="9.8" fill="var(--gap)">by KHI — sub-steps shown are disclosed only (5)</text>
+
+      <text x="495" y="308" text-anchor="middle" class="body-text" font-size="10.5">No H₂ loss claimed in plant concept</text>
+      <text x="495" y="321" text-anchor="middle" class="body-text" font-size="10.5">no expected performance degradation</text>
+
+      <text x="495" y="345" text-anchor="middle" class="note-text" font-size="10" fill="var(--recycle)">↑ BOG recycle inlet (see below)</text>
+
+      <!-- ============ 3. EXPORT / LOADING TERMINAL ============ -->
+      <rect x="790" y="180" width="230" height="170" rx="5" class="box-cited"/>
+      <text x="905" y="206" text-anchor="middle" class="hdr-text" font-size="13">EXPORT / LOADING</text>
+      <text x="905" y="222" text-anchor="middle" class="hdr-text" font-size="13">TERMINAL</text>
+      <text x="905" y="246" text-anchor="middle" class="body-text" font-size="11">Storage: 64,000 m³/tank</text>
+      <text x="905" y="260" text-anchor="middle" class="body-text" font-size="11">× 3 (Base) / 4 (Large) (7)</text>
+      <text x="905" y="278" text-anchor="middle" class="mono-text" font-size="11">BOR 0.1 %/day at rest (7)</text>
+      <text x="905" y="300" text-anchor="middle" class="body-text" font-size="11">Loading arm: 6″ TRL 6–7 /</text>
+      <text x="905" y="314" text-anchor="middle" class="body-text" font-size="11">16″ not yet verified (8)</text>
+      <text x="905" y="336" text-anchor="middle" class="note-text" font-size="10" fill="var(--recycle)">BOG → re-liquefied (6)</text>
+
+      <!-- ============ 4. SHIPPING ============ -->
+      <rect x="1160" y="85" width="400" height="360" rx="6" class="box-outer"/>
+      <text x="1360" y="112" text-anchor="middle" class="hdr-text" font-size="14.5">SHIPPING — LH₂ CARRIER</text>
+      <text x="1360" y="128" text-anchor="middle" class="note-text" font-size="10.5">[4] loaded → discharged, incl. BOG management</text>
+
+      <rect x="1185" y="150" width="160" height="64" rx="4" class="box-cited"/>
+      <text x="1265" y="170" text-anchor="middle" class="body-text" font-size="10.5">CARGO TANKS</text>
+      <text x="1265" y="184" text-anchor="middle" class="mono-text" font-size="10">160,000 m³ @ 29.6 km/h</text>
+      <text x="1265" y="197" text-anchor="middle" class="note-text" font-size="9">(~16 kn, commercial target) (9)</text>
+      <text x="1265" y="209" text-anchor="middle" class="note-text" font-size="9">No filling-ratio restriction (10)</text>
+
+      <line x1="1265" y1="214" x2="1265" y2="236" class="mini-arrow" marker-end="url(#arrowHead)"/>
+
+      <rect x="1175" y="238" width="180" height="46" rx="4" class="box-gap-fill"/>
+      <text x="1265" y="256" text-anchor="middle" class="body-text" font-size="10.5" fill="var(--gap)">BOG GENERATION (voyage)</text>
+      <text x="1265" y="270" text-anchor="middle" class="note-text" font-size="9.5" fill="var(--gap)">rate not disclosed by KHI (11) — GAP</text>
+
+      <line x1="1225" y1="284" x2="1195" y2="322" class="mini-arrow" marker-end="url(#arrowHead)"/>
+      <line x1="1305" y1="284" x2="1345" y2="322" class="mini-arrow" marker-end="url(#arrowHead)"/>
+
+      <rect x="1175" y="324" width="170" height="70" rx="4" class="box-cited"/>
+      <text x="1260" y="343" text-anchor="middle" class="body-text" font-size="10.3">DUAL-FUEL (DF) ENGINE</text>
+      <text x="1260" y="356" text-anchor="middle" class="note-text" font-size="9.3">BOG + MGO/VLSFO → propulsion (12)</text>
+      <text x="1260" y="368" text-anchor="middle" class="note-text" font-size="9.3">fuel-gas rate = BOR; range limited</text>
+      <text x="1260" y="380" text-anchor="middle" class="note-text" font-size="9.3">by MGO tank, not BOG (15)</text>
+
+      <rect x="1360" y="324" width="160" height="70" rx="4" class="box-cited"/>
+      <text x="1440" y="343" text-anchor="middle" class="body-text" font-size="10.3">GCU (contingency)</text>
+      <text x="1440" y="357" text-anchor="middle" class="note-text" font-size="9.3">Burns excess BOG if tank</text>
+      <text x="1440" y="369" text-anchor="middle" class="note-text" font-size="9.3">pressure exceeds MARVS</text>
+      <text x="1440" y="381" text-anchor="middle" class="note-text" font-size="9.3">on MGO-only ops (13)</text>
+
+      <rect x="1175" y="404" width="345" height="30" rx="4" class="box-muted"/>
+      <text x="1347.5" y="423" text-anchor="middle" class="note-text" font-size="10.5">⊘ Onboard reliquefaction — NOT ADOPTED (14): energy + space constraint</text>
+
+      <!-- ============ 5. IMPORT / RECEIVING TERMINAL ============ -->
+      <rect x="1700" y="180" width="230" height="170" rx="5" class="box-cited"/>
+      <text x="1815" y="206" text-anchor="middle" class="hdr-text" font-size="13">IMPORT / RECEIVING</text>
+      <text x="1815" y="222" text-anchor="middle" class="hdr-text" font-size="13">TERMINAL</text>
+      <text x="1815" y="246" text-anchor="middle" class="body-text" font-size="11">Storage: 65,000 m³/tank</text>
+      <text x="1815" y="260" text-anchor="middle" class="body-text" font-size="11">× 3 (Base) / 11 (Large) (16)</text>
+      <text x="1815" y="278" text-anchor="middle" class="mono-text" font-size="11">BOR 0.1 %/day at rest (16)</text>
+
+      <rect x="1720" y="292" width="190" height="40" rx="4" class="box-assumption-fill"/>
+      <text x="1815" y="308" text-anchor="middle" class="note-text" font-size="9.7" fill="var(--assumption)">BOG assumed re-liquefied — not</text>
+      <text x="1815" y="321" text-anchor="middle" class="note-text" font-size="9.7" fill="var(--assumption)">explicitly confirmed by KHI (17)</text>
+
+      <!-- ============ 6. REGASIFICATION PLANT ============ -->
+      <rect x="2070" y="180" width="210" height="170" rx="5" class="box-cited"/>
+      <text x="2175" y="206" text-anchor="middle" class="hdr-text" font-size="13">REGASIFICATION</text>
+      <text x="2175" y="222" text-anchor="middle" class="hdr-text" font-size="13">PLANT</text>
+      <text x="2175" y="246" text-anchor="middle" class="body-text" font-size="11">Vaporizer: ORV, seawater</text>
+      <text x="2175" y="260" text-anchor="middle" class="body-text" font-size="11">heat source (18)</text>
+      <text x="2175" y="278" text-anchor="middle" class="note-text" font-size="10">Alt: dedicated heat source if</text>
+      <text x="2175" y="290" text-anchor="middle" class="note-text" font-size="10">seawater discharge constrained</text>
+      <text x="2175" y="312" text-anchor="middle" class="mono-text" font-size="11.5">Heat duty ≈ 3.8 MJ/kg-LH₂ (19)</text>
+
+      <!-- ============ END-USE (out of scope) ============ -->
+      <rect x="2390" y="210" width="120" height="110" rx="5" class="box-muted"/>
+      <text x="2450" y="255" text-anchor="middle" class="note-text" font-size="10.5">TO DISTRIBUTION</text>
+      <text x="2450" y="270" text-anchor="middle" class="note-text" font-size="10.5">/ END-USE</text>
+      <text x="2450" y="292" text-anchor="middle" class="note-text" font-size="9.5">(out of scope of</text>
+      <text x="2450" y="304" text-anchor="middle" class="note-text" font-size="9.5">KHI's offer)</text>
+
+      <!-- ============ RECYCLE LOOP: Export Terminal BOG -> Reliq Plant ============ -->
+      <path d="M905,350 V480 H495 V347" class="recycle-arrow" marker-end="url(#arrowHeadRecycle)"/>
+      <text x="700" y="500" text-anchor="middle" class="note-text" font-size="11" fill="var(--recycle)">Export-terminal BOG re-liquefied and returned to liquefaction plant inlet (6)</text>
+
+      <!-- ============ STREAM ANNOTATION LABELS (painted last so they always stay on top of box fills) ============ -->
+      <g>
+        <rect x="222" y="228" width="98" height="30" rx="3" fill="var(--bg)" opacity="0.001"/>
+        <text x="269" y="240" text-anchor="middle" class="stream-label" font-size="11">GH₂ 30 barg/30°C</text>
+        <text x="269" y="253" text-anchor="middle" font-size="9.5" fill="var(--assumption)" font-family="var(--font-mono)">[assumption · 21]</text>
+
+        <text x="719" y="240" text-anchor="middle" class="stream-label" font-size="11">LH₂ ~1 bar(a) / ~20.3 K</text>
+        <text x="719" y="253" text-anchor="middle" font-size="9.5" fill="var(--accent)" font-family="var(--font-mono)">[cited · 20]</text>
+
+        <text x="1089" y="240" text-anchor="middle" class="stream-label" font-size="11">LH₂ loaded aboard ship</text>
+
+        <text x="1629" y="240" text-anchor="middle" class="stream-label" font-size="11">LH₂ discharged</text>
+        <text x="1629" y="253" text-anchor="middle" font-size="9.5" fill="var(--muted)" font-family="var(--font-mono)">(net of voyage BOG · 11)</text>
+
+        <text x="1999" y="240" text-anchor="middle" class="stream-label" font-size="11">LH₂ to vaporizer feed</text>
+
+        <text x="2334" y="240" text-anchor="middle" class="stream-label" font-size="11">GH₂ send-out</text>
+        <text x="2334" y="253" text-anchor="middle" font-size="9.5" fill="var(--assumption)" font-family="var(--font-mono)">[pressure TBD · 22]</text>
+      </g>
+    </svg>
+  </div>
+  <p class="diagram-caption">
+    Scroll horizontally to see the full chain on narrow screens. Numbers in
+    parentheses reference the notes below.
+  </p>
+
+  <div class="notes">
+    <h2>Notes &amp; sources</h2>
+    <ol>
+      <li><b>SEC ≈ 8–9 kWh/kg</b>, varies with liquefier scale/boundary conditions — KHI reply Q1 (<i>kawasaki-2026-questionnaire</i>).</li>
+      <li>Precooling: N₂ precooling proven in service; hydrocarbon mixed refrigerant under consideration for the future — reply Q5/Q13.</li>
+      <li>Ortho–para conversion inside the liquefier, Fe-based catalyst in service (Co-based under evaluation); no expected degradation — reply Q6/Q7.</li>
+      <li>Liquefaction cycle: H₂ Claude cycle with N₂ precooling, proven track record — reply Q13.</li>
+      <li>Detailed PFD / heat &amp; mass balance <b>not disclosed</b> by KHI — reply Q10: shareable only "at Feasibility Study timing." Sub-steps shown are the process elements KHI did disclose, not a full engineering PFD. <span class="tag gap">GAP</span></li>
+      <li>BOG downstream of the liquefaction plant is re-liquefied — via an ejector in the liquefier or a compressor with cryogenic-rated suction — reply Q3/Q14.</li>
+      <li>Export/loading terminal: 64,000 m³/tank, ×3 at Base scale (2.5B Nm³/y) / ×4 at Large scale (10B Nm³/y); BOR 0.1%/day at rest — <i>kawasaki-2026-supplemental</i>.</li>
+      <li>Loading arm: 6-inch arm demonstrated at TRL 6–7 on the Suiso Frontier pilot; 16-inch commercial-scale arm not yet verified (~3 years out); both by TBG — reply Q19.</li>
+      <li>Commercial-scale target vessel: 160,000 m³ @ 29.6 km/h (~16 kn) — <i>kawasaki-2026-supplemental</i>. A 40,000 m³ vessel is under construction using Suiso Frontier's proven tank technology (reply Q29); the demo vessel Suiso Frontier itself is 1,250 m³ (<i>kawasaki-hydrogen-activities</i>).</li>
+      <li>No cargo-tank filling-ratio restriction; no sloshing impact on BOG — reply Q20.</li>
+      <li><b>Voyage boil-off rate is not disclosed by KHI as a standalone figure</b> — reply Q23 states only that fuel-gas consumption equals the BOR, without giving a %/day value. <span class="tag gap">GAP</span></li>
+      <li>BOG-as-fuel: KHI is developing a dual-fuel (DF) engine that burns cargo BOG as propulsion fuel — reply Q23/Q32.</li>
+      <li>Excess BOG (when sailing on MGO only and tank pressure exceeds MARVS) is burned via the onboard gas combustion unit (GCU) — reply Q26.</li>
+      <li>Onboard reliquefaction is <b>not adopted</b> — too much electrical energy and onboard space required — reply Q33.</li>
+      <li>Maximum sailing distance is limited only by the MGO fuel tank, not by BOG — reply Q21.</li>
+      <li>Import/receiving terminal: 65,000 m³/tank, ×3 at Base scale / ×11 at Large scale; BOR 0.1%/day at rest — <i>kawasaki-2026-supplemental</i>.</li>
+      <li>Import-side BOG handling is shown as re-liquefied by analogy with the export terminal — KHI's reply on reliquefaction (Q3/Q14) specifically addresses the export/loading side; treat the import-side treatment as an assumption, not a KHI-confirmed fact. <span class="tag assumption">ASSUMPTION</span></li>
+      <li>Vaporizer: Open-Rack Vaporizer (ORV) using seawater as the heat source; a dedicated heat-source system if nearby aquaculture constrains cold-seawater discharge — reply Q17.</li>
+      <li>Regasification heat duty ≈ 3.8 MJ/kg-LH₂ — reply Q18.</li>
+      <li>LH₂ normal boiling point ≈ 20.3 K / ≈ 1 bar(a) — <i>data/properties/lh2-properties.csv</i>, tagged <span class="tag assumption">needs-source</span> pending a formal NIST/CODATA citation (see <i>docs/memory.md</i> open item).</li>
+      <li>Feed condition (30 barg / 30°C) is a <b>Gentari project-specified</b> boundary condition for this diagram, not a figure disclosed by KHI. <span class="tag assumption">ASSUMPTION</span></li>
+      <li>Delivery (send-out) pressure at the regas outlet has not been specified by KHI or by the project yet. <span class="tag assumption">ASSUMPTION until specified</span></li>
+    </ol>
+  </div>
+
+  <footer>
+    <p><b>System boundary:</b> gate-to-gate, electrolyzer GH₂ battery limit → regasification GH₂ send-out. Production (electrolysis) and downstream distribution/end-use are out of scope.</p>
+    <p><b>Cardinal rule applied:</b> every block/stream label is either cited to a KHI/IAE source or flagged as an assumption/gap — nothing on this diagram is an invented process detail (see <code>CLAUDE.md</code> §4).</p>
+    <p class="sources">Sources: kawasaki-2026-questionnaire · kawasaki-2026-questionnaire-r0 · kawasaki-2026-supplemental · kawasaki-hydrogen-activities · data/properties/lh2-properties.csv — full register in data/references.csv</p>
+  </footer>
+</div>
