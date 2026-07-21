@@ -13,20 +13,21 @@
 
 ## ⚠️ Access note (read first)
 
-The full text could **not be retrieved in this environment**: the network egress
-policy blocked MDPI, doi.org, and the scholarly metadata APIs (Crossref /
-OpenAlex) with HTTP 403, and per the proxy policy those blocks must be reported,
-not routed around. **This dossier is therefore built from the article's
-metadata, abstract, and indexed excerpts** (verified across MDPI's own listing,
-the DOI record, and ResearchGate). Every claim below that is attributed to the
-paper was found in those excerpts. **Quantitative property/BOG numbers that could
-not be confirmed as this paper's own are listed separately under
-"Full-text extraction pending" and are NOT attributed to it.**
+**UPDATE 2026-07-21 — full text now in repo.** The user supplied the PDF, so the
+full text is available at
+[`../sources/raw/jmse-2025-lng-to-lh2-maritime-review.pdf`](../sources/raw/jmse-2025-lng-to-lh2-maritime-review.pdf)
+and as machine-generated Markdown at
+[`jmse-2025-lng-to-lh2-maritime-review.fulltext.md`](jmse-2025-lng-to-lh2-maritime-review.fulltext.md)
+(converted with Microsoft `markitdown`). Author affiliation is now confirmed:
+**Thermochemical Power Group (TPG), DIME — University of Genova, Italy**.
 
-➡️ **To complete this dossier:** drop the PDF into
-[`../../sources/raw/`](../../sources/raw/) (it becomes proprietary-tier precedence
-per `CLAUDE.md` §7e) and Zane will do a full, correctly-attributed
-section-by-section extraction and propose promotions into `../../data/`.
+The sections below were written **before** the PDF arrived — from the abstract,
+metadata, and indexed excerpts (direct fetch of MDPI/doi.org/Crossref/OpenAlex was
+blocked by the environment's egress policy at the time). They are accurate as far
+as they go, but the **"Full-text extraction pending" (§5) items are now
+extractable from the in-repo full text** — that work is queued for the KHI-vs-
+papers comparison in the next session. Verify figures against the PDF before
+promoting anything into `../../data/`.
 
 ---
 
@@ -34,8 +35,8 @@ section-by-section extraction and propose promotions into `../../data/`.
 
 - **Title:** From LNG to LH2 in Maritime Transport: A Review of Technology,
   Materials, and Safety Challenges
-- **Authors:** Matteo Passalacqua; Alberto Traverso
-  *(affiliations not captured from excerpts — confirm from full text)*
+- **Authors:** Matteo Passalacqua; Alberto Traverso — Thermochemical Power Group
+  (TPG), DIME, University of Genova, Via Montallegro 1, 16145 Genova, Italy
 - **Venue:** *Journal of Marine Science and Engineering* (JMSE), MDPI —
   **Vol. 13, Issue 9, Article 1748**
 - **Published:** **10 September 2025**

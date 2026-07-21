@@ -391,3 +391,68 @@ validate the end-to-end pipeline; (2) can build the first licensor profile
 (e.g. `research/profiles/kawasaki.md`, cross-linked to existing repo data) when
 the user wants; (3) digest commit-target is `main` — tell Zane if a dedicated
 `zane/lh2-weekly-digests` branch is preferred instead.
+
+### Zane in action: first digest, source dossiers, PDF ingestion (2026-07-21, same session)
+
+After building Zane, the user exercised it:
+
+1. **First weekly LH2 digest** (`research/digests/2026-07-21-lh2-weekly.md`) — user
+   said "Zane, run this week digest." Quiet week; two firm in-window items (LH2
+   Shipping NOK 344.3 M Enova award for two 7,700 dwt LH2-fuelled bulkers; DNV
+   July-2026 class-rules edition with gas-fuelled-hydrogen rules, in force
+   2027-01-01) + date-tagged adjacent items. **Web-research limitation observed:**
+   most news domains (marinelink, Ship&Bunker, DNV, MDPI, etc.) return HTTP 403 to
+   WebFetch, and the scholarly APIs (Crossref/OpenAlex) + doi.org are blocked by
+   the environment **egress policy** — so Zane worked from corroborated WebSearch
+   snippets and flagged it. WebSearch works; WebFetch/curl to non-allowlisted
+   hosts do not.
+
+2. **RSER voyage-BOR source dated** — user asked when the ~3.44%/day BOG figure was
+   published. Pinned: RSER Vol. 233 (Jun 2026), art. 116850, DOI
+   10.1016/j.rser.2026.116850, **online 28 Feb 2026** (i.e. NOT this-week; adjacent
+   literature). Corrected the digest + staging.csv.
+
+3. **JMSE dossier** — user asked to build a DB markdown from the open-access JMSE
+   review. Created `research/literature/` (new source-dossier folder) +
+   `2025-jmse-lng-to-lh2-maritime-review.md`. Full text was egress-blocked at the
+   time, so quantitative numbers were deliberately left **unattributed** under a
+   "full-text extraction pending" section (no misattribution, no fabrication).
+
+4. **Both PDFs ingested via markitdown** — user uploaded the two paper PDFs and
+   asked to convert them with Microsoft `markitdown` and store them in Zane's
+   environment. Done:
+   - Installed `markitdown[pdf]` 0.1.6 (had to `pip install --force-reinstall cffi`
+     first — its C backend `_cffi_backend` was missing, breaking `cryptography`/
+     pdfminer).
+   - Originals: `research/sources/raw/jmse-2025-lng-to-lh2-maritime-review.pdf`,
+     `research/sources/raw/rser-2026-lh2-maritime-transportation.pdf`.
+   - Full-text Markdown (with provenance headers):
+     `research/literature/jmse-2025-lng-to-lh2-maritime-review.fulltext.md`,
+     `research/literature/rser-2026-lh2-maritime-transportation.fulltext.md`.
+   - **Authors now confirmed from PDFs:** JMSE = Passalacqua & Traverso (TPG, DIME,
+     University of Genova, Italy); RSER = MD. Shajratul Alam Towhid & Sumaiya Binte
+     Hossain (BUET / North South University, Dhaka, Bangladesh).
+   - Updated the JMSE dossier access note (full text now in-repo) and staging.csv
+     rows for both papers (raw + fulltext paths, confirmed authors, verified
+     abstract figures for RSER: BOG ~3.44%/day, ~3.74 $/GJ, larger tank diameter
+     ~1.8%→~0.2%/day, ballast-warming heat cut 41.6–54.3%, single-node under-
+     predicts wall energy up to 60% at ≤5% fill).
+
+5. **Merged all to `main`** per explicit user instruction (see git log merge
+   commit) and pushed. The Zane weekly trigger already commits to `main`, so this
+   consolidates everything (agent + digests + dossiers + PDFs) onto the trunk.
+
+**➡️ NEXT SESSION (user's stated goal):** build a **comparison table of KHI vs the
+two papers** — i.e. KHI's LH2 solution (in-repo proprietary data, esp. shipping/
+BOG/tank/materials/economics) vs. Towhid & Hossain (RSER 2026) and Passalacqua &
+Traverso (JMSE 2025). Both papers' full text is now in `research/literature/*.fulltext.md`
+and `research/sources/raw/`. Key axes to compare (from OKR KR1.3 + these papers):
+voyage/at-rest **BOR** (KHI 0.1%/day at-rest, no voyage figure disclosed vs RSER
+~3.44%/day and the tank-diameter BOR scaling), **tank design/insulation** (KHI
+double-wall vacuum spherical 64–65k m³ vs paper tank-architecture taxonomy),
+**materials** (JMSE 316/316L austenitic SS baseline, embrittlement-vs-temperature),
+**BOG management** (KHI burns voyage BOG as fuel, no onboard reliq vs paper reliq/
+management strategies), **techno-economics** (KHI IAE stack vs RSER ~3.74 $/GJ),
+and **safety** (JMSE "record reflects limited data, not inherent safety"). Verify
+every paper number against the PDF before putting it in the table; keep KHI
+(proprietary) vs public-paper sources clearly separated.
