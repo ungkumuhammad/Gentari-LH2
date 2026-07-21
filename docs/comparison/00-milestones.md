@@ -121,10 +121,10 @@ pre-built to de-risk; NH3 side unlocks when the internal dataset lands.
 |----|------|-----------------|---------------------|--------|
 | M3.1 | **LH2 chain cost stack → LCOH** ($/kg delivered) on generic basis | memo §Economics, `data/costs/` | M1.5, `economics.lcoh` | 🟡 `economics.lcoh` + `scenario.run_scenario` implemented and runnable (`scripts/run_project_model.py`); still gated on user-supplied CapEx/OpEx since KHI has not disclosed them |
 | M3.2 | **NH3 chain cost stack → LCOH** (incl. cracking/reconversion) | memo §Economics | **user NH3 dataset (D4)** | 🔒 |
-| M3.3 | **BOG / boil-off** comparison across chain (terminal + voyage) | memo §BOG | M1, NH3 data | ⬜ |
+| M3.3 | **BOG / boil-off** comparison across chain (terminal + voyage) | memo §BOG | M1, NH3 data | 🟡 LH2-vs-literature BOG comparison drafted in `docs/comparison/khi-vs-literature-lh2-comparison.md` §1; still blocked on NH3 data for the full LH2-vs-NH3 memo |
 | M3.4 | **Speed / voyage time** on existing vessels (LH2 16 kn vs NH3 carrier) | memo §Speed | M1.3, NH3 data | ⬜ |
 | M3.5 | **End-to-end energy** consumption (liquefaction vs synthesis+cracking, regas) | memo §Energy | M1.1/1.4, NH3 data | ⬜ |
-| M3.6 | **Complexity / TRL + safety / permitting** (toxicity, separation distances, loading-arm TRL 6–7) | memo §Complexity | `kawasaki-2026-questionnaire`, `-comparison` | ⬜ |
+| M3.6 | **Complexity / TRL + safety / permitting** (toxicity, separation distances, loading-arm TRL 6–7) | memo §Complexity | `kawasaki-2026-questionnaire`, `-comparison` | 🟡 KHI-vs-literature materials/tank-design/safety comparison drafted in `docs/comparison/khi-vs-literature-lh2-comparison.md` §§2–3, 6; still blocked on NH3 data for the full LH2-vs-NH3 memo |
 | M3.7 | **Sensitivities** on dominant drivers (scale, distance, energy price) | memo §Sensitivity | M3.1–M3.2 | ⬜ |
 | M3.8 | **Corridor re-run** (D1) once origin→destination, distance, volume given | memo addendum | **user corridor inputs (D1)** | 🔒 |
 | M3.9 | **Memo write-up + go/no-go** (boundary, units, cost-year, assumptions up front; Sources list) | `docs/comparison/lh2-vs-nh3.md` | M3.1–M3.7 | ⬜ |
@@ -168,6 +168,7 @@ tracked here rather than renumbering the plan:
 | `src/lh2/{liquefaction,storage,shipping,regas,economics}.py` implemented | Real (no-longer-stub) functions: SEC energy, train sizing, at-rest/voyage boil-off, fleet sizing, regas duty, NPV/IRR/LCOH — every default sourced or tagged per `CLAUDE.md` §4 | ✅ |
 | `src/lh2/scenario.py` + `scripts/run_project_model.py` | Project-level calculator: annual liquefaction throughput + shipping distance → energy, boil-off, fleet size, indicative IAE cost stack (interpolated), and LCOH if the user supplies CapEx/OpEx/discount rate. Missing KHI disclosures (CapEx, OpEx, carbon intensity, voyage BOR, FX rate) surface as an explicit `gaps` list rather than being fabricated | ✅ v1 |
 | `tests/test_scenario.py` | 15 tests covering unit consistency, KHI-figure reconciliation, and the "no fabricated numbers" invariant in code | ✅ |
+| `docs/comparison/khi-vs-literature-lh2-comparison.md` (2026-07-21) | KHI proprietary LH2 solution vs. two ingested public papers (RSER 2026 Towhid & Hossain; JMSE 2025 Passalacqua & Traverso) — sourced comparison tables across BOR (at-rest vs voyage), tank design/insulation, materials, BOG management strategy, techno-economics, and safety. Feeds M3.3 (BOG), M3.6 (complexity/TRL/safety) directly; every paper figure re-verified against the full-text `.md`, not just `research/sources/staging.csv`. Provenance kept separate per cell ([KHI]/[RSER]/[JMSE]); closes with a gaps + promotion-candidates list (not promoted — separate user approval needed) | ✅ |
 
 **Relationship to KR1.2/KR1.3:** this Python calculator is a working reference
 implementation of much of what M2.3 (shipping calc logic) and M3.1 (LCOH)
