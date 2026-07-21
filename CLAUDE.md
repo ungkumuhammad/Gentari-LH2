@@ -139,7 +139,16 @@ sources/raw/         ← drop zone for user-uploaded company/technology files
 src/lh2/             ← Python modeling library (one module per segment)
 notebooks/           ← scenario runs & analysis
 tests/               ← smoke + model tests
+research/            ← "Zane" LH2 research sub-agent: charter (AGENT.md), weekly
+                       digests, licensor profiles, isolated source staging
+.claude/agents/      ← dispatchable sub-agents (zane.md = the LH2 research agent)
 ```
+
+- **External-source LH2 research / market news?** → dispatch **Zane**
+  (`.claude/agents/zane.md`; charter in [`research/AGENT.md`](research/AGENT.md)).
+  Calling Zane by name grants standing consent to research public sources
+  autonomously — but the no-fabrication rule still binds, and findings stay
+  isolated in `research/` until you approve promotion into `data/`.
 
 - **Reference question?** → `docs/` + `data/properties/`.
 - **Need a number?** → `data/` (and cite the `references.csv` id).

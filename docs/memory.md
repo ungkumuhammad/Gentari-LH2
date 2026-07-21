@@ -4,7 +4,7 @@
 > Updated every session. `CLAUDE.md` points here — read this at the start of
 > any session where the user references prior work or continuing a task.
 >
-> Last updated: 2026-07-20
+> Last updated: 2026-07-21
 
 ---
 
@@ -340,3 +340,54 @@ storage-days → BOG management energy), and two thermodynamics deep-dives
 (theoretical liquefaction work vs KHI's SEC, and BOG re-liquefaction's
 smaller ideal-work requirement) folded into `docs/methodology/02-liquefaction.md`
 and `data/properties/liquefaction.csv` as cited/tagged database rows.
+
+### "Zane" LH2 research sub-agent + weekly news loop (2026-07-21)
+
+User asked to build a dedicated research sub-agent — a specific folder — to
+research LH2 technology from public sources (papers, licensors, news) with a
+strict no-fabrication rule, acting as a senior principal H2/NH3 engineer expert
+in H2 carriers/derivatives, and with a weekly loop scanning new LH2 news every
+Monday 07:00 Malaysia Time. Clarifying questions asked upfront (decision-first,
+per user preference).
+
+**Decisions from the user (this session):**
+
+| # | Decision | Chosen |
+|---|----------|--------|
+| Z1 | Agent name | **"Zane"** |
+| Z2 | Research-consent model | Invoking Zane **by name** = standing consent to autonomously use WebSearch/WebFetch on public sources (no per-source approval); the **weekly loop** also has standing consent to run + commit. The no-fabrication cardinal rule is **unchanged** — consent governs *fetching*, never *whether a number needs a source*. Outside Zane, the repo's "ask-first" external-data policy still holds. |
+| Z3 | Agent form | **Folder + dispatchable sub-agent + scheduled loop** |
+| Z4 | Weekly loop | **LH2-only**, commit a dated digest & push, notify |
+| Z5 | Standing research scope | **LH2 only** (Zane's broad carrier expertise — NH3, e-methane, SAF, e-methanol, LOHC — is on-demand only when the user names the carrier) |
+
+**Isolation policy:** Zane's findings stage in `research/sources/staging.csv`
+and live in `research/`; promotion into the repo-wide `data/references.csv` /
+`data/` tables is a **separate explicit user approval** (keeps the proprietary
+Kawasaki DB clean).
+
+| File | Action | Purpose |
+|------|--------|---------|
+| `research/AGENT.md` | Created | Zane's full charter: persona, research-consent model (§4), inherited no-fabrication rule (§3), workflows (§5), weekly-digest spec (§6), guardrails |
+| `research/README.md` | Created | Human-facing overview + how to invoke Zane |
+| `research/digests/README.md` | Created | Weekly digest folder index |
+| `research/profiles/README.md` | Created | Licensor/technology profile folder index |
+| `research/templates/weekly-digest-template.md` | Created | Standard weekly LH2 digest layout |
+| `research/sources/staging.csv` | Created | Isolated source registry (header only) |
+| `.claude/agents/zane.md` | Created | Dispatchable Claude Code sub-agent definition (tools: Read/Write/Edit/Glob/Grep/Bash/WebSearch/WebFetch) |
+| `CLAUDE.md` | Updated | Repo map: added `research/` + `.claude/agents/` and a "dispatch Zane for external LH2 research" pointer |
+| `docs/memory.md` | Updated | This entry |
+
+**Scheduled trigger (loop):** created via the claude-code-remote routines API —
+id `trig_015meLYXKh1RoNoEswWW94rh`, name "Zane — Weekly LH2 News Digest (Mon
+07:00 MYT)", cron `0 23 * * 0` (UTC) = **Monday 07:00 Malaysia Time**,
+fresh-session-per-fire, push + email notification on. First run:
+2026-07-27 ~07:00 MYT. The fired session reads `research/AGENT.md`, does the LH2
+scan, writes `research/digests/YYYY-MM-DD-lh2-weekly.md`, commits to **`main`**
+(durable default branch, so digests survive after feature branches merge) and
+pushes, listing new figures as "promotion candidates" rather than auto-promoting.
+
+**Open follow-ups / offered:** (1) can run a first seed digest on request to
+validate the end-to-end pipeline; (2) can build the first licensor profile
+(e.g. `research/profiles/kawasaki.md`, cross-linked to existing repo data) when
+the user wants; (3) digest commit-target is `main` — tell Zane if a dedicated
+`zane/lh2-weekly-digests` branch is preferred instead.
