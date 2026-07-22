@@ -349,21 +349,26 @@
   .result-card dl { margin: 0; }
   .result-card .row {
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
-    gap: 10px;
+    gap: 3px 10px;
     font-size: 12px;
     padding: 5px 0;
     border-bottom: 1px dashed var(--line);
   }
   .result-card .row:last-child { border-bottom: none; }
-  .result-card .row .k { color: var(--muted); }
+  .result-card .row .k { color: var(--muted); flex: 1 1 auto; min-width: 0; }
   .result-card .row .v {
     font-family: var(--font-mono);
     font-variant-numeric: tabular-nums;
     color: var(--ink);
     font-weight: 600;
     text-align: right;
-    white-space: nowrap;
+    white-space: normal;
+    overflow-wrap: break-word;
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: 100%;
   }
   .result-card .row .v.flag-gap { color: var(--gap); font-weight: 700; }
   .result-card .row .v.flag-assumption { color: var(--assumption); }
