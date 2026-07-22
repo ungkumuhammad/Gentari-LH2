@@ -42,6 +42,16 @@ KHI_MIN_ECONOMICAL_SCALE_TPA = 10_000.0
 #: figures, not an invented default — replace if KHI provides a direct figure.
 KHI_TRAIN_UTILIZATION_ASSUMPTION = 0.78
 
+#: [ASSUMPTION] Plant stream days per year (on-stream time, i.e. calendar
+#: days less planned turnaround/maintenance downtime). KHI's own Base/Large
+#: data points used to derive KHI_TRAIN_UTILIZATION_ASSUMPTION above assumed
+#: a 365-day (calendar) year, so 365 is the default here to reproduce that
+#: derivation unchanged. Not a KHI-disclosed figure — override with a
+#: project-specific turnaround/maintenance schedule if available (typical
+#: cryogenic liquefaction trains run ~330-350 stream-days/y after planned
+#: turnaround; no source for a KHI-specific value exists yet).
+KHI_STREAM_DAYS_PER_YEAR_ASSUMPTION = 365.0
+
 
 def liquefaction_energy(mass: object, sec: object = KHI_SEC_MID):
     """Liquefaction energy use for a given hydrogen mass.
@@ -65,6 +75,7 @@ def train_count(
     annual_capacity_tpa: float,
     train_capacity: object = KHI_TRAIN_CAPACITY,
     utilization: float = KHI_TRAIN_UTILIZATION_ASSUMPTION,
+    stream_days_per_year: float = KHI_STREAM_DAYS_PER_YEAR_ASSUMPTION,
 ) -> int:
     """Number of liquefaction trains needed for an annual throughput.
 
@@ -72,16 +83,25 @@ def train_count(
         annual_capacity_tpa: Required annual liquefaction throughput, t/y.
         train_capacity: Per-train nameplate capacity (default: KHI's
             disclosed 115 t/d train, ``KHI_TRAIN_CAPACITY``).
-        utilization: Effective annual utilization factor (default:
-            ``KHI_TRAIN_UTILIZATION_ASSUMPTION``, derived from KHI's own
-            Base/Large data points — see that constant's docstring/comment).
+        utilization: Effective rate-utilization factor while on-stream
+            (default: ``KHI_TRAIN_UTILIZATION_ASSUMPTION``, derived from
+            KHI's own Base/Large data points — see that constant's
+            docstring/comment).
+        stream_days_per_year: Plant on-stream days per year, i.e. calendar
+            days less planned turnaround/maintenance downtime (default:
+            ``KHI_STREAM_DAYS_PER_YEAR_ASSUMPTION`` = 365 d, matching the
+            365-day basis KHI's own data points were back-solved against).
+            Pass a project-specific value (e.g. 330-350 d) to model planned
+            downtime explicitly instead of folding it into ``utilization``.
 
     Returns:
         Number of whole trains (rounded up) required.
     """
     if not hasattr(train_capacity, "units"):
         train_capacity = Q_(train_capacity, "t/day")
-    annual_train_capacity = (train_capacity * Q_(365.0, "day") * utilization).to("t")
+    annual_train_capacity = (
+        train_capacity * Q_(stream_days_per_year, "day") * utilization
+    ).to("t")
     n = annual_capacity_tpa / annual_train_capacity.magnitude
     return math.ceil(n)
 
@@ -93,6 +113,7 @@ __all__ = [
     "KHI_TRAIN_CAPACITY",
     "KHI_MIN_ECONOMICAL_SCALE_TPA",
     "KHI_TRAIN_UTILIZATION_ASSUMPTION",
+    "KHI_STREAM_DAYS_PER_YEAR_ASSUMPTION",
     "liquefaction_energy",
     "train_count",
 ]

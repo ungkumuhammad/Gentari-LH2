@@ -511,6 +511,11 @@
             <input type="number" id="in-sec" value="8.5" min="0" step="0.1" oninput="calculate()">
           </div>
           <div class="field">
+            <label for="in-stream-days">Reliq. plant stream days/yr</label>
+            <span class="hint">days — on-stream time (calendar days less planned turnaround). Default 365 matches the 365-day basis KHI's own Base/Large data was back-solved against (27); lower it to model planned downtime explicitly. <span class="tag assumption">ASSUMPTION</span></span>
+            <input type="number" id="in-stream-days" value="365" min="1" max="366" step="1" oninput="calculate()">
+          </div>
+          <div class="field">
             <label for="in-speed">Vessel speed</label>
             <span class="hint">km/h — KHI commercial target 29.6</span>
             <input type="number" id="in-speed" value="29.6" min="1" step="0.1" oninput="calculate()">
@@ -785,6 +790,7 @@
       <div class="result-card">
         <h3>② Reliquefaction plant</h3>
         <div class="row"><span class="k">Trains required (115 t/d)</span><span class="v" id="r-trains">—</span></div>
+        <div class="row"><span class="k">Stream days/yr used</span><span class="v" id="r-stream-days">—</span></div>
         <div class="row"><span class="k">SEC used</span><span class="v" id="r-sec">—</span></div>
         <div class="row"><span class="k">Annual energy (fresh feed)</span><span class="v" id="r-liq-energy">—</span></div>
         <div class="row"><span class="k">Average power draw</span><span class="v" id="r-liq-power">—</span></div>
@@ -879,6 +885,7 @@
       <li>Fleet sizing assumes a 90% fleet-wide operational availability (dry-docking/weather/maintenance margin) — not a KHI-disclosed figure. <span class="tag assumption">ASSUMPTION</span></li>
       <li>H₂ lower heating value (LHV) ≈ 120 MJ/kg = 33.33 kWh/kg — <i>data/properties/lh2-properties.csv</i>, tagged <span class="tag assumption">needs-source</span> pending a formal NIST/ISO citation (same open item as note 20). Used as the energy-efficiency reference in the "Well-to-LH2 energy efficiency" card. Electrolyzer specific energy consumption itself is a <b>user-supplied calculator input</b>, not a KHI figure — production is segment [1], upstream of and outside this diagram's KHI-sourced boundary.</li>
       <li><b>BOG management energy is derived, not KHI-disclosed.</b> BOG is already at ~20.3 K and near-equilibrium para fraction when it boils off, so its ideal (theoretical minimum) energy is only the condensation step (≈1.71 kWh/kg), not the full fresh-feed cool-down + ortho-para conversion (≈3.9 kWh/kg, para-H2 basis) — see <i>docs/methodology/02-liquefaction.md</i> "BOG re-liquefaction is a different (smaller) calculation." This calculator scales your own reliquefaction SEC input by the ratio of those two ideal-work figures (≈0.438) to estimate a real-world BOG-management specific energy, applied to export-terminal, import-terminal, <i>and</i> shipping boil-off for consistent energy accounting — even though KHI's ships actually burn voyage BOG as propulsion fuel rather than electrically re-liquefying it (reply Q23/Q32). <span class="tag assumption">ASSUMPTION: derived</span></li>
+      <li><b>Reliquefaction plant stream days/year is a separate, user-editable input</b> (default 365). Previously this was folded silently into the 0.78 utilization factor (note 23), which was back-solved from KHI's Base/Large data points assuming a 365-day calendar year. The calculator now exposes that 365-day basis explicitly so planned-turnaround/maintenance downtime can be modeled directly (typical cryogenic liquefaction trains run ~330-350 stream-days/y after turnaround) instead of being blended into the rate-utilization assumption. No KHI-specific stream-days figure has been disclosed — treat any value other than the 365-day default as your own project assumption. See <i>src/lh2/liquefaction.py</i> <code>KHI_STREAM_DAYS_PER_YEAR_ASSUMPTION</code>. <span class="tag assumption">ASSUMPTION</span></li>
     </ol>
   </div>
 
@@ -940,8 +947,8 @@
     return { stack, clipped };
   }
 
-  function trainCount(annualTpa) {
-    const annualTrainCapacity = TRAIN_CAPACITY_TPD * 365 * TRAIN_UTILIZATION;
+  function trainCount(annualTpa, streamDaysPerYear = 365) {
+    const annualTrainCapacity = TRAIN_CAPACITY_TPD * streamDaysPerYear * TRAIN_UTILIZATION;
     return Math.ceil(annualTpa / annualTrainCapacity);
   }
   function boilOffAtRest(inventoryKg, days, borPctPerDay = TERMINAL_BOR_PCT_PER_DAY) {
@@ -997,6 +1004,7 @@
     const ktpa = parseFloat(document.getElementById('in-ktpa').value) || 0;
     const distanceKm = parseFloat(document.getElementById('in-distance').value) || 0;
     const sec = parseFloat(document.getElementById('in-sec').value) || 8.5;
+    const streamDays = parseFloat(document.getElementById('in-stream-days').value) || 365;
     const speed = parseFloat(document.getElementById('in-speed').value) || 29.6;
     const cargoCap = parseFloat(document.getElementById('in-cargo').value) || 160000;
     const exportHold = parseFloat(document.getElementById('in-export-hold').value) || 0;
@@ -1039,12 +1047,13 @@
     }
 
     // ---- Reliquefaction ----
-    const trains = trainCount(annualTpa);
+    const trains = trainCount(annualTpa, streamDays);
     const liqEnergyKwh = annualKg * sec;
     const liqEnergyGwh = liqEnergyKwh / 1e6;
     const liqAvgMw = liqEnergyKwh / 8760 / 1000;
     const bogSecKwhPerKg = sec * BOG_SEC_RATIO; // derived BOG-management SEC, see constants above (26)
     val('r-trains', fmt(trains) + ' × 115 t/d');
+    val('r-stream-days', fmt(streamDays) + ' d/y', streamDays !== 365 ? 'flag-assumption' : undefined);
     val('r-sec', fmtKwhMj(sec));
     val('r-liq-energy', fmtAnnualEnergy(liqEnergyKwh));
     val('r-liq-power', '≈ ' + fmt(liqAvgMw, 0) + ' MW avg');
