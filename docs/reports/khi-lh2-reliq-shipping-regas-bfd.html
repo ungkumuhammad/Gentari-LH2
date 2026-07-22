@@ -491,6 +491,11 @@
           <input type="number" id="in-distance" value="6000" min="1" step="50" oninput="calculate()">
         </div>
         <div class="field field-primary">
+          <label for="in-sec">Liquefaction SEC</label>
+          <span class="hint">kWh/kg — <b>recommended: 8.5</b> (KHI's disclosed range is 8–9 kWh/kg, varies with liquefier scale/boundary conditions, reply Q1). Override freely to run sensitivities across that range or test your own figure.</span>
+          <input type="number" id="in-sec" value="8.5" min="0" step="0.1" oninput="calculate()">
+        </div>
+        <div class="field field-primary">
           <label for="in-electrolyzer-sec">Electrolyzer plant efficiency</label>
           <span class="hint">kWh/kg H₂ — user input; production is outside KHI's LH2 offer, leave blank to skip</span>
           <input type="number" id="in-electrolyzer-sec" value="" min="0" step="0.5" placeholder="e.g. 55–65" oninput="calculate()">
@@ -510,11 +515,6 @@
       <details class="advanced">
         <summary>Advanced parameters (liquefaction, shipping, economics)</summary>
         <div class="field-grid">
-          <div class="field">
-            <label for="in-sec">Liquefaction SEC</label>
-            <span class="hint">kWh/kg — KHI range 8–9, default midpoint</span>
-            <input type="number" id="in-sec" value="8.5" min="0" step="0.1" oninput="calculate()">
-          </div>
           <div class="field">
             <label for="in-stream-days">Reliq. plant stream days/yr</label>
             <span class="hint">days — on-stream time (calendar days less planned turnaround). Default 365 matches the 365-day basis KHI's own Base/Large data was back-solved against (27); lower it to model planned downtime explicitly. <span class="tag assumption">ASSUMPTION</span></span>
@@ -539,6 +539,21 @@
             <label for="in-voyage-bor">Voyage BOR</label>
             <span class="hint">%/day — KHI discloses no figure; leave blank to flag as a gap</span>
             <input type="number" id="in-voyage-bor" value="" min="0" step="0.05" placeholder="not disclosed by KHI" oninput="calculate()">
+          </div>
+          <div class="field">
+            <label for="in-regas-temp">Regas send-out temperature</label>
+            <span class="hint">°C — target GH₂ delivery temperature at the regas outlet. Mirrors the same 30°C the electrolyzer feed uses (21) — a Gentari project spec, not a KHI figure. <span class="tag assumption">ASSUMPTION</span></span>
+            <input type="number" id="in-regas-temp" value="30" step="1" oninput="calculate()">
+          </div>
+          <div class="field">
+            <label for="in-regas-pressure">Regas send-out pressure</label>
+            <span class="hint">barg — target GH₂ delivery pressure at the regas outlet, achieved by cryogenic-pumping the LH2 before vaporization (standard practice — pumping liquid is far cheaper than compressing gas). Not a KHI figure. <span class="tag assumption">ASSUMPTION</span></span>
+            <input type="number" id="in-regas-pressure" value="30" min="0" step="1" oninput="calculate()">
+          </div>
+          <div class="field">
+            <label for="in-regas-cryo-pump-eff">Regas cryo pump efficiency</label>
+            <span class="hint">% — LH2 pump raising pressure to send-out spec before vaporization. <span class="tag assumption">ASSUMPTION</span></span>
+            <input type="number" id="in-regas-cryo-pump-eff" value="70" min="1" max="100" step="1" oninput="calculate()">
           </div>
           <div class="field">
             <label for="in-regas-dt">Regas seawater ΔT</label>
@@ -863,8 +878,11 @@
       <div class="result-card">
         <h3>⑥ Regasification plant</h3>
         <div class="row"><span class="k">Vaporizer type</span><span class="v">Open-Rack Vaporizer (ORV), seawater</span></div>
-        <div class="row"><span class="k">Annual heat duty</span><span class="v" id="r-regas-duty">—</span></div>
+        <div class="row"><span class="k">Send-out spec (input)</span><span class="v" id="r-regas-spec">—</span></div>
+        <div class="row"><span class="k">Annual heat duty (KHI 3.8 MJ/kg)</span><span class="v" id="r-regas-duty">—</span></div>
         <div class="row"><span class="k">Average thermal duty</span><span class="v" id="r-regas-power">—</span></div>
+        <div class="row"><span class="k">Heat duty cross-check (derived)</span><span class="v" id="r-regas-crosscheck">—</span></div>
+        <div class="row"><span class="k">Cryo pump-to-pressure (derived)</span><span class="v" id="r-regas-cryo-pump">—</span></div>
         <div class="row"><span class="k">Seawater flow (annual, derived)</span><span class="v" id="r-regas-sw-flow">—</span></div>
         <div class="row"><span class="k">Seawater pump energy (derived)</span><span class="v" id="r-regas-pump-energy">—</span></div>
         <div class="row"><span class="k">Supplemental heater energy</span><span class="v" id="r-regas-heater-energy">—</span></div>
@@ -934,6 +952,7 @@
       <li><b>Terminal tank sizing and BOG are vessel-speed/fleet-driven and volume-driven, not user-typed hold-days.</b> Export/loading and import/receiving terminal cards each recommend a "survival size" tank capacity: the larger of (a) one full vessel cargo parcel (since loading/discharge happens in a single batch) or (b) daily production/offtake x <i>survival days</i>, where <code>survival_days = loading_interval_days + vessel_arrival_buffer_days</code>. <code>loading_interval_days = round_trip_days / fleet_size</code> is the fleet's average time between calls (round-trip depends on the <b>vessel speed</b> and distance inputs); <code>vessel_arrival_buffer_days</code> (default 2 d, <code>in-vessel-buffer</code>) is a small explicit contingency for a late vessel. This is deliberately leaner than sizing for a full missed round-trip cycle — the fleet is already sized to the throughput (see <code>fleetSize()</code>), so a worst-case single-vessel-failure basis would recommend needlessly large (costly) tanks; a fleet-normalized interval plus a modest lateness buffer better reflects how a multi-vessel operation is actually run, at the cost of speed/distance mattering less once the fleet auto-scales to compensate (per <code>fleetSize()</code>, the interval converges toward roughly cargo capacity x fleet-availability regardless of speed) — the buffer-days term is what keeps some schedule-risk margin without inflating the whole tank. No blanket safety margin is layered on top. Recommended sizes are pre-filled but fully editable (<code>in-export-capacity</code>, <code>in-import-capacity</code>) — leave blank to use the recommendation, or type your own (e.g. a smaller value if you want to test a leaner/riskier design, or a larger one for extra schedule slack). Whichever capacity is in effect then drives BOG directly: average residence time = tank inventory (capacity x LH2 density) / daily mass flow (the standard CSTR/space-time relationship, tau = V/Q), fed into the same exponential boil-off-at-rest formula used elsewhere (note 7/16) — a larger tank relative to throughput means LH2 dwells longer and accumulates more boil-off. <b>None of this sizing methodology is KHI-disclosed</b> — KHI only gives the actual Base/Large-scale tank counts and unit sizes (notes 7, 16), not a design/sizing method; treat every survival-size, buffer-day, and residence-time figure as a project-specific engineering assumption to be checked against a real terminal design and cost model. <span class="tag assumption">ASSUMPTION: derived</span></li>
       <li><b>Seawater physical properties</b> used in the regas ORV pump-power derivation (note 31): density ≈1,025 kg/m³ and specific heat ≈3.93 kJ/kg·K, both standard values for open-ocean seawater at ~35 ppt salinity. These are widely-published physical constants, not KHI or project data, but no formal citation (e.g. UNESCO/IOC-SCOR-IAPSO seawater equation of state, or a CRC Handbook edition) has been logged to <i>data/references.csv</i> yet. <span class="tag assumption">needs-source</span></li>
       <li><b>Regasification plant card (⑥) now derives the ORV seawater pump's electrical energy from first principles</b> — no KHI or public source gives an electrical consumption figure for KHI's disclosed ORV/seawater vaporizer (reply Q17 covers only the heat-source choice; reply Q18 gives the 3.8 MJ/kg <i>thermal</i> duty, which is free ambient heat, not an electrical cost). The derivation: (1) seawater mass flow = heat duty / (seawater specific heat x your <code>Regas seawater ΔT</code> input, default 5°C — a typical LNG/LH2 ORV design temperature drop, not a KHI figure); (2) seawater volume = mass / seawater density; (3) pump hydraulic energy = seawater density x gravity x your <code>Regas seawater pump head</code> input (default 20 m) x volume; (4) electrical input = hydraulic energy / your <code>Regas seawater pump efficiency</code> input (default 75%). An optional <code>Regas supplemental heater SEC</code> input (default 0, i.e. seawater-only, matching KHI's disclosed design) adds a second electrical term if you want to model backup/trim electric heating. The resulting total is folded into the "Well-to-Gate energy efficiency" card below as a fourth input-energy term alongside electrolyzer, reliquefaction, and BOG management — which is also why that card (and the KPI tile) is renamed from "Well-to-LH2" to <b>"Well-to-Gate"</b>, since the diagram's declared boundary already runs electrolyzer battery limit → regas GH₂ send-out, and this energy term now actually covers that last leg. Every ΔT/head/efficiency default here is a placeholder for your own design basis, not a sourced or KHI-derived value — treat the whole regas electrical figure as approximate until validated against a real ORV pump curve/vendor datasheet. <span class="tag assumption">ASSUMPTION: derived</span></li>
+      <li><b>Regas send-out spec (30°C / 30 barg default) and its two energy consequences, re-checked.</b> The regas card now takes explicit <code>Regas send-out temperature</code> and <code>Regas send-out pressure</code> inputs (defaults 30°C / 30 barg, mirroring the same 30°C/30 barg used for the electrolyzer feed condition — note 21 — as a symmetric Gentari project spec, not a KHI figure). Two consequences are modeled: <b>(1) Pressure — cryogenic pump work</b>, shown as "Cryo pump-to-pressure": LH2 is pumped from ~1 atm storage pressure up to send-out pressure <i>before</i> vaporization (specific work = ΔP / LH2 density / pump efficiency) — the standard, efficient design choice, since pumping liquid (nearly incompressible) costs far less than compressing the equivalent gas; no separate gas compressor is modeled, on the assumption pressurization always happens on the liquid side. This is folded into "Total regas electrical energy" alongside the seawater pump (note 31). <b>(2) Temperature — heat duty cross-check</b>, shown as "Heat duty cross-check": an independent order-of-magnitude estimate = latent heat at NBP (≈446 kJ/kg) + sensible heat from NBP (20.369 K) to your target temperature, using a <i>constant</i> gas specific heat of ≈14.3 kJ/kg·K (the standard room-temperature H2 value). This does <b>not</b> replace KHI's cited 3.8 MJ/kg (reply Q18), which still drives the seawater-flow calc — it is shown only as a sanity check, and it is a known <b>over-estimate</b>: real H2 gas Cp is lower than 14.3 kJ/kg·K at cryogenic temperatures (quantum rotational modes freeze out approaching 0 K), so the true sensible-heat integral is smaller than a constant-Cp calculation gives. A NIST WebBook fetch for exact real-gas enthalpies at both end states was attempted for this session and blocked (HTTP 403); the 446 kJ/kg and 14.3 kJ/kg·K figures come from published secondary sources (nuclear-power.com, engineeringtoolbox.com, Wikipedia heat-capacity data), not NIST directly. <b>Do not treat the cross-check number as authoritative</b> — it exists to flag whether KHI's figure is in the right ballpark for a ~30°C target (it is, by inspection: KHI's 3.8 MJ/kg sits below this over-estimate, consistent with real Cp being lower than the constant 14.3 used here) — get real REFPROP/NIST enthalpy data before using it for anything beyond a screening check. <span class="tag assumption">ESTIMATE — needs formal NIST/REFPROP source</span></li>
     </ol>
   </div>
 
@@ -964,6 +983,10 @@
   const SEAWATER_DENSITY_KG_PER_M3 = 1025; // standard seawater ~35 ppt salinity, needs-source (30)
   const SEAWATER_CP_KJ_PER_KGK = 3.93;     // standard seawater specific heat, needs-source (30)
   const GRAVITY_M_PER_S2 = 9.81;           // physical constant
+  const LH2_STORAGE_PRESSURE_BARA = 1.01325; // ~1 atm, matches "LH2 ~1 bar(a)" diagram label
+  const H2_NBP_K = 20.369;                 // normal boiling point, standard value, needs-source (32)
+  const H2_LATENT_HEAT_KJ_PER_KG = 446;    // at NBP, standard value, needs-source (32)
+  const H2_GAS_CP_KJ_PER_KGK = 14.3;       // ~constant above ~200K, standard value, needs-source (32)
   const FLEET_AVAILABILITY = 0.90;         // assumption, see notes (24)
   const LOAD_UNLOAD_DAYS_MID = 1.25;       // midpoint of KHI's 1-1.5 day range
   const H2_LHV_KWH_PER_KG = 120 / 3.6;     // 120 MJ/kg / 3.6 = 33.33 kWh/kg, data/properties/lh2-properties.csv, needs-source (25)
@@ -1098,6 +1121,11 @@
     const vesselBufferDays = isNaN(vesselBufferDaysRaw) ? 2 : vesselBufferDaysRaw;
     const voyageBorRaw = document.getElementById('in-voyage-bor').value;
     const voyageBor = voyageBorRaw === '' ? null : parseFloat(voyageBorRaw);
+    const regasTempC = parseFloat(document.getElementById('in-regas-temp').value);
+    const regasTempCUsed = isNaN(regasTempC) ? 30 : regasTempC;
+    const regasPressureBarg = parseFloat(document.getElementById('in-regas-pressure').value);
+    const regasPressureBargUsed = isNaN(regasPressureBarg) ? 30 : regasPressureBarg;
+    const regasCryoPumpEffPct = parseFloat(document.getElementById('in-regas-cryo-pump-eff').value) || 70;
     const regasDeltaT = parseFloat(document.getElementById('in-regas-dt').value) || 5;
     const regasPumpHeadM = parseFloat(document.getElementById('in-regas-head').value) || 20;
     const regasPumpEffPct = parseFloat(document.getElementById('in-regas-pump-eff').value) || 75;
@@ -1150,7 +1178,7 @@
     const bogSecKwhPerKg = sec * BOG_SEC_RATIO; // derived BOG-management SEC, see constants above (26)
     val('r-trains', fmt(trains) + ' × 115 t/d');
     val('r-stream-days', fmt(streamDays) + ' d/y', streamDays !== 365 ? 'flag-assumption' : undefined);
-    val('r-sec', fmtKwhMj(sec));
+    val('r-sec', fmtKwhMj(sec), (sec < 8 || sec > 9) ? 'flag-assumption' : undefined);
     val('r-liq-energy', fmtAnnualEnergyKwh(liqEnergyKwh));
 
     // ---- Shipping (moved ahead of the terminal cards: tank sizing below
@@ -1237,8 +1265,36 @@
     const regasDutyMj = deliveredKg * REGAS_DUTY_MJ_PER_KG;
     const regasDutyKwh = regasDutyMj / MJ_PER_KWH;
     const regasAvgMwTh = (regasDutyMj * 1000) / (365 * 24 * 3600) ; // MJ/y -> kJ/y /(s/y) = kW
+    val('r-regas-spec', fmt(regasTempCUsed, 0) + '°C / ' + fmt(regasPressureBargUsed, 0) + ' barg', 'flag-assumption');
     val('r-regas-duty', fmtAnnualEnergy(regasDutyKwh, 1));
     val('r-regas-power', '≈ ' + fmt(regasAvgMwTh / 1000, 0) + ' MWth avg');
+
+    // Heat-duty cross-check against KHI's disclosed 3.8 MJ/kg (note 32):
+    // constant-Cp sensible heat (NBP -> your target temp) + latent heat at
+    // NBP, using standard published H2 properties. This does NOT replace
+    // KHI's cited figure (still used for seawater flow above) — it is
+    // shown only as an independent order-of-magnitude check, and is a
+    // known OVER-estimate because real H2 Cp is lower than 14.3 kJ/kg-K
+    // at cryogenic temperatures (quantum rotational effects) — a proper
+    // check needs real-gas enthalpy tables (NIST/REFPROP), not done here.
+    const regasTargetTempK = regasTempCUsed + 273.15;
+    const regasCrossCheckKjPerKg = H2_LATENT_HEAT_KJ_PER_KG + H2_GAS_CP_KJ_PER_KGK * Math.max(regasTargetTempK - H2_NBP_K, 0);
+    const regasCrossCheckMjPerKg = regasCrossCheckKjPerKg / 1000;
+    val('r-regas-crosscheck', fmtKwhMj(regasCrossCheckMjPerKg / MJ_PER_KWH) + ' vs KHI ' + fmt(REGAS_DUTY_MJ_PER_KG, 1) + ' MJ/kg', 'flag-assumption');
+
+    // Cryogenic pump work to reach send-out pressure BEFORE vaporization
+    // (note 32) — the standard, energy-efficient approach: pumping liquid
+    // to pressure costs far less than compressing the equivalent gas,
+    // since liquid is ~incompressible (work = deltaP / density), so no
+    // separate gas compressor is modeled. deltaP is your send-out pressure
+    // input vs LH2 storage pressure (~1 atm).
+    const regasDeliveryBara = regasPressureBargUsed + LH2_STORAGE_PRESSURE_BARA;
+    const regasDeltaPBar = Math.max(regasDeliveryBara - LH2_STORAGE_PRESSURE_BARA, 0);
+    const regasDeltaPPa = regasDeltaPBar * 1e5;
+    const cryoPumpEffFactor = Math.min(Math.max(regasCryoPumpEffPct, 1), 100) / 100;
+    const cryoPumpKwhPerKg = (regasDeltaPPa / LH2_DENSITY_KG_PER_M3 / cryoPumpEffFactor) / 3.6e6;
+    const regasCryoPumpEnergyKwh = cryoPumpKwhPerKg * deliveredKg;
+    val('r-regas-cryo-pump', fmtKwhMj(cryoPumpKwhPerKg) + ' → ' + fmtAnnualEnergyKwh(regasCryoPumpEnergyKwh, 1), 'flag-assumption');
 
     // ORV seawater pump + optional heater electrical energy — first-principles
     // derivation, not KHI-disclosed (note 31). KHI's ORV uses seawater heat
@@ -1251,14 +1307,14 @@
     const pumpHydraulicJ = SEAWATER_DENSITY_KG_PER_M3 * GRAVITY_M_PER_S2 * regasPumpHeadM * seawaterVolumeM3;
     const regasPumpEnergyKwh = (pumpHydraulicJ / pumpEffFactor) / 3.6e6;
     const regasHeaterEnergyKwh = regasHeaterSecKwhPerKg * deliveredKg;
-    const regasElecTotalKwh = regasPumpEnergyKwh + regasHeaterEnergyKwh;
+    const regasElecTotalKwh = regasCryoPumpEnergyKwh + regasPumpEnergyKwh + regasHeaterEnergyKwh;
     const regasElecAvgMw = regasElecTotalKwh / (365 * 24) / 1000;
     val('r-regas-sw-flow', fmt(seawaterVolumeM3, 0) + ' m³/y', 'flag-assumption');
     val('r-regas-pump-energy', fmtAnnualEnergyKwh(regasPumpEnergyKwh, 1), 'flag-assumption');
     val('r-regas-heater-energy', fmtAnnualEnergyKwh(regasHeaterEnergyKwh, 1), regasHeaterEnergyKwh > 0 ? 'flag-assumption' : undefined);
     val('r-regas-elec-total', fmtAnnualEnergyKwh(regasElecTotalKwh, 1), 'flag-assumption');
     val('r-regas-elec-power', '≈ ' + fmt(regasElecAvgMw, 2) + ' MW avg');
-    gaps.push('Regas ORV pump/heater electrical energy (' + fmtAnnualEnergyKwh(regasElecTotalKwh, 1) + ') is a first-principles estimate, not a KHI figure: seawater flow is sized from the disclosed 3.8 MJ/kg heat duty and your seawater ΔT input, then pump hydraulic work (rho x g x head x flow / efficiency) uses your head/efficiency inputs. KHI discloses the ORV/seawater choice (reply Q17) but no electrical consumption for it. [ASSUMPTION: derived]');
+    gaps.push('Regas electrical energy (' + fmtAnnualEnergyKwh(regasElecTotalKwh, 1) + ' = cryo pump-to-pressure + ORV seawater pump + any heater) is a first-principles estimate, not a KHI figure: cryo pump work uses your send-out pressure input vs LH2 storage pressure (~1 atm) and pump efficiency; seawater flow is sized from the disclosed 3.8 MJ/kg heat duty and your seawater DeltaT input, then hydraulic work (rho x g x head x flow / efficiency) uses your head/efficiency inputs. KHI discloses the ORV/seawater choice (reply Q17) but no electrical consumption for either the pump or the vaporizer. [ASSUMPTION: derived]');
 
     // ---- Cost stack ----
     const nm3PerYear = annualKg / GAS_DENSITY_KG_PER_NM3;
