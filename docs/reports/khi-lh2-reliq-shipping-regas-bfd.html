@@ -531,9 +531,9 @@
             <input type="number" id="in-cargo" value="160000" min="1" step="1000" oninput="calculate()">
           </div>
           <div class="field">
-            <label for="in-tank-margin">Terminal tank sizing margin</label>
-            <span class="hint">% — safety margin over the bare survival-size calc (29); no KHI methodology exists for this, tune to your own design basis. <span class="tag assumption">ASSUMPTION</span></span>
-            <input type="number" id="in-tank-margin" value="20" min="0" step="5" oninput="calculate()">
+            <label for="in-vessel-buffer">Vessel arrival buffer</label>
+            <span class="hint">days — extra days added on top of the fleet's average loading interval, to cover a late vessel, without sizing for a full missed round trip (29). No KHI methodology exists for this, tune to your own design/contingency basis. <span class="tag assumption">ASSUMPTION</span></span>
+            <input type="number" id="in-vessel-buffer" value="2" min="0" step="0.5" oninput="calculate()">
           </div>
           <div class="field">
             <label for="in-voyage-bor">Voyage BOR</label>
@@ -904,7 +904,7 @@
       <li><b>BOG management energy is derived, not KHI-disclosed.</b> BOG is already at ~20.3 K and near-equilibrium para fraction when it boils off, so its ideal (theoretical minimum) energy is only the condensation step (≈1.71 kWh/kg), not the full fresh-feed cool-down + ortho-para conversion (≈3.9 kWh/kg, para-H2 basis) — see <i>docs/methodology/02-liquefaction.md</i> "BOG re-liquefaction is a different (smaller) calculation." This calculator scales your own reliquefaction SEC input by the ratio of those two ideal-work figures (≈0.438) to estimate a real-world BOG-management specific energy, applied to export-terminal, import-terminal, <i>and</i> shipping boil-off for consistent energy accounting — even though KHI's ships actually burn voyage BOG as propulsion fuel rather than electrically re-liquefying it (reply Q23/Q32). <span class="tag assumption">ASSUMPTION: derived</span></li>
       <li><b>Reliquefaction plant stream days/year is a separate, user-editable input</b> (default 365). Previously this was folded silently into the 0.78 utilization factor (note 23), which was back-solved from KHI's Base/Large data points assuming a 365-day calendar year. The calculator now exposes that 365-day basis explicitly so planned-turnaround/maintenance downtime can be modeled directly (typical cryogenic liquefaction trains run ~330-350 stream-days/y after turnaround) instead of being blended into the rate-utilization assumption. No KHI-specific stream-days figure has been disclosed — treat any value other than the 365-day default as your own project assumption. See <i>src/lh2/liquefaction.py</i> <code>KHI_STREAM_DAYS_PER_YEAR_ASSUMPTION</code>. <span class="tag assumption">ASSUMPTION</span></li>
       <li><b>Reliquefaction plant card (②) totals only fresh-feed liquefaction energy + export/loading-terminal BOG re-liq energy</b> — not shipping or import-terminal BOG. KHI's replies (Q3/Q14) describe BOG re-liquefaction as happening via the liquefier's own ejector or a cryogenic-rated compressor feeding back into the liquefaction process, specifically for BOG "generated in downstream sections of the liquefaction terminal" (i.e. the export/loading terminal) — not for shipping BOG (burned as propulsion fuel, note 12/18) or import-terminal BOG (a different site, KHI's reliquefaction reply doesn't address it — note 22). Average power draw on this card is fresh-feed + export-terminal-BOG energy combined, divided by 8,760 h/y. Energy figures on this card are shown in kWh/y (MJ/y) per <i>CLAUDE.md</i> §5's kWh/MJ convention, rather than the GWh/TJ used elsewhere in this diagram for larger chain-wide totals. The separate "Well-to-LH2 energy efficiency" card below still sums BOG energy across all three locations (export + shipping + import) for whole-chain energy-input accounting — that is a different accounting purpose from this plant-level card. <span class="tag assumption">ASSUMPTION: derived scope</span></li>
-      <li><b>Terminal tank sizing and BOG are now vessel-speed-driven and volume-driven, not user-typed hold-days.</b> Export/loading and import/receiving terminal cards each recommend a "survival size" tank capacity: the larger of (a) one full vessel cargo parcel (since loading/discharge happens in a single batch) or (b) daily production/offtake x the full round-trip cycle time (days) — i.e. enough buffer to "survive" without a vessel call for one complete round trip, the standard survival-storage contingency basis — times a user-set safety margin (default 20%, <code>in-tank-margin</code>). Round-trip time is <code>2 x (distance / vessel speed) + load/unload time</code>, so the <b>vessel speed</b> input directly and substantially moves the recommendation: a slower vessel means a longer round trip, so more production/offtake must be bufferable, so a bigger tank. (Deliberately <i>not</i> divided by fleet size for this calc — fleet count is itself derived from cargo capacity, so dividing by it would make the buffer term collapse back toward the cargo term regardless of speed and defeat the point; the shipping card's separate "Loading interval" row, which <i>is</i> fleet-normalized, is shown for reference only and does not drive tank sizing.) Recommended sizes are pre-filled but fully editable (<code>in-export-capacity</code>, <code>in-import-capacity</code>) — leave blank to use the recommendation, or type your own. Whichever capacity is in effect then drives BOG directly: average residence time = tank inventory (capacity x LH2 density) / daily mass flow (the standard CSTR/space-time relationship, tau = V/Q), fed into the same exponential boil-off-at-rest formula used elsewhere (note 7/16). A larger tank relative to throughput means LH2 dwells longer and accumulates more boil-off — this replaces the previous "type an arbitrary number of hold-days" inputs. <b>None of this sizing methodology is KHI-disclosed</b> — KHI only gives the actual Base/Large-scale tank counts and unit sizes (notes 7, 16), not a design/sizing method; treat every survival-size, margin, and residence-time figure as a project-specific engineering assumption to be checked against a real terminal design. <span class="tag assumption">ASSUMPTION: derived</span></li>
+      <li><b>Terminal tank sizing and BOG are vessel-speed/fleet-driven and volume-driven, not user-typed hold-days.</b> Export/loading and import/receiving terminal cards each recommend a "survival size" tank capacity: the larger of (a) one full vessel cargo parcel (since loading/discharge happens in a single batch) or (b) daily production/offtake x <i>survival days</i>, where <code>survival_days = loading_interval_days + vessel_arrival_buffer_days</code>. <code>loading_interval_days = round_trip_days / fleet_size</code> is the fleet's average time between calls (round-trip depends on the <b>vessel speed</b> and distance inputs); <code>vessel_arrival_buffer_days</code> (default 2 d, <code>in-vessel-buffer</code>) is a small explicit contingency for a late vessel. This is deliberately leaner than sizing for a full missed round-trip cycle — the fleet is already sized to the throughput (see <code>fleetSize()</code>), so a worst-case single-vessel-failure basis would recommend needlessly large (costly) tanks; a fleet-normalized interval plus a modest lateness buffer better reflects how a multi-vessel operation is actually run, at the cost of speed/distance mattering less once the fleet auto-scales to compensate (per <code>fleetSize()</code>, the interval converges toward roughly cargo capacity x fleet-availability regardless of speed) — the buffer-days term is what keeps some schedule-risk margin without inflating the whole tank. No blanket safety margin is layered on top. Recommended sizes are pre-filled but fully editable (<code>in-export-capacity</code>, <code>in-import-capacity</code>) — leave blank to use the recommendation, or type your own (e.g. a smaller value if you want to test a leaner/riskier design, or a larger one for extra schedule slack). Whichever capacity is in effect then drives BOG directly: average residence time = tank inventory (capacity x LH2 density) / daily mass flow (the standard CSTR/space-time relationship, tau = V/Q), fed into the same exponential boil-off-at-rest formula used elsewhere (note 7/16) — a larger tank relative to throughput means LH2 dwells longer and accumulates more boil-off. <b>None of this sizing methodology is KHI-disclosed</b> — KHI only gives the actual Base/Large-scale tank counts and unit sizes (notes 7, 16), not a design/sizing method; treat every survival-size, buffer-day, and residence-time figure as a project-specific engineering assumption to be checked against a real terminal design and cost model. <span class="tag assumption">ASSUMPTION: derived</span></li>
     </ol>
   </div>
 
@@ -990,20 +990,18 @@
     return Math.ceil(annualVolumeKg / (cargoMassPerVoyage * tripsPerYearPerShip));
   }
   //  Terminal "survival size" recommendation — no KHI methodology exists for
-  //  this, it's a standard terminal-design heuristic (29): a tank must hold
-  //  (a) at least one full ship's cargo, since loading/discharge happens in
-  //  a single parcel, and (b) enough inventory to buffer production/offtake
-  //  through a full round-trip cycle (dailyMassKg x roundTripDays,
-  //  converted to volume) — i.e. "survive" without a vessel call for one
-  //  complete cycle, the standard survival-storage contingency basis.
-  //  Deliberately NOT divided by fleet size: fleet count is itself derived
-  //  from cargo capacity (see fleetSize()), so dividing by it would make
-  //  the buffer term collapse back toward the cargo term regardless of
-  //  vessel speed, defeating the point of a speed-driven recommendation.
-  //  Takes the larger of the two terms, times a user-set safety margin.
-  function tankSurvivalSizeM3(dailyMassKg, roundTripCycleDays, cargoCapacityM3, densityKgM3, marginFactor) {
-    const bufferM3 = isFinite(roundTripCycleDays) ? (dailyMassKg * roundTripCycleDays) / densityKgM3 : 0;
-    return Math.max(cargoCapacityM3, bufferM3) * marginFactor;
+  //  this, it's a standard terminal-design heuristic (29), deliberately kept
+  //  lean (not oversized) for cost: a tank must hold (a) at least one full
+  //  ship's cargo, since loading/discharge happens in a single parcel, and
+  //  (b) enough inventory to buffer production/offtake over the fleet's
+  //  average loading interval (round-trip days / fleet size — i.e. sized to
+  //  the fleet actually deployed, not a worst-case single-vessel missed
+  //  cycle) PLUS a small explicit day-count buffer for a late vessel
+  //  (dailyMassKg x survivalDays, converted to volume). Takes the larger of
+  //  the two terms — no additional blanket safety margin on top.
+  function tankSurvivalSizeM3(dailyMassKg, survivalDays, cargoCapacityM3, densityKgM3) {
+    const bufferM3 = isFinite(survivalDays) ? (dailyMassKg * survivalDays) / densityKgM3 : 0;
+    return Math.max(cargoCapacityM3, bufferM3);
   }
   //  Average residence time of LH2 in a tank of the given capacity, at the
   //  given steady-state mass flow rate — the classic CSTR/space-time
@@ -1064,8 +1062,8 @@
     const exportCapUserM3 = exportCapRaw === '' ? null : parseFloat(exportCapRaw);
     const importCapRaw = document.getElementById('in-import-capacity').value;
     const importCapUserM3 = importCapRaw === '' ? null : parseFloat(importCapRaw);
-    const tankMarginPct = parseFloat(document.getElementById('in-tank-margin').value);
-    const tankMarginFactor = 1 + (isNaN(tankMarginPct) ? 20 : tankMarginPct) / 100;
+    const vesselBufferDaysRaw = parseFloat(document.getElementById('in-vessel-buffer').value);
+    const vesselBufferDays = isNaN(vesselBufferDaysRaw) ? 2 : vesselBufferDaysRaw;
     const voyageBorRaw = document.getElementById('in-voyage-bor').value;
     const voyageBor = voyageBorRaw === '' ? null : parseFloat(voyageBorRaw);
     const capexRaw = document.getElementById('in-capex').value;
@@ -1125,12 +1123,14 @@
     const transitDays = distanceKm > 0 ? oneWayTransitDays(distanceKm, speed) : NaN;
     const roundTrip = distanceKm > 0 ? roundTripDays(distanceKm, speed) : NaN;
     const fleet = distanceKm > 0 ? fleetSize(shippedKg, roundTrip, cargoCap, LH2_DENSITY_KG_PER_M3) : NaN;
-    // Average loading interval (informational only): days between
-    // successive vessel calls assuming an evenly-staggered fleet rotation.
-    // NOT what drives tank sizing below — see tankSurvivalSizeM3() comment
-    // for why the survival-size calc uses the full round-trip cycle
-    // instead. [ASSUMPTION: derived] (29)
+    // Average loading interval: days between successive vessel calls,
+    // assuming the deployed fleet is evenly staggered. This — not the full
+    // round-trip cycle — is what drives terminal tank sizing below: sizing
+    // for the fleet actually in service, plus a small explicit late-vessel
+    // buffer, rather than a worst-case single-missed-cycle scenario, keeps
+    // recommended tanks from ballooning in cost. [ASSUMPTION: derived] (29)
     const loadingIntervalDays = (isFinite(roundTrip) && fleet > 0) ? roundTrip / fleet : NaN;
+    const survivalDays = isFinite(loadingIntervalDays) ? loadingIntervalDays + vesselBufferDays : NaN;
     val('r-transit', isFinite(transitDays) ? fmt(transitDays, 1) + ' d' : '—');
     val('r-roundtrip', isFinite(roundTrip) ? fmt(roundTrip, 1) + ' d' : '—');
     val('r-fleet', isFinite(fleet) ? fmt(fleet) + ' vessel(s)' : '—');
@@ -1149,13 +1149,13 @@
       val('r-shipping-bog-energy', 'not modeled', 'flag-gap');
       gaps.push('Voyage BOR not supplied — KHI disclosed no standalone shipping boil-off figure (reply Q23: fuel-gas consumption equals the BOR, no %/day value given). Delivered mass below assumes zero in-transit loss, which is optimistic.');
     }
-    if (!isFinite(roundTrip)) {
-      gaps.push('Shipping distance not supplied — terminal tank sizing below falls back to "one cargo parcel x margin" only, without a round-trip buffering term.');
+    if (!isFinite(survivalDays)) {
+      gaps.push('Shipping distance not supplied — terminal tank sizing below falls back to "one cargo parcel" only, without a loading-interval buffering term.');
     }
 
     // ---- Export terminal: survival-size tank recommendation + volume-driven BOG ----
     const dailyProductionKg = streamDays > 0 ? annualKg / streamDays : 0;
-    const exportCapRecM3 = tankSurvivalSizeM3(dailyProductionKg, roundTrip, cargoCap, LH2_DENSITY_KG_PER_M3, tankMarginFactor);
+    const exportCapRecM3 = tankSurvivalSizeM3(dailyProductionKg, survivalDays, cargoCap, LH2_DENSITY_KG_PER_M3);
     const exportCapM3 = (exportCapUserM3 !== null && !isNaN(exportCapUserM3) && exportCapUserM3 > 0) ? exportCapUserM3 : exportCapRecM3;
     const exportResidenceDays = tankResidenceDays(exportCapM3, LH2_DENSITY_KG_PER_M3, dailyProductionKg);
     const exportBog = boilOffAtRest(annualKg, exportResidenceDays);
@@ -1177,7 +1177,7 @@
     // ---- Import terminal: survival-size tank recommendation + volume-driven BOG ----
     val('r-delivered', fmt(deliveredKg / 1000, 0) + ' t/y (' + fmt(deliveredKg / 1e6, 1) + ' KTPA)');
     const dailyOfftakeKg = deliveredKg / 365; // regas send-out basis, matches REGAS_DUTY's 365-day convention
-    const importCapRecM3 = tankSurvivalSizeM3(dailyOfftakeKg, roundTrip, cargoCap, LH2_DENSITY_KG_PER_M3, tankMarginFactor);
+    const importCapRecM3 = tankSurvivalSizeM3(dailyOfftakeKg, survivalDays, cargoCap, LH2_DENSITY_KG_PER_M3);
     const importCapM3 = (importCapUserM3 !== null && !isNaN(importCapUserM3) && importCapUserM3 > 0) ? importCapUserM3 : importCapRecM3;
     const importResidenceDays = tankResidenceDays(importCapM3, LH2_DENSITY_KG_PER_M3, dailyOfftakeKg);
     const importBog = boilOffAtRest(deliveredKg, importResidenceDays);
