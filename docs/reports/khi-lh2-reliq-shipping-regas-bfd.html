@@ -793,9 +793,9 @@
         <div class="row"><span class="k">Stream days/yr used</span><span class="v" id="r-stream-days">—</span></div>
         <div class="row"><span class="k">SEC used</span><span class="v" id="r-sec">—</span></div>
         <div class="row"><span class="k">Annual energy (fresh feed)</span><span class="v" id="r-liq-energy">—</span></div>
-        <div class="row"><span class="k">Average power draw</span><span class="v" id="r-liq-power">—</span></div>
-        <div class="row"><span class="k">+ BOG management (all locations)</span><span class="v" id="r-liq-bog-total">—</span></div>
-        <div class="row"><span class="k">= Total incl. BOG</span><span class="v" id="r-liq-grand-total">—</span></div>
+        <div class="row"><span class="k">+ BOG re-liq (export/loading terminal only)</span><span class="v" id="r-liq-bog-total">—</span></div>
+        <div class="row"><span class="k">= Total plant energy (fresh feed + export BOG)</span><span class="v" id="r-liq-grand-total">—</span></div>
+        <div class="row"><span class="k">Average power draw (combined)</span><span class="v" id="r-liq-power">—</span></div>
       </div>
 
       <div class="result-card">
@@ -886,6 +886,7 @@
       <li>H₂ lower heating value (LHV) ≈ 120 MJ/kg = 33.33 kWh/kg — <i>data/properties/lh2-properties.csv</i>, tagged <span class="tag assumption">needs-source</span> pending a formal NIST/ISO citation (same open item as note 20). Used as the energy-efficiency reference in the "Well-to-LH2 energy efficiency" card. Electrolyzer specific energy consumption itself is a <b>user-supplied calculator input</b>, not a KHI figure — production is segment [1], upstream of and outside this diagram's KHI-sourced boundary.</li>
       <li><b>BOG management energy is derived, not KHI-disclosed.</b> BOG is already at ~20.3 K and near-equilibrium para fraction when it boils off, so its ideal (theoretical minimum) energy is only the condensation step (≈1.71 kWh/kg), not the full fresh-feed cool-down + ortho-para conversion (≈3.9 kWh/kg, para-H2 basis) — see <i>docs/methodology/02-liquefaction.md</i> "BOG re-liquefaction is a different (smaller) calculation." This calculator scales your own reliquefaction SEC input by the ratio of those two ideal-work figures (≈0.438) to estimate a real-world BOG-management specific energy, applied to export-terminal, import-terminal, <i>and</i> shipping boil-off for consistent energy accounting — even though KHI's ships actually burn voyage BOG as propulsion fuel rather than electrically re-liquefying it (reply Q23/Q32). <span class="tag assumption">ASSUMPTION: derived</span></li>
       <li><b>Reliquefaction plant stream days/year is a separate, user-editable input</b> (default 365). Previously this was folded silently into the 0.78 utilization factor (note 23), which was back-solved from KHI's Base/Large data points assuming a 365-day calendar year. The calculator now exposes that 365-day basis explicitly so planned-turnaround/maintenance downtime can be modeled directly (typical cryogenic liquefaction trains run ~330-350 stream-days/y after turnaround) instead of being blended into the rate-utilization assumption. No KHI-specific stream-days figure has been disclosed — treat any value other than the 365-day default as your own project assumption. See <i>src/lh2/liquefaction.py</i> <code>KHI_STREAM_DAYS_PER_YEAR_ASSUMPTION</code>. <span class="tag assumption">ASSUMPTION</span></li>
+      <li><b>Reliquefaction plant card (②) totals only fresh-feed liquefaction energy + export/loading-terminal BOG re-liq energy</b> — not shipping or import-terminal BOG. KHI's replies (Q3/Q14) describe BOG re-liquefaction as happening via the liquefier's own ejector or a cryogenic-rated compressor feeding back into the liquefaction process, specifically for BOG "generated in downstream sections of the liquefaction terminal" (i.e. the export/loading terminal) — not for shipping BOG (burned as propulsion fuel, note 12/18) or import-terminal BOG (a different site, KHI's reliquefaction reply doesn't address it — note 22). Average power draw on this card is fresh-feed + export-terminal-BOG energy combined, divided by 8,760 h/y. Energy figures on this card are shown in kWh/y (MJ/y) per <i>CLAUDE.md</i> §5's kWh/MJ convention, rather than the GWh/TJ used elsewhere in this diagram for larger chain-wide totals. The separate "Well-to-LH2 energy efficiency" card below still sums BOG energy across all three locations (export + shipping + import) for whole-chain energy-input accounting — that is a different accounting purpose from this plant-level card. <span class="tag assumption">ASSUMPTION: derived scope</span></li>
     </ol>
   </div>
 
@@ -999,6 +1000,13 @@
     const tj = gwh * MJ_PER_KWH;
     return fmt(gwh, digits) + ' GWh/y (' + fmt(tj, digits) + ' TJ/y)';
   }
+  // Annual energy total, plant-consumption basis (CLAUDE.md units convention: kWh + MJ):
+  // "12,750,000 kWh/y (45,900,000 MJ/y)"
+  function fmtAnnualEnergyKwh(totalKwh, digits = 0) {
+    if (!isFinite(totalKwh)) return '—';
+    const mj = totalKwh * MJ_PER_KWH;
+    return fmt(totalKwh, digits) + ' kWh/y (' + fmt(mj, digits) + ' MJ/y)';
+  }
 
   function calculate() {
     const ktpa = parseFloat(document.getElementById('in-ktpa').value) || 0;
@@ -1046,24 +1054,34 @@
       gaps.push('Electrolyzer specific energy consumption not supplied — production is outside KHI\'s LH2 offer (segment [1], upstream of this diagram\'s boundary); supply a value to see well-to-LH2 efficiency vs LHV.');
     }
 
-    // ---- Reliquefaction ----
+    // ---- Reliquefaction plant ----
+    // Scope: this card totals only the energy actually drawn by the
+    // liquefaction plant itself — fresh-feed liquefaction plus export/
+    // loading-terminal BOG re-liq, which KHI describes as routed back into
+    // the liquefier's own ejector/compressor (reply Q3/Q14; see notes 6, 28).
+    // Shipping and import-terminal BOG happen at a different location/asset
+    // and are reported on their own cards (④, ⑤), not folded in here.
     const trains = trainCount(annualTpa, streamDays);
     const liqEnergyKwh = annualKg * sec;
-    const liqEnergyGwh = liqEnergyKwh / 1e6;
-    const liqAvgMw = liqEnergyKwh / 8760 / 1000;
     const bogSecKwhPerKg = sec * BOG_SEC_RATIO; // derived BOG-management SEC, see constants above (26)
     val('r-trains', fmt(trains) + ' × 115 t/d');
     val('r-stream-days', fmt(streamDays) + ' d/y', streamDays !== 365 ? 'flag-assumption' : undefined);
     val('r-sec', fmtKwhMj(sec));
-    val('r-liq-energy', fmtAnnualEnergy(liqEnergyKwh));
-    val('r-liq-power', '≈ ' + fmt(liqAvgMw, 0) + ' MW avg');
+    val('r-liq-energy', fmtAnnualEnergyKwh(liqEnergyKwh));
 
-    // ---- Export terminal ----
+    // ---- Export terminal BOG (re-liquefied back at the reliq plant) ----
     const exportBog = boilOffAtRest(annualKg, exportHold);
     const exportBogEnergyKwh = exportBog * bogSecKwhPerKg;
     val('r-export-bog', fmt(exportBog, 0) + ' kg/y');
     val('r-export-hold', fmt(exportHold, 1) + ' d');
-    val('r-export-bog-energy', fmtAnnualEnergy(exportBogEnergyKwh, 1));
+    val('r-export-bog-energy', fmtAnnualEnergyKwh(exportBogEnergyKwh, 1));
+
+    // ---- Reliq plant totals: fresh-feed liquefaction + export-terminal BOG only ----
+    const liqPlantTotalKwh = liqEnergyKwh + exportBogEnergyKwh;
+    const liqAvgMw = liqPlantTotalKwh / 8760 / 1000;
+    val('r-liq-bog-total', fmtAnnualEnergyKwh(exportBogEnergyKwh, 1));
+    val('r-liq-grand-total', fmtAnnualEnergyKwh(liqPlantTotalKwh));
+    val('r-liq-power', '≈ ' + fmt(liqAvgMw, 1) + ' MW avg');
 
     // ---- Shipping ----
     const shippedKg = annualKg; // export BOG re-liquefied, not subtracted (reply Q3/Q14)
@@ -1096,11 +1114,12 @@
     val('r-import-hold', fmt(importHold, 1) + ' d');
     val('r-import-bog-energy', fmtAnnualEnergy(importBogEnergyKwh, 1));
 
-    // ---- Total BOG management energy across the chain (26) ----
+    // ---- Total BOG-management energy across the chain (26) ----
+    // Used only for the well-to-LH2 efficiency accounting below — NOT
+    // displayed on the reliq plant card, which is scoped to export-terminal
+    // BOG only (see note 28).
     const totalBogEnergyKwh = exportBogEnergyKwh + importBogEnergyKwh + (shippingBogEnergyKwh !== null ? shippingBogEnergyKwh : 0);
     const bogEnergyPerKgDelivered = deliveredKg > 0 ? totalBogEnergyKwh / deliveredKg : NaN;
-    val('r-liq-bog-total', fmtAnnualEnergy(totalBogEnergyKwh, 1));
-    val('r-liq-grand-total', fmtAnnualEnergy(liqEnergyKwh + totalBogEnergyKwh));
 
     // ---- Regasification ----
     const regasDutyMj = deliveredKg * REGAS_DUTY_MJ_PER_KG;
@@ -1186,7 +1205,7 @@
     // ---- KPI bar ----
     document.getElementById('kpi-delivered').textContent = fmt(deliveredKg / 1e6, 1) + ' KTPA/y';
     document.getElementById('kpi-delivered-sub').textContent = fmt(deliveredKg / 1000, 0) + ' t/y at import terminal';
-    document.getElementById('kpi-energy').textContent = fmt(liqEnergyGwh, 0) + ' GWh/y';
+    document.getElementById('kpi-energy').textContent = fmt(liqPlantTotalKwh / 1e6, 0) + ' GWh/y';
     document.getElementById('kpi-energy-sub').textContent = '≈ ' + fmt(liqAvgMw, 0) + ' MW average, ' + trains + ' train(s)';
     document.getElementById('kpi-fleet').textContent = isFinite(fleet) ? fleet + ' vessel(s)' : '—';
     document.getElementById('kpi-fleet-sub').textContent = isFinite(roundTrip) ? fmt(roundTrip, 1) + ' d round trip' : 'enter shipping distance';
