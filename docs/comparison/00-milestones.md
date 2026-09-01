@@ -123,7 +123,7 @@ pre-built to de-risk; NH3 side unlocks when the internal dataset lands.
 | M3.2 | **NH3 chain cost stack → LCOH** (incl. cracking/reconversion) | memo §Economics | **user NH3 dataset (D4)** | 🔒 |
 | M3.3 | **BOG / boil-off** comparison across chain (terminal + voyage) | memo §BOG | M1, NH3 data | ⬜ |
 | M3.4 | **Speed / voyage time** on existing vessels (LH2 16 kn vs NH3 carrier) | memo §Speed | M1.3, NH3 data | ⬜ |
-| M3.5 | **End-to-end energy** consumption (liquefaction vs synthesis+cracking, regas) | memo §Energy | M1.1/1.4, NH3 data | ⬜ |
+| M3.5 | **End-to-end energy** consumption (liquefaction vs synthesis+cracking, regas) | memo §Energy | M1.1/1.4, NH3 data | 🟡 node-by-node energy-penalty model built for both chains — `docs/comparison/01-energy-penalty-method.md`, `src/lh2/chain_energy.py`, interactive ledger in `docs/reports/lh2-vs-nh3-energy-penalty.html`. LH2 side runs on cited KHI figures; NH3 side is structurally complete but every value is an `[ESTIMATE]` placeholder until the D4 dataset lands |
 | M3.6 | **Complexity / TRL + safety / permitting** (toxicity, separation distances, loading-arm TRL 6–7) | memo §Complexity | `kawasaki-2026-questionnaire`, `-comparison` | ⬜ |
 | M3.7 | **Sensitivities** on dominant drivers (scale, distance, energy price) | memo §Sensitivity | M3.1–M3.2 | ⬜ |
 | M3.8 | **Corridor re-run** (D1) once origin→destination, distance, volume given | memo addendum | **user corridor inputs (D1)** | 🔒 |
@@ -168,6 +168,11 @@ tracked here rather than renumbering the plan:
 | `src/lh2/{liquefaction,storage,shipping,regas,economics}.py` implemented | Real (no-longer-stub) functions: SEC energy, train sizing, at-rest/voyage boil-off, fleet sizing, regas duty, NPV/IRR/LCOH — every default sourced or tagged per `CLAUDE.md` §4 | ✅ |
 | `src/lh2/scenario.py` + `scripts/run_project_model.py` | Project-level calculator: annual liquefaction throughput + shipping distance → energy, boil-off, fleet size, indicative IAE cost stack (interpolated), and LCOH if the user supplies CapEx/OpEx/discount rate. Missing KHI disclosures (CapEx, OpEx, carbon intensity, voyage BOR, FX rate) surface as an explicit `gaps` list rather than being fabricated | ✅ v1 |
 | `tests/test_scenario.py` | 15 tests covering unit consistency, KHI-figure reconciliation, and the "no fabricated numbers" invariant in code | ✅ |
+| `docs/reports/lh2-vs-nh3-energy-penalty.html` | **LH2 vs Ammonia Energy Ledger** — interactive node-by-node energy-penalty cascade (A → B1–F1 vs A → B2–F2). Editable inputs on every node card, two cascade charts, node ledger, live gap list, assumption register. Published as a Claude Artifact | ✅ v1 |
+| `src/lh2/chain_energy.py` + `scripts/run_chain_comparison.py` | The model behind it: per-node energy draw and H2 mass loss, both efficiency views (input basis and the LHV-deduction basis), explicit `gaps` list. Mirrored exactly by the HTML | ✅ v1 |
+| `data/carriers/chain-energy-defaults.csv` | Every default for both chains, cited or tagged. LH2 side is cited to KHI; **the entire NH3 column is `[ESTIMATE]` pending decision D4** | ✅ v1 |
+| `tests/test_chain_energy.py` | 55 tests: the user's 60 kWh/kg worked example, mass balance, both efficiency definitions, the cracker's 12.7 % thermodynamic floor, and a drift test that fails if a Python default ever diverges from the CSV | ✅ |
+| `docs/comparison/01-energy-penalty-method.md` | Method write-up: boundary, basis, formulas, defaults with tags, result at defaults, gap register | ✅ |
 
 **Relationship to KR1.2/KR1.3:** this Python calculator is a working reference
 implementation of much of what M2.3 (shipping calc logic) and M3.1 (LCOH)

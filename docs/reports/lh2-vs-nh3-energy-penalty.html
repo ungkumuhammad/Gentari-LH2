@@ -1,0 +1,1320 @@
+<title>LH2 vs Ammonia Energy Ledger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+  /* ---------------------------------------------------------------
+     Tokens — complete light palette on bare :root, redefined for the
+     two dark states. Components only ever read tokens.
+     Series hues validated (dataviz six-checks) for both surfaces.
+  ---------------------------------------------------------------- */
+  :root {
+    --ground:      #EEF1F3;
+    --surface:     #FBFCFC;
+    --surface-2:   #F4F7F8;
+    --surface-3:   #E8EDEF;
+    --ink:         #101820;
+    --ink-2:       #34454F;
+    --muted:       #5A6B77;
+    --line:        #D3DBE0;
+    --line-strong: #B6C3CA;
+
+    --lh2:      #0C7C9E;   /* validated categorical slot 1, light */
+    --lh2-text: #0A6982;
+    --lh2-wash: #E2F0F5;
+    --nh3:      #A9660B;   /* validated categorical slot 2, light */
+    --nh3-text: #8C5409;
+    --nh3-wash: #F6EDDF;
+    --on-accent:#FBFCFC;   /* text sitting on a series-hue fill */
+
+    --stream:   #65757F;   /* neutral: energy still in the stream */
+    --flag:     #9C3B33;   /* ESTIMATE / gap marker (not a series hue) */
+    --flag-wash:#F7E8E6;
+
+    --shadow: 0 1px 2px rgba(16,24,32,.06), 0 8px 24px -16px rgba(16,24,32,.28);
+    --radius: 3px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:      #0F1418;
+      --surface:     #161D22;
+      --surface-2:   #1B242A;
+      --surface-3:   #222D34;
+      --ink:         #E4EBF0;
+      --ink-2:       #C2D0D9;
+      --muted:       #93A5B1;
+      --line:        #2A353C;
+      --line-strong: #3B4954;
+
+      --lh2:      #2E97B9;  /* validated categorical slot 1, dark */
+      --lh2-text: #5CBBD8;
+      --lh2-wash: #10333F;
+      --nh3:      #BA8930;  /* validated categorical slot 2, dark */
+      --nh3-text: #DFA94E;
+      --nh3-wash: #33280F;
+      --on-accent:#0F1418;
+
+      --stream:   #7C8C97;
+      --flag:     #D97F76;
+      --flag-wash:#341F1D;
+
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 28px -18px rgba(0,0,0,.8);
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground:      #0F1418;
+    --surface:     #161D22;
+    --surface-2:   #1B242A;
+    --surface-3:   #222D34;
+    --ink:         #E4EBF0;
+    --ink-2:       #C2D0D9;
+    --muted:       #93A5B1;
+    --line:        #2A353C;
+    --line-strong: #3B4954;
+
+    --lh2:      #2E97B9;
+    --lh2-text: #5CBBD8;
+    --lh2-wash: #10333F;
+    --nh3:      #BA8930;
+    --nh3-text: #DFA94E;
+    --nh3-wash: #33280F;
+    --on-accent:#0F1418;
+
+    --stream:   #7C8C97;
+    --flag:     #D97F76;
+    --flag-wash:#341F1D;
+
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 28px -18px rgba(0,0,0,.8);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 20px 80px; }
+
+  /* --- typography ------------------------------------------------ */
+  h1, h2, h3, .eyebrow, .rail-title, .kpi-num {
+    font-family: "IBM Plex Sans Condensed", "IBM Plex Sans", sans-serif;
+  }
+  h1 { font-size: clamp(28px, 4.4vw, 44px); font-weight: 700; line-height: 1.06;
+       letter-spacing: -.015em; margin: 0; text-wrap: balance; }
+  h2 { font-size: 21px; font-weight: 600; letter-spacing: -.005em; margin: 0; }
+  h3 { font-size: 15px; font-weight: 600; margin: 0; }
+  p  { margin: 0; }
+  .eyebrow {
+    font-size: 11.5px; font-weight: 600; letter-spacing: .13em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .lede { color: var(--ink-2); max-width: 66ch; font-size: 16px; }
+  .mono, input, td.num, .kpi-num, .cell-v {
+    font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* --- masthead --------------------------------------------------- */
+  header.mast { padding: 40px 0 26px; }
+  .mast-top { display: flex; flex-wrap: wrap; gap: 12px 20px;
+              align-items: baseline; justify-content: space-between; }
+  .mast-title { display: flex; flex-direction: column; gap: 10px; }
+  .basis {
+    display: grid; gap: 1px; margin-top: 26px;
+    grid-template-columns: repeat(3, 1fr);
+    background: var(--line); border: 1px solid var(--line);
+    border-radius: var(--radius); overflow: hidden;
+  }
+  @media (max-width: 880px) { .basis { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 560px) { .basis { grid-template-columns: 1fr; } }
+  .basis > div { background: var(--surface); padding: 11px 14px; }
+  .basis dt { font-size: 10.5px; font-weight: 600; letter-spacing: .1em;
+              text-transform: uppercase; color: var(--muted); margin: 0 0 3px; }
+  .basis dd { margin: 0; font-size: 13px; color: var(--ink-2); line-height: 1.4; }
+
+  /* --- section scaffolding ---------------------------------------- */
+  section { margin-top: 46px; }
+  .sec-head { display: flex; flex-wrap: wrap; align-items: baseline;
+              justify-content: space-between; gap: 8px 16px; margin-bottom: 6px; }
+  .sec-note { color: var(--muted); font-size: 13.5px; max-width: 74ch; margin-bottom: 18px; }
+
+  .panel {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: var(--radius); box-shadow: var(--shadow);
+  }
+
+  /* --- verdict cards ---------------------------------------------- */
+  .verdict { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+  .vcard { padding: 20px 22px 18px; position: relative; overflow: hidden; }
+  .vcard::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 3px; }
+  .vcard.lh2::before { background: var(--lh2); }
+  .vcard.nh3::before { background: var(--nh3); }
+  .vcard-head { display: flex; align-items: center; gap: 9px; margin-bottom: 14px; }
+  .swatch { width: 11px; height: 11px; border-radius: 2px; flex: none; }
+  .lh2 .swatch { background: var(--lh2); }
+  .nh3 .swatch { background: var(--nh3); }
+  .vcard h2 { font-size: 18px; }
+  .vcard .chain-sub { color: var(--muted); font-size: 12.5px; margin-left: auto; }
+  .kpi-num { font-size: 46px; font-weight: 600; line-height: 1; letter-spacing: -.02em; }
+  .lh2 .kpi-num { color: var(--lh2-text); }
+  .nh3 .kpi-num { color: var(--nh3-text); }
+  .kpi-unit { font-size: 21px; font-weight: 500; letter-spacing: 0; margin-left: 2px; }
+  .kpi-cap { font-size: 12.5px; color: var(--muted); margin-top: 6px; }
+  .vrows { margin-top: 18px; border-top: 1px solid var(--line); }
+  .vrow { display: flex; justify-content: space-between; gap: 12px;
+          padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; }
+  .vrow:last-child { border-bottom: 0; }
+  .vrow .k { color: var(--muted); }
+  .vrow .cell-v { color: var(--ink); font-weight: 500; text-align: right; }
+
+  /* --- tags -------------------------------------------------------- */
+  .tag {
+    display: inline-block; font-family: "IBM Plex Mono", monospace;
+    font-size: 9.5px; font-weight: 500; letter-spacing: .06em;
+    text-transform: uppercase; padding: 2px 6px; border-radius: 2px;
+    border: 1px solid var(--line-strong); color: var(--muted);
+    white-space: nowrap; vertical-align: middle;
+  }
+  .tag.cited { color: var(--lh2-text); border-color: var(--lh2); background: var(--lh2-wash); }
+  .tag.assumption { color: var(--nh3-text); border-color: var(--nh3); background: var(--nh3-wash); }
+  .tag.estimate { color: var(--flag); border-color: var(--flag); background: var(--flag-wash); }
+  .tag.derived { color: var(--muted); }
+
+  /* --- chain rails -------------------------------------------------- */
+  .shared-node { padding: 18px 20px; display: grid; gap: 18px;
+                 grid-template-columns: minmax(240px, 1.1fr) minmax(220px, 1fr) minmax(200px, .9fr); }
+  .shared-node .node-id { background: var(--stream); }
+  .fork {
+    display: flex; align-items: center; gap: 10px;
+    color: var(--muted); font-size: 11.5px; letter-spacing: .1em;
+    text-transform: uppercase; font-weight: 600; margin: 14px 0 10px;
+  }
+  .fork::before, .fork::after { content: ""; height: 1px; background: var(--line-strong); flex: 1; }
+
+  .rail { margin-top: 14px; }
+  .rail-head { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
+  .rail-title { font-size: 15px; font-weight: 600; letter-spacing: .02em; }
+  .lh2 .rail-title { color: var(--lh2-text); }
+  .nh3 .rail-title { color: var(--nh3-text); }
+  .rail-scroll { overflow-x: auto; padding-bottom: 6px; }
+  .rail-row { display: flex; align-items: stretch; gap: 0; min-width: min-content; }
+  .node {
+    flex: 1 1 0; min-width: 186px;
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 12px 13px 11px;
+    display: flex; flex-direction: column; gap: 9px;
+  }
+  .connector { flex: 0 0 20px; display: flex; align-items: center; justify-content: center; }
+  .connector svg { display: block; }
+  .node-head { display: flex; align-items: center; gap: 7px; }
+  .node-id {
+    font-family: "IBM Plex Mono", monospace; font-size: 11px; font-weight: 600;
+    color: var(--on-accent); padding: 2px 6px; border-radius: 2px; letter-spacing: .04em;
+  }
+  .lh2 .node-id { background: var(--lh2); }
+  .nh3 .node-id { background: var(--nh3); }
+  .node-name { font-weight: 600; font-size: 13.5px; line-height: 1.25; }
+  .node-state { font-size: 11.5px; color: var(--muted); font-family: "IBM Plex Mono", monospace; }
+  .metrics { display: flex; flex-direction: column; gap: 5px; margin-top: 1px; }
+  .metric { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .metric .k { font-size: 11.5px; color: var(--muted); }
+  .metric .cell-v { font-size: 12.5px; font-weight: 500; }
+  .metric.lead .cell-v { font-size: 15px; font-weight: 600; }
+  .lh2 .metric.lead .cell-v { color: var(--lh2-text); }
+  .nh3 .metric.lead .cell-v { color: var(--nh3-text); }
+  .metric .sub { font-size: 10.5px; color: var(--muted); }
+
+  details.node-inputs { margin-top: auto; border-top: 1px solid var(--line); padding-top: 8px; }
+  details.node-inputs > summary {
+    cursor: pointer; font-size: 11px; color: var(--muted);
+    letter-spacing: .06em; text-transform: uppercase; font-weight: 600;
+    list-style: none; display: flex; align-items: center; gap: 5px;
+  }
+  details.node-inputs > summary::-webkit-details-marker { display: none; }
+  details.node-inputs > summary::before { content: "+"; font-family: "IBM Plex Mono", monospace; }
+  details.node-inputs[open] > summary::before { content: "\2212"; }
+  details.node-inputs > summary:hover { color: var(--ink); }
+  .field { display: flex; flex-direction: column; gap: 3px; margin-top: 9px; }
+  .field label { font-size: 11.5px; color: var(--ink-2); display: flex; gap: 6px;
+                 align-items: baseline; justify-content: space-between; }
+  .field .hint { font-size: 10.5px; color: var(--muted); line-height: 1.35; }
+  input[type="number"] {
+    width: 100%; background: var(--surface-2); color: var(--ink);
+    border: 1px solid var(--line-strong); border-radius: 2px;
+    padding: 5px 7px; font-size: 12.5px;
+  }
+  input[type="number"]:focus-visible, select:focus-visible, button:focus-visible,
+  summary:focus-visible { outline: 2px solid var(--lh2); outline-offset: 2px; }
+  select {
+    width: 100%; background: var(--surface-2); color: var(--ink);
+    border: 1px solid var(--line-strong); border-radius: 2px;
+    padding: 5px 7px; font-size: 12.5px; font-family: inherit;
+  }
+
+  /* --- global controls --------------------------------------------- */
+  .controls { display: grid; gap: 14px; padding: 16px 18px;
+              grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); align-items: end; }
+  button.reset {
+    background: var(--surface-2); color: var(--ink-2); border: 1px solid var(--line-strong);
+    border-radius: 2px; padding: 6px 12px; font: inherit; font-size: 12.5px;
+    cursor: pointer;
+  }
+  button.reset:hover { background: var(--surface-3); color: var(--ink); }
+
+  /* --- charts -------------------------------------------------------- */
+  .charts { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); }
+  .chart-card { padding: 16px 18px 14px; }
+  .chart-card h3 { display: flex; align-items: center; gap: 8px; margin-bottom: 2px; }
+  .chart-sub { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 10px;
+            font-size: 11.5px; color: var(--muted); }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend i { width: 12px; height: 12px; border-radius: 2px; display: inline-block; flex: none; }
+  svg.wf { width: 100%; height: auto; display: block; overflow: visible; }
+  svg.wf text { font-family: "IBM Plex Mono", monospace; font-variant-numeric: tabular-nums; }
+  .wf-grid { stroke: var(--line); stroke-width: 1; }
+  .wf-axis { fill: var(--muted); font-size: 9.5px; }
+  .wf-col { fill: var(--muted); font-size: 10px; }
+  .wf-val { font-size: 10px; font-weight: 500; }
+  .wf-bar { cursor: default; }
+  .wf-bar:hover { opacity: .82; }
+  .tip {
+    position: fixed; z-index: 30; pointer-events: none; opacity: 0;
+    transition: opacity .1s linear; background: var(--surface);
+    border: 1px solid var(--line-strong); border-radius: 2px;
+    box-shadow: var(--shadow); padding: 8px 10px; font-size: 12px;
+    max-width: 260px; color: var(--ink);
+  }
+  .tip b { font-weight: 600; }
+  .tip .t-row { color: var(--muted); font-size: 11.5px; }
+
+  /* --- tables --------------------------------------------------------- */
+  .table-scroll { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  caption { text-align: left; font-size: 12px; color: var(--muted); padding: 12px 16px 0; }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--line);
+           vertical-align: top; }
+  thead th {
+    font-family: "IBM Plex Sans Condensed", sans-serif; font-size: 11px;
+    letter-spacing: .08em; text-transform: uppercase; color: var(--muted);
+    font-weight: 600; white-space: nowrap; border-bottom: 1px solid var(--line-strong);
+  }
+  td.num, th.num { text-align: right; white-space: nowrap; }
+  tbody tr:last-child td { border-bottom: 0; }
+  tr.chain-head td {
+    background: var(--surface-2); font-family: "IBM Plex Sans Condensed", sans-serif;
+    font-weight: 600; letter-spacing: .04em; font-size: 12.5px;
+  }
+  tr.chain-head.lh2 td { color: var(--lh2-text); }
+  tr.chain-head.nh3 td { color: var(--nh3-text); }
+  tr.total-row td { font-weight: 600; background: var(--surface-2); }
+  .cell-note { color: var(--muted); font-size: 11.5px; line-height: 1.4; }
+
+  /* --- lists ---------------------------------------------------------- */
+  ul.gaps { list-style: none; padding: 0; margin: 0; }
+  ul.gaps li {
+    padding: 10px 16px 10px 34px; border-bottom: 1px solid var(--line);
+    font-size: 13px; color: var(--ink-2); position: relative; line-height: 1.5;
+  }
+  ul.gaps li:last-child { border-bottom: 0; }
+  ul.gaps li::before {
+    content: "!"; position: absolute; left: 14px; top: 10px;
+    font-family: "IBM Plex Mono", monospace; font-weight: 600;
+    color: var(--flag); font-size: 12px;
+  }
+  ol.sources { margin: 0; padding: 4px 16px 14px 34px; font-size: 12.5px;
+               color: var(--ink-2); line-height: 1.55; }
+  ol.sources li { padding: 5px 0; }
+  ol.sources code { font-family: "IBM Plex Mono", monospace; font-size: 11.5px;
+                    color: var(--muted); }
+
+  footer { margin-top: 46px; padding-top: 18px; border-top: 1px solid var(--line);
+           color: var(--muted); font-size: 12px; display: flex; flex-wrap: wrap;
+           gap: 6px 20px; justify-content: space-between; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+  @media (max-width: 620px) {
+    .shared-node { grid-template-columns: 1fr; }
+    .node { min-width: 168px; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="mast">
+    <div class="mast-top">
+      <div class="mast-title">
+        <span class="eyebrow">Gentari &middot; OKR KR1.3 &middot; carrier comparison</span>
+        <h1>LH2 vs Ammonia Energy Ledger</h1>
+      </div>
+    </div>
+    <p class="lede" style="margin-top:14px">
+      Where the energy goes, node by node, when 1 kg of hydrogen travels to an import
+      terminal as liquid H<sub>2</sub> or as ammonia. Both chains share node A, so every
+      difference below is a property of the carrier &mdash; not of the electrolyser.
+      Change any input; the whole ledger recomputes.
+    </p>
+
+    <dl class="basis">
+      <div>
+        <dt>System boundary</dt>
+        <dd>Electrolyser battery limit &rarr; GH<sub>2</sub> at import send-out flange.
+            Well-to-gate; distribution &amp; end-use excluded.</dd>
+      </div>
+      <div>
+        <dt>Basis</dt>
+        <dd>1 kg H<sub>2</sub> produced at node A. Mass tracked as H<sub>2</sub>-equivalent
+            throughout.</dd>
+      </div>
+      <div>
+        <dt>Units</dt>
+        <dd>Energy kWh (MJ shown alongside) &middot; mass kg &middot; BOR %/day.
+            H<sub>2</sub> LHV 33.33 kWh/kg = 120 MJ/kg.</dd>
+      </div>
+      <div>
+        <dt>Cost</dt>
+        <dd>Out of scope in this build &mdash; energy only. No currency, no cost-year.</dd>
+      </div>
+      <div>
+        <dt>Every number</dt>
+        <dd>Cited to <code class="mono">data/references.csv</code> or tagged
+            <span class="tag assumption">assumption</span>
+            <span class="tag estimate">estimate</span>. No untagged figures.</dd>
+      </div>
+      <div>
+        <dt>Ammonia data status</dt>
+        <dd><b>No NH<sub>3</sub> figure here is sourced.</b> All are placeholders pending
+            the internal Gentari dataset (decision D4).</dd>
+      </div>
+    </dl>
+  </header>
+
+  <!-- ============== VERDICT ============== -->
+  <section>
+    <div class="sec-head"><h2>Delivered energy per kg of hydrogen produced</h2></div>
+    <p class="sec-note">
+      Two readings of the same cascade. <b>Chain efficiency</b> is the input basis:
+      the LHV of the hydrogen that actually arrives, over every kWh consumed to get it
+      there. <b>Energy retained</b> is the deduction basis: start with the 33.33 kWh of
+      chemical energy in the 1 kg produced, subtract every downstream node's energy draw
+      and the heating value of every kg lost.
+    </p>
+    <div class="verdict">
+      <article class="panel vcard lh2">
+        <div class="vcard-head">
+          <span class="swatch"></span><h2>Liquid hydrogen</h2>
+          <span class="chain-sub">A &rarr; B1 &rarr; F1</span>
+        </div>
+        <div class="kpi-num" id="lh2-eff">&mdash;</div>
+        <div class="kpi-cap">chain efficiency &mdash; LHV delivered &divide; total energy in</div>
+        <div class="vrows">
+          <div class="vrow"><span class="k">H<sub>2</sub> delivered</span><span class="cell-v" id="lh2-delivered">&mdash;</span></div>
+          <div class="vrow"><span class="k">Total energy in</span><span class="cell-v" id="lh2-total">&mdash;</span></div>
+          <div class="vrow"><span class="k">Per kg delivered</span><span class="cell-v" id="lh2-perkg">&mdash;</span></div>
+          <div class="vrow"><span class="k">Carrier chain penalty</span><span class="cell-v" id="lh2-penalty">&mdash;</span></div>
+          <div class="vrow"><span class="k">Energy retained</span><span class="cell-v" id="lh2-retained">&mdash;</span></div>
+        </div>
+      </article>
+
+      <article class="panel vcard nh3">
+        <div class="vcard-head">
+          <span class="swatch"></span><h2>Ammonia</h2>
+          <span class="chain-sub">A &rarr; B2 &rarr; F2</span>
+        </div>
+        <div class="kpi-num" id="nh3-eff">&mdash;</div>
+        <div class="kpi-cap">chain efficiency &mdash; LHV delivered &divide; total energy in</div>
+        <div class="vrows">
+          <div class="vrow"><span class="k">H<sub>2</sub> delivered</span><span class="cell-v" id="nh3-delivered">&mdash;</span></div>
+          <div class="vrow"><span class="k">Total energy in</span><span class="cell-v" id="nh3-total">&mdash;</span></div>
+          <div class="vrow"><span class="k">Per kg delivered</span><span class="cell-v" id="nh3-perkg">&mdash;</span></div>
+          <div class="vrow"><span class="k">Carrier chain penalty</span><span class="cell-v" id="nh3-penalty">&mdash;</span></div>
+          <div class="vrow"><span class="k">Energy retained</span><span class="cell-v" id="nh3-retained">&mdash;</span></div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ============== SHARED INPUTS + NODE A ============== -->
+  <section>
+    <div class="sec-head">
+      <h2>Node A &mdash; hydrogen production</h2>
+      <button class="reset" type="button" onclick="resetAll()">Reset to defaults</button>
+    </div>
+    <p class="sec-note">
+      Shared by both chains, so it cancels out of the comparison &mdash; but it sets the
+      scale of everything downstream. The penalty here is the electrolyser's own
+      inefficiency: energy in, minus the heating value of the hydrogen that comes out.
+    </p>
+    <div class="panel shared-node">
+      <div>
+        <div class="node-head">
+          <span class="node-id">A</span>
+          <span class="node-name">Electrolysis</span>
+          <span class="tag assumption">assumption</span>
+        </div>
+        <div class="node-state" style="margin-top:6px">GH<sub>2</sub> &middot; 30 barg &middot; 30 &deg;C</div>
+        <div class="field">
+          <label for="in-elec">Plant efficiency <span class="hint">kWh/kg H<sub>2</sub></span></label>
+          <input type="number" id="in-elec" value="60" min="0" step="0.5" oninput="recompute()">
+          <span class="hint">Production sits outside KHI's LH<sub>2</sub> scope, so no in-repo
+            sourced figure exists. Default is the worked-example value.</span>
+        </div>
+      </div>
+      <div class="metrics" style="justify-content:center">
+        <div class="metric lead"><span class="k">Efficiency vs LHV</span><span class="cell-v" id="a-eff">&mdash;</span></div>
+        <div class="metric"><span class="k">Energy in</span><span class="cell-v" id="a-in">&mdash;</span></div>
+        <div class="metric"><span class="k">LHV out</span><span class="cell-v" id="a-out">&mdash;</span></div>
+        <div class="metric"><span class="k">Penalty</span><span class="cell-v" id="a-pen">&mdash;</span></div>
+      </div>
+      <div>
+        <div class="field">
+          <label for="in-distance">Shipping distance <span class="hint">km, one way</span></label>
+          <input type="number" id="in-distance" value="6000" min="0" step="100" oninput="recompute()">
+          <span class="hint">Laden leg, shared by both chains. No corridor is fixed yet
+            (decision D1). <span class="tag assumption">assumption</span></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="fork">the chain forks here</div>
+
+    <!-- LH2 rail -->
+    <div class="rail lh2">
+      <div class="rail-head">
+        <span class="swatch"></span>
+        <span class="rail-title">Liquid hydrogen &mdash; nodes B1 to F1</span>
+      </div>
+      <div class="rail-scroll"><div class="rail-row" id="rail-lh2"></div></div>
+    </div>
+
+    <!-- NH3 rail -->
+    <div class="rail nh3">
+      <div class="rail-head">
+        <span class="swatch"></span>
+        <span class="rail-title">Ammonia &mdash; nodes B2 to F2</span>
+      </div>
+      <div class="rail-scroll"><div class="rail-row" id="rail-nh3"></div></div>
+    </div>
+  </section>
+
+  <!-- ============== WATERFALLS ============== -->
+  <section>
+    <div class="sec-head"><h2>What the carrier costs, node by node</h2></div>
+    <p class="sec-note">
+      The deduction view the ledger is built on: 33.33 kWh of chemical energy leaves node A,
+      and each node takes its cut &mdash; either as energy drawn to run the node (solid) or as
+      hydrogen that physically leaves the chain (hatched). Both charts share one scale.
+    </p>
+    <div class="charts">
+      <figure class="panel chart-card" style="margin:0">
+        <h3><span class="swatch" style="background:var(--lh2)"></span>Liquid hydrogen</h3>
+        <p class="chart-sub" id="wf-lh2-sub">&mdash;</p>
+        <svg class="wf" id="wf-lh2" viewBox="0 0 520 300" role="img"
+             aria-labelledby="wf-lh2-t"><title id="wf-lh2-t">LH2 chain energy cascade</title></svg>
+        <div class="legend">
+          <span><i style="background:var(--stream)"></i>energy in the stream</span>
+          <span><i style="background:var(--lh2)"></i>energy drawn by the node</span>
+          <span><i id="key-hatch-lh2"></i>hydrogen lost</span>
+        </div>
+      </figure>
+      <figure class="panel chart-card" style="margin:0">
+        <h3><span class="swatch" style="background:var(--nh3)"></span>Ammonia</h3>
+        <p class="chart-sub" id="wf-nh3-sub">&mdash;</p>
+        <svg class="wf" id="wf-nh3" viewBox="0 0 520 300" role="img"
+             aria-labelledby="wf-nh3-t"><title id="wf-nh3-t">NH3 chain energy cascade</title></svg>
+        <div class="legend">
+          <span><i style="background:var(--stream)"></i>energy in the stream</span>
+          <span><i style="background:var(--nh3)"></i>energy drawn by the node</span>
+          <span><i id="key-hatch-nh3"></i>hydrogen lost</span>
+        </div>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ============== LEDGER TABLE ============== -->
+  <section>
+    <div class="sec-head"><h2>Node ledger</h2></div>
+    <p class="sec-note">
+      Every figure the charts are drawn from. <b>Running efficiency</b> is the input basis
+      at that point in the chain; <b>net energy</b> is the deduction basis.
+    </p>
+    <div class="panel table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Node</th><th>Stage</th>
+            <th class="num">Energy drawn</th>
+            <th class="num">Cumulative in</th>
+            <th class="num">H<sub>2</sub> out</th>
+            <th class="num">Net energy</th>
+            <th class="num">Running &eta;</th>
+            <th>Basis</th>
+          </tr>
+        </thead>
+        <tbody id="ledger"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============== GAPS ============== -->
+  <section>
+    <div class="sec-head"><h2>What this ledger does not know</h2></div>
+    <p class="sec-note">
+      Live list &mdash; it changes with your inputs. Anything here is a figure nobody has
+      disclosed, or a boundary this model deliberately draws short of.
+    </p>
+    <div class="panel"><ul class="gaps" id="gaps"></ul></div>
+  </section>
+
+  <!-- ============== ASSUMPTION REGISTER ============== -->
+  <section>
+    <div class="sec-head"><h2>Assumption register</h2></div>
+    <p class="sec-note">
+      Every input with its provenance. Mirrors
+      <code class="mono">data/carriers/chain-energy-defaults.csv</code>, which
+      <code class="mono">tests/test_chain_energy.py</code> asserts against the Python model
+      so the three cannot drift apart.
+    </p>
+    <div class="panel table-scroll">
+      <table>
+        <thead>
+          <tr><th>Node</th><th>Parameter</th><th class="num">Default</th><th>Tag</th><th>Provenance</th></tr>
+        </thead>
+        <tbody id="register"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============== SOURCES ============== -->
+  <section>
+    <div class="sec-head"><h2>Sources</h2></div>
+    <div class="panel">
+      <ol class="sources">
+        <li><b>Kawasaki Heavy Industries, Ltd.</b> <i>Gentari Liquid H<sub>2</sub> Questionnaire
+          &mdash; KHI reply (Rev.1)</i>, Mar&ndash;Apr 2026. Liquefaction SEC 8&ndash;9 kWh/kg (Q1);
+          no H<sub>2</sub> losses claimed (Q15); terminal BOG re-liquefied (Q3); BOG burned as
+          propulsion fuel, no onboard re-liquefaction (Q23/Q33); regas heat duty 3.8 MJ/kg-LH<sub>2</sub>
+          via ORV (Q17/Q18). <code>kawasaki-2026-questionnaire</code> &middot; proprietary tier.</li>
+        <li><b>Kawasaki Heavy Industries, Ltd.</b> <i>Supplemental Information &mdash; Comparison
+          between LH<sub>2</sub> and other Carriers of Hydrogen</i>, May 2026. At-rest BOR 0.1 %/day
+          both terminals; carrier 160,000 m&sup3; at 29.6 km/h.
+          <code>kawasaki-2026-supplemental</code> &middot; proprietary tier.</li>
+        <li><b>U.S. DOE Hydrogen and Fuel Cells Program Record #9013</b> (Gardiner, 2009).
+          Ideal liquefaction work 3.3 kWh/kg normal-H<sub>2</sub>, 3.9 kWh/kg para-H<sub>2</sub> &mdash;
+          the basis for the derived BOG re-liquefaction SEC.
+          <code>doe-2009-h2-liquefaction-energy</code> &middot; institutional tier.</li>
+        <li><b>Repository data.</b> H<sub>2</sub> LHV 120 MJ/kg from
+          <code>data/properties/lh2-properties.csv</code>, tagged <i>needs-source</i> pending a
+          formal NIST/CODATA citation. Molar masses and the cracking reaction enthalpy are
+          standard thermochemical values, likewise uncited.</li>
+        <li><b>Not a source: the ammonia column.</b> Every NH<sub>3</sub> figure in this build is an
+          <span class="tag estimate">estimate</span> placeholder. Under decision D4 the ammonia
+          techno-economics come from the internal Gentari dataset, which has not landed in
+          <code>sources/raw/</code> yet. No external NH<sub>3</sub> data was pulled.</li>
+      </ol>
+    </div>
+  </section>
+
+  <footer>
+    <span>Gentari LH2 value chain &middot; KR1.3 working artifact</span>
+    <span class="mono">chain_energy.py &middot; chain-energy-defaults.csv</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" role="status" aria-live="polite"></div>
+
+<script>
+/* =====================================================================
+   Mirrors src/lh2/chain_energy.py exactly. Any change here must be made
+   there too (and vice versa) — tests/test_chain_energy.py locks the
+   Python side to data/carriers/chain-energy-defaults.csv.
+   ===================================================================== */
+
+const MJ_PER_KWH = 3.6;
+const H2_LHV = 120 / 3.6;                        // 33.333 kWh/kg — needs-source
+const NH3_PER_H2 = (2 * 17.031) / (3 * 2.016);   // 5.632 kg NH3 per kg H2 — first principles
+const NH3_CRACK_KJ_PER_MOL = 45.9;               // needs-source
+const H2_MOL_PER_KG = 1000 / 2.016;
+const CRACK_DUTY_KWH_PER_KG =
+  ((2 / 3) * NH3_CRACK_KJ_PER_MOL * H2_MOL_PER_KG) / 1000 / MJ_PER_KWH;   // 4.22 kWh/kg
+const CRACK_FLOOR_PCT = 100 * CRACK_DUTY_KWH_PER_KG / H2_LHV;             // 12.7 %
+
+/* --- input definitions: id, default, and the tag each one carries ----- */
+const INPUTS = [
+  { id: 'in-elec',        def: 60 },
+  { id: 'in-distance',    def: 6000 },
+  // LH2
+  { id: 'in-liq-sec',     def: 9 },
+  { id: 'in-liq-loss',    def: 0 },
+  { id: 'in-exp-bor',     def: 0.1 },
+  { id: 'in-exp-days',    def: 5 },
+  { id: 'in-bog-sec',     def: 3.94 },
+  { id: 'in-speed-lh2',   def: 29.6 },
+  { id: 'in-voy-bor-lh2', def: 0.2 },
+  { id: 'in-imp-bor',     def: 0.1 },
+  { id: 'in-imp-days',    def: 5 },
+  { id: 'in-regas-duty',  def: 3.8 },
+  { id: 'in-regas-elec',  def: 0.031 },
+  // NH3
+  { id: 'in-hb-sec',      def: 0.60 },
+  { id: 'in-hb-loss',     def: 2 },
+  { id: 'in-nexp-bor',    def: 0.04 },
+  { id: 'in-nexp-days',   def: 5 },
+  { id: 'in-nbog-sec',    def: 0.25 },
+  { id: 'in-speed-nh3',   def: 30 },
+  { id: 'in-voy-bor-nh3', def: 0.04 },
+  { id: 'in-nimp-bor',    def: 0.04 },
+  { id: 'in-nimp-days',   def: 5 },
+  { id: 'in-crack-self',  def: 20 },
+  { id: 'in-crack-elec',  def: 0.5 }
+];
+
+function num(id, fallback) {
+  const el = document.getElementById(id);
+  if (!el) return fallback;
+  const v = parseFloat(el.value);
+  return Number.isFinite(v) ? v : fallback;
+}
+
+function readInputs() {
+  const g = (id) => {
+    const spec = INPUTS.find((i) => i.id === id);
+    return num(id, spec ? spec.def : 0);
+  };
+  return {
+    elecSec: g('in-elec'),
+    distance: g('in-distance'),
+    liqSec: g('in-liq-sec'),
+    liqLoss: g('in-liq-loss'),
+    expBor: g('in-exp-bor'),
+    expDays: g('in-exp-days'),
+    bogSec: g('in-bog-sec'),
+    speedLh2: g('in-speed-lh2'),
+    voyBorLh2: g('in-voy-bor-lh2'),
+    impBor: g('in-imp-bor'),
+    impDays: g('in-imp-days'),
+    regasDuty: g('in-regas-duty'),
+    regasElec: g('in-regas-elec'),
+    hbSec: g('in-hb-sec'),
+    hbLoss: g('in-hb-loss'),
+    nExpBor: g('in-nexp-bor'),
+    nExpDays: g('in-nexp-days'),
+    nBogSec: g('in-nbog-sec'),
+    speedNh3: g('in-speed-nh3'),
+    voyBorNh3: g('in-voy-bor-nh3'),
+    nImpBor: g('in-nimp-bor'),
+    nImpDays: g('in-nimp-days'),
+    crackSelf: g('in-crack-self'),
+    crackElec: g('in-crack-elec'),
+    nh3VoyageReliq: (document.getElementById('in-nh3-bog-mode') || { value: 'reliq' }).value === 'reliq'
+  };
+}
+
+/* --- helpers (identical to the Python) -------------------------------- */
+function boilOffFraction(borPctPerDay, days) {
+  if (borPctPerDay <= 0 || days <= 0) return 0;
+  return 1 - Math.pow(1 - borPctPerDay / 100, days);
+}
+function voyageDays(km, kmh) { return kmh > 0 ? km / kmh / 24 : 0; }
+
+function makeCascade() {
+  return {
+    nodes: [], mass: 1, cumEnergy: 0, carrierEnergy: 0, ambient: 0,
+    add(node) {
+      const massIn = this.mass;
+      const massOut = massIn * (1 - (node.massLossFrac || 0));
+      this.mass = massOut;
+      this.cumEnergy += node.energy || 0;
+      if (node.id !== 'A') this.carrierEnergy += node.energy || 0;
+      this.ambient += node.ambient || 0;
+      const lhvCarried = massOut * H2_LHV;
+      const net = H2_LHV - this.carrierEnergy - (1 - massOut) * H2_LHV;
+      this.nodes.push(Object.assign({}, node, {
+        massIn: massIn,
+        massOut: massOut,
+        massLoss: massIn - massOut,
+        energy: node.energy || 0,
+        ambient: node.ambient || 0,
+        cumEnergy: this.cumEnergy,
+        lhvCarried: lhvCarried,
+        net: net,
+        eff: this.cumEnergy > 0 ? 100 * lhvCarried / this.cumEnergy : 0
+      }));
+    }
+  };
+}
+
+function finish(chain, c) {
+  const delivered = c.mass;
+  const total = c.cumEnergy;
+  return {
+    chain: chain,
+    nodes: c.nodes,
+    delivered: delivered,
+    totalEnergy: total,
+    ambient: c.ambient,
+    carrierEnergy: c.carrierEnergy,
+    lhvDelivered: delivered * H2_LHV,
+    eff: total > 0 ? 100 * delivered * H2_LHV / total : 0,
+    lostMass: 1 - delivered,
+    net: H2_LHV - c.carrierEnergy - (1 - delivered) * H2_LHV,
+    perKg: delivered > 0 ? total / delivered : NaN
+  };
+}
+
+/* --- LH2 chain: A -> B1 -> C1 -> D1 -> E1 -> F1 ----------------------- */
+function runLh2(v) {
+  const c = makeCascade();
+  c.add({ id: 'A', name: 'H2 production', state: 'GH2 · 30 barg', tag: 'assumption',
+          energy: v.elecSec });
+
+  c.add({ id: 'B1', name: 'Liquefaction', state: 'LH2 · 20.3 K', tag: 'cited',
+          energy: v.liqSec * c.mass, massLossFrac: v.liqLoss / 100,
+          basis: 'SEC ' + fmtNum(v.liqSec, 1) + ' kWh/kg (KHI 8–9, cited); zero-loss claim reply Q15.' });
+
+  const expBog = boilOffFraction(v.expBor, v.expDays);
+  c.add({ id: 'C1', name: 'Export terminal', state: 'LH2 · at rest', tag: 'cited',
+          energy: expBog * c.mass * v.bogSec,
+          basis: 'BOG ' + fmtNum(expBog * 100, 3) + ' % over ' + fmtNum(v.expDays, 0) +
+                 ' d at ' + fmtNum(v.expBor, 2) + ' %/d (cited), re-liquefied at a derived SEC.' });
+
+  const daysLh2 = voyageDays(v.distance, v.speedLh2);
+  const voyBog = boilOffFraction(v.voyBorLh2, daysLh2);
+  c.add({ id: 'D1', name: 'LH2 shipping', state: fmtNum(daysLh2, 1) + ' d laden', tag: 'estimate',
+          massLossFrac: voyBog,
+          basis: fmtNum(daysLh2, 2) + ' d at ' + fmtNum(v.speedLh2, 1) + ' km/h (cited); BOG ' +
+                 fmtNum(v.voyBorLh2, 2) + ' %/d burned as propulsion fuel (cited), so it leaves as ' +
+                 'mass, not as an electrical draw.' });
+
+  const impBog = boilOffFraction(v.impBor, v.impDays);
+  c.add({ id: 'E1', name: 'Import terminal', state: 'LH2 · at rest', tag: 'cited',
+          energy: impBog * c.mass * v.bogSec,
+          basis: 'BOG ' + fmtNum(impBog * 100, 3) + ' % over ' + fmtNum(v.impDays, 0) +
+                 ' d at ' + fmtNum(v.impBor, 2) + ' %/d (cited), re-liquefied.' });
+
+  c.add({ id: 'F1', name: 'Regasification', state: 'GH2 · ORV', tag: 'cited',
+          energy: v.regasElec * c.mass,
+          ambient: (v.regasDuty / MJ_PER_KWH) * c.mass,
+          basis: 'Heat duty ' + fmtNum(v.regasDuty, 1) + ' MJ/kg (cited) is free seawater heat — ' +
+                 'reported, never charged. The charged term is derived pump work.' });
+
+  return finish('LH2', c);
+}
+
+/* --- NH3 chain: A -> B2 -> C2 -> D2 -> E2 -> F2 ----------------------- */
+function runNh3(v) {
+  const c = makeCascade();
+  c.add({ id: 'A', name: 'H2 production', state: 'GH2 · 30 barg', tag: 'assumption',
+          energy: v.elecSec });
+
+  const hbLoss = v.hbLoss / 100;
+  const nh3PerH2e = (1 - hbLoss) * NH3_PER_H2;
+  c.add({ id: 'B2', name: 'Haber–Bosch', state: 'NH3 · synthesis', tag: 'estimate',
+          energy: v.hbSec * nh3PerH2e * c.mass, massLossFrac: hbLoss,
+          basis: '1 kg H2 → ' + fmtNum(NH3_PER_H2, 3) + ' kg NH3 (stoichiometric). SEC ' +
+                 fmtNum(v.hbSec, 2) + ' kWh/kg-NH3 and ' + fmtNum(v.hbLoss, 1) +
+                 ' % purge loss are both placeholders. Steam export credit not modelled.' });
+
+  const nExpBog = boilOffFraction(v.nExpBor, v.nExpDays);
+  c.add({ id: 'C2', name: 'Export terminal', state: 'NH3 · −33 °C', tag: 'estimate',
+          energy: nExpBog * c.mass * NH3_PER_H2 * v.nBogSec,
+          basis: 'BOG ' + fmtNum(nExpBog * 100, 3) + ' % over ' + fmtNum(v.nExpDays, 0) +
+                 ' d at ' + fmtNum(v.nExpBor, 3) + ' %/d, re-liquefied. Every figure a placeholder.' });
+
+  const daysNh3 = voyageDays(v.distance, v.speedNh3);
+  const nVoyBog = boilOffFraction(v.voyBorNh3, daysNh3);
+  const reliq = v.nh3VoyageReliq;
+  c.add({ id: 'D2', name: 'NH3 shipping', state: fmtNum(daysNh3, 1) + ' d laden', tag: 'estimate',
+          energy: reliq ? nVoyBog * c.mass * NH3_PER_H2 * v.nBogSec : 0,
+          massLossFrac: reliq ? 0 : nVoyBog,
+          basis: fmtNum(daysNh3, 2) + ' d at ' + fmtNum(v.speedNh3, 1) + ' km/h; BOG ' +
+                 fmtNum(v.voyBorNh3, 3) + ' %/d, ' + (reliq ? 're-liquefied on board' : 'burned as fuel') +
+                 '. Every figure a placeholder.' });
+
+  const nImpBog = boilOffFraction(v.nImpBor, v.nImpDays);
+  c.add({ id: 'E2', name: 'Import terminal', state: 'NH3 · −33 °C', tag: 'estimate',
+          energy: nImpBog * c.mass * NH3_PER_H2 * v.nBogSec,
+          basis: 'BOG ' + fmtNum(nImpBog * 100, 3) + ' % over ' + fmtNum(v.nImpDays, 0) +
+                 ' d at ' + fmtNum(v.nImpBor, 3) + ' %/d, re-liquefied. Every figure a placeholder.' });
+
+  c.add({ id: 'F2', name: 'Cracking', state: 'GH2 · PSA', tag: 'estimate',
+          energy: v.crackElec * c.mass, massLossFrac: v.crackSelf / 100,
+          basis: fmtNum(v.crackSelf, 1) + ' % of the H2-equivalent entering is burned for heat or ' +
+                 'lost in PSA tail gas. Thermodynamic floor is ' + fmtNum(CRACK_FLOOR_PCT, 1) +
+                 ' % from the reaction enthalpy alone (' + fmtNum(CRACK_DUTY_KWH_PER_KG, 2) + ' kWh/kg).' });
+
+  return finish('NH3', c);
+}
+
+/* --- formatting -------------------------------------------------------- */
+function fmtNum(x, d) {
+  if (!Number.isFinite(x)) return '—';
+  return x.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+}
+function fmtKwh(x, d) {
+  const dec = d === undefined ? (Math.abs(x) < 1 ? 3 : 2) : d;
+  return fmtNum(x, dec) + ' kWh';
+}
+function fmtKwhMj(x) {
+  const dec = Math.abs(x) < 1 ? 3 : 2;
+  return fmtNum(x, dec) + ' kWh · ' + fmtNum(x * MJ_PER_KWH, Math.abs(x) < 1 ? 2 : 1) + ' MJ';
+}
+function fmtPct(x, d) { return fmtNum(x, d === undefined ? 1 : d) + ' %'; }
+
+/* --- node cards ------------------------------------------------------- */
+const NODE_FIELDS = {
+  B1: [
+    { id: 'in-liq-sec',  label: 'Liquefaction SEC', unit: 'kWh/kg', step: 0.1, min: 0,
+      hint: 'KHI discloses 8–9 kWh/kg (reply Q1). Default is the top of that range.' },
+    { id: 'in-liq-loss', label: 'H2 loss', unit: '%', step: 0.1, min: 0, max: 100,
+      hint: 'KHI claims no H2 losses in the plant concept (reply Q15).' }
+  ],
+  C1: [
+    { id: 'in-exp-bor',  label: 'BOR at rest', unit: '%/day', step: 0.01, min: 0,
+      hint: 'Cited: 0.1 %/day, KHI cost-basis slide.' },
+    { id: 'in-exp-days', label: 'Storage hold', unit: 'days', step: 1, min: 0,
+      hint: 'Placeholder hold time — drives BOG mass and its re-liquefaction energy.' },
+    { id: 'in-bog-sec',  label: 'BOG re-liq SEC', unit: 'kWh/kg-BOG', step: 0.01, min: 0,
+      hint: 'Derived: 0.438 × liquefaction SEC, from the ideal-work ratio of condensation-only (1.71) to fresh feed (3.9 kWh/kg). Shared with node E1.' }
+  ],
+  D1: [
+    { id: 'in-speed-lh2',   label: 'Service speed', unit: 'km/h', step: 0.1, min: 1,
+      hint: 'Cited: 29.6 km/h (~16 kn), 160,000 m³ commercial carrier.' },
+    { id: 'in-voy-bor-lh2', label: 'Voyage BOR', unit: '%/day', step: 0.01, min: 0,
+      hint: 'KHI discloses no standalone voyage BOR — this is NOT the 0.1 %/day at-rest figure. Placeholder.' }
+  ],
+  E1: [
+    { id: 'in-imp-bor',  label: 'BOR at rest', unit: '%/day', step: 0.01, min: 0,
+      hint: 'Cited: 0.1 %/day, receiving side.' },
+    { id: 'in-imp-days', label: 'Storage hold', unit: 'days', step: 1, min: 0,
+      hint: 'Placeholder hold time.' }
+  ],
+  F1: [
+    { id: 'in-regas-duty', label: 'Heat duty', unit: 'MJ/kg', step: 0.1, min: 0,
+      hint: 'Cited: 3.8 MJ/kg-LH2 (reply Q18), supplied by seawater through an ORV — free ambient heat, so it is reported but never charged as input energy.' },
+    { id: 'in-regas-elec', label: 'Electrical draw', unit: 'kWh/kg', step: 0.001, min: 0,
+      hint: 'Derived pump work: cryogenic pump to 30 barg send-out plus ORV seawater circulation. No ORV electrical figure is disclosed anywhere.' }
+  ],
+  B2: [
+    { id: 'in-hb-sec',  label: 'Synthesis SEC', unit: 'kWh/kg-NH3', step: 0.05, min: 0,
+      hint: 'ASU, syngas compression, loop and refrigeration — electrical, per kg ammonia made. Placeholder pending the internal dataset.' },
+    { id: 'in-hb-loss', label: 'H2 loss', unit: '%', step: 0.5, min: 0, max: 100,
+      hint: 'Purge gas and inerts, net of recovery. Placeholder.' }
+  ],
+  C2: [
+    { id: 'in-nexp-bor',  label: 'BOR at rest', unit: '%/day', step: 0.01, min: 0,
+      hint: 'Refrigerated ammonia at about −33 °C, atmospheric. Placeholder.' },
+    { id: 'in-nexp-days', label: 'Storage hold', unit: 'days', step: 1, min: 0,
+      hint: 'Matched to the LH2 side so hold time is not the differentiator.' },
+    { id: 'in-nbog-sec',  label: 'BOG re-liq SEC', unit: 'kWh/kg-NH3', step: 0.01, min: 0,
+      hint: 'Refrigeration compressor duty per kg of ammonia BOG. Placeholder, shared with nodes D2 and E2.' }
+  ],
+  D2: [
+    { id: 'in-speed-nh3',   label: 'Service speed', unit: 'km/h', step: 0.1, min: 1,
+      hint: 'Set close to the LH2 carrier so voyage time is not a built-in difference. Placeholder.' },
+    { id: 'in-voy-bor-nh3', label: 'Voyage BOR', unit: '%/day', step: 0.01, min: 0,
+      hint: 'Placeholder pending the internal dataset.' }
+  ],
+  E2: [
+    { id: 'in-nimp-bor',  label: 'BOR at rest', unit: '%/day', step: 0.01, min: 0,
+      hint: 'Placeholder.' },
+    { id: 'in-nimp-days', label: 'Storage hold', unit: 'days', step: 1, min: 0,
+      hint: 'Matched to the LH2 side.' }
+  ],
+  F2: [
+    { id: 'in-crack-self', label: 'Self-consumption', unit: '% of H2', step: 0.5, min: 0, max: 100,
+      hint: 'H2-equivalent burned for reaction and sensible heat, plus PSA tail-gas losses. Below 12.7 % is thermodynamically impossible — that is the reaction enthalpy alone.' },
+    { id: 'in-crack-elec', label: 'Electrical draw', unit: 'kWh/kg', step: 0.05, min: 0,
+      hint: 'PSA, compression and balance of plant, per kg H2-equivalent entering. Placeholder.' }
+  ]
+};
+
+const NODE_ORDER = {
+  LH2: ['B1', 'C1', 'D1', 'E1', 'F1'],
+  NH3: ['B2', 'C2', 'D2', 'E2', 'F2']
+};
+
+function connectorSvg() {
+  return '<div class="connector" aria-hidden="true"><svg width="20" height="12" viewBox="0 0 20 12">' +
+    '<path d="M0 6 H14" stroke="var(--line-strong)" stroke-width="1.5" fill="none"/>' +
+    '<path d="M13 2.5 L18 6 L13 9.5" stroke="var(--line-strong)" stroke-width="1.5" ' +
+    'fill="none" stroke-linejoin="round" stroke-linecap="round"/></svg></div>';
+}
+
+function buildRails() {
+  ['LH2', 'NH3'].forEach(function (chain) {
+    const host = document.getElementById(chain === 'LH2' ? 'rail-lh2' : 'rail-nh3');
+    const parts = [];
+    NODE_ORDER[chain].forEach(function (id, i) {
+      if (i > 0) parts.push(connectorSvg());
+      const fields = (NODE_FIELDS[id] || []).map(function (f) {
+        const spec = INPUTS.find(function (s) { return s.id === f.id; });
+        const attrs = ['type="number"', 'id="' + f.id + '"', 'value="' + spec.def + '"',
+          'step="' + f.step + '"', 'min="' + f.min + '"',
+          f.max !== undefined ? 'max="' + f.max + '"' : '',
+          'oninput="recompute()"'].filter(Boolean).join(' ');
+        return '<div class="field"><label for="' + f.id + '">' + f.label +
+          ' <span class="hint">' + f.unit + '</span></label><input ' + attrs +
+          '><span class="hint">' + f.hint + '</span></div>';
+      }).join('');
+      const modeField = id === 'D2'
+        ? '<div class="field"><label for="in-nh3-bog-mode">Voyage BOG</label>' +
+          '<select id="in-nh3-bog-mode" onchange="recompute()">' +
+          '<option value="reliq" selected>Re-liquefied on board</option>' +
+          '<option value="fuel">Burned as fuel</option></select>' +
+          '<span class="hint">Moves the penalty between energy drawn and hydrogen lost.</span></div>'
+        : '';
+      parts.push(
+        '<article class="node" id="node-' + id + '">' +
+          '<div class="node-head"><span class="node-id">' + id + '</span>' +
+          '<span class="node-name" id="name-' + id + '"></span></div>' +
+          '<div class="node-state" id="state-' + id + '"></div>' +
+          '<div class="metrics">' +
+            '<div class="metric lead"><span class="k">Energy drawn</span>' +
+              '<span class="cell-v" id="e-' + id + '">—</span></div>' +
+            '<div class="metric"><span class="k">H<sub>2</sub> out</span>' +
+              '<span class="cell-v" id="m-' + id + '">—</span></div>' +
+            '<div class="metric"><span class="k">Running &eta;</span>' +
+              '<span class="cell-v" id="eff-' + id + '">—</span></div>' +
+          '</div>' +
+          '<details class="node-inputs"><summary>inputs</summary>' + fields + modeField + '</details>' +
+        '</article>');
+    });
+    host.innerHTML = parts.join('');
+  });
+}
+
+/* --- waterfall --------------------------------------------------------- */
+function drawWaterfall(svgId, result, hue, hatchId) {
+  const svg = document.getElementById(svgId);
+  const W = 520, H = 300;
+  const M = { t: 14, r: 10, b: 40, l: 40 };
+  const plotW = W - M.l - M.r, plotH = H - M.t - M.b;
+
+  const segments = [];
+  result.nodes.filter(function (n) { return n.id !== 'A'; }).forEach(function (n) {
+    const cuts = [];
+    if (n.energy > 0) cuts.push({ kind: 'energy', value: n.energy });
+    if (n.massLoss > 0) cuts.push({ kind: 'mass', value: n.massLoss * H2_LHV });
+    segments.push({ node: n, cuts: cuts });
+  });
+
+  const yMax = Math.max(H2_LHV, result.net) * 1.06;
+  const y = function (v) { return M.t + plotH - (v / yMax) * plotH; };
+
+  const cols = segments.length + 2;               // start + nodes + net
+  const gap = 10;
+  const colW = (plotW - gap * (cols - 1)) / cols;
+  const x = function (i) { return M.l + i * (colW + gap); };
+
+  let out = '<defs><pattern id="' + hatchId + '" patternUnits="userSpaceOnUse" width="6" height="6" ' +
+    'patternTransform="rotate(45)"><rect width="6" height="6" fill="var(--surface)"/>' +
+    '<line x1="0" y1="0" x2="0" y2="6" stroke="' + hue + '" stroke-width="3.4"/></pattern></defs>';
+
+  // grid + y axis
+  const step = 5;
+  for (let g = 0; g <= Math.floor(yMax); g += step) {
+    out += '<line class="wf-grid" x1="' + M.l + '" y1="' + y(g).toFixed(1) +
+      '" x2="' + (W - M.r) + '" y2="' + y(g).toFixed(1) + '"/>';
+    out += '<text class="wf-axis" x="' + (M.l - 7) + '" y="' + (y(g) + 3.2).toFixed(1) +
+      '" text-anchor="end">' + g + '</text>';
+  }
+  out += '<text class="wf-axis" x="' + M.l + '" y="' + (M.t - 3) +
+    '" text-anchor="start">kWh</text>';
+
+  const bars = [];
+  let running = H2_LHV;
+
+  // start bar
+  bars.push({ i: 0, top: H2_LHV, bottom: 0, fill: 'var(--stream)', label: fmtNum(H2_LHV, 1),
+              title: 'Hydrogen leaving node A', detail: fmtKwhMj(H2_LHV) + ' of chemical energy in 1.0000 kg H2',
+              col: 'LHV' });
+
+  segments.forEach(function (s, si) {
+    const i = si + 1;
+    s.cuts.forEach(function (cut) {
+      const top = running, bottom = running - cut.value;
+      bars.push({
+        i: i, top: top, bottom: bottom,
+        fill: cut.kind === 'energy' ? hue : 'url(#' + hatchId + ')',
+        stroke: cut.kind === 'mass' ? hue : null,
+        label: cut.value / yMax > 0.03 ? '−' + fmtNum(cut.value, 2) : '',
+        title: s.node.id + ' · ' + s.node.name,
+        detail: (cut.kind === 'energy' ? 'Energy drawn: ' : 'Hydrogen lost: ') + fmtKwhMj(cut.value) +
+                (cut.kind === 'mass' ? ' (' + fmtNum(s.node.massLoss * 1000, 1) + ' g H2)' : ''),
+        col: s.node.id
+      });
+      running = bottom;
+    });
+    if (s.cuts.length === 0) {
+      bars.push({ i: i, top: running, bottom: running, fill: 'none', label: '0',
+        title: s.node.id + ' · ' + s.node.name, detail: 'No energy drawn, no hydrogen lost.',
+        col: s.node.id });
+    }
+  });
+
+  // net bar
+  bars.push({ i: cols - 1, top: running, bottom: 0, fill: 'var(--stream)',
+              label: fmtNum(running, 1), title: 'Net at the gate',
+              detail: fmtKwhMj(running) + ' — ' + fmtPct(100 * running / H2_LHV) +
+                      ' of the hydrogen’s own heating value',
+              col: 'NET' });
+
+  // connector line across the tops
+  let path = '';
+  bars.forEach(function (b, k) {
+    if (k === 0) return;
+    const prev = bars[k - 1];
+    path += '<line x1="' + x(prev.i).toFixed(1) + '" y1="' + y(prev.bottom).toFixed(1) +
+      '" x2="' + (x(b.i) + colW).toFixed(1) + '" y2="' + y(prev.bottom).toFixed(1) +
+      '" stroke="var(--line-strong)" stroke-width="1" stroke-dasharray="2 2"/>';
+  });
+  out += path;
+
+  bars.forEach(function (b, k) {
+    const yTop = y(b.top), yBot = y(b.bottom);
+    const h = Math.max(Math.abs(yBot - yTop), b.fill === 'none' ? 0 : 2);
+    if (b.fill !== 'none') {
+      out += '<rect class="wf-bar" x="' + x(b.i).toFixed(1) + '" y="' + Math.min(yTop, yBot).toFixed(1) +
+        '" width="' + colW.toFixed(1) + '" height="' + h.toFixed(1) + '" rx="1.5" fill="' + b.fill + '"' +
+        (b.stroke ? ' stroke="' + b.stroke + '" stroke-width="1"' : '') +
+        ' data-k="' + k + '"><title>' + b.title + ' — ' + b.detail.replace(/</g, '&lt;') + '</title></rect>';
+    }
+    if (b.label) {
+      const isBig = b.bottom === 0;
+      out += '<text class="wf-val" x="' + (x(b.i) + colW / 2).toFixed(1) + '" y="' +
+        (Math.min(yTop, yBot) - 4).toFixed(1) + '" text-anchor="middle" fill="' +
+        (isBig ? 'var(--ink)' : 'var(--muted)') + '">' + b.label + '</text>';
+    }
+  });
+
+  // column labels
+  const labelled = {};
+  bars.forEach(function (b) {
+    if (labelled[b.i]) return;
+    labelled[b.i] = true;
+    out += '<text class="wf-col" x="' + (x(b.i) + colW / 2).toFixed(1) + '" y="' +
+      (M.t + plotH + 15) + '" text-anchor="middle">' + b.col + '</text>';
+  });
+  out += '<line x1="' + M.l + '" y1="' + (M.t + plotH) + '" x2="' + (W - M.r) +
+    '" y2="' + (M.t + plotH) + '" stroke="var(--line-strong)" stroke-width="1"/>';
+
+  svg.innerHTML = '<title>' + result.chain + ' chain energy cascade</title>' + out;
+  attachTips(svg, bars);
+}
+
+const tip = document.getElementById('tip');
+function attachTips(svg, bars) {
+  svg.querySelectorAll('rect[data-k]').forEach(function (r) {
+    const b = bars[parseInt(r.getAttribute('data-k'), 10)];
+    r.addEventListener('mousemove', function (e) {
+      tip.innerHTML = '<b>' + b.title + '</b><div class="t-row">' + b.detail + '</div>';
+      tip.style.opacity = '1';
+      const pad = 14;
+      const w = tip.offsetWidth, h = tip.offsetHeight;
+      let left = e.clientX + pad, top = e.clientY + pad;
+      if (left + w > window.innerWidth - 8) left = e.clientX - w - pad;
+      if (top + h > window.innerHeight - 8) top = e.clientY - h - pad;
+      tip.style.left = left + 'px';
+      tip.style.top = top + 'px';
+    });
+    r.addEventListener('mouseleave', function () { tip.style.opacity = '0'; });
+  });
+}
+
+/* --- ledger + register + gaps ----------------------------------------- */
+function renderLedger(lh2, nh3) {
+  const rows = [];
+  [[lh2, 'lh2'], [nh3, 'nh3']].forEach(function (pair) {
+    const r = pair[0], cls = pair[1];
+    rows.push('<tr class="chain-head ' + cls + '"><td colspan="8">' +
+      (cls === 'lh2' ? 'Liquid hydrogen' : 'Ammonia') + ' — ' + fmtPct(r.eff) +
+      ' chain efficiency, ' + fmtNum(r.delivered, 4) + ' kg H2 delivered</td></tr>');
+    r.nodes.forEach(function (n) {
+      rows.push('<tr>' +
+        '<td class="mono">' + n.id + '</td>' +
+        '<td>' + n.name + '</td>' +
+        '<td class="num">' + (n.energy > 0 ? fmtKwh(n.energy) : '—') + '</td>' +
+        '<td class="num">' + fmtNum(n.cumEnergy, 2) + '</td>' +
+        '<td class="num">' + fmtNum(n.massOut, 4) + '</td>' +
+        '<td class="num">' + fmtNum(n.net, 2) + '</td>' +
+        '<td class="num">' + fmtPct(n.eff) + '</td>' +
+        '<td class="cell-note">' + (n.basis || 'Shared production node — identical in both chains.') + '</td>' +
+        '</tr>');
+    });
+    rows.push('<tr class="total-row">' +
+      '<td class="mono">&Sigma;</td><td>Chain total</td>' +
+      '<td class="num">' + fmtNum(r.totalEnergy, 2) + '</td>' +
+      '<td class="num">' + fmtNum(r.totalEnergy, 2) + '</td>' +
+      '<td class="num">' + fmtNum(r.delivered, 4) + '</td>' +
+      '<td class="num">' + fmtNum(r.net, 2) + '</td>' +
+      '<td class="num">' + fmtPct(r.eff) + '</td>' +
+      '<td class="cell-note">' + fmtNum(r.perKg, 2) + ' kWh per kg delivered' +
+      (r.ambient > 0 ? '; plus ' + fmtKwh(r.ambient, 2) + ' of free ambient heat, not charged' : '') +
+      '.</td></tr>');
+  });
+  document.getElementById('ledger').innerHTML = rows.join('');
+}
+
+const REGISTER = [
+  ['A',  'Electrolyser plant efficiency',   '60 kWh/kg',      'assumption', 'User-specified worked example. Production is outside KHI&rsquo;s LH<sub>2</sub> scope, so the repo holds no sourced figure.'],
+  ['—',  'Shipping distance',               '6,000 km',       'assumption', 'Generic placeholder; no corridor fixed (decision D1).'],
+  ['—',  'H<sub>2</sub> lower heating value','33.33 kWh/kg',   'needs-source', '120 MJ/kg from <code>data/properties/lh2-properties.csv</code>, pending a NIST/CODATA citation.'],
+  ['B1', 'Liquefaction SEC',                '9 kWh/kg',       'cited', 'KHI reply Q1: 8&ndash;9 kWh/kg. Default is the conservative top of the range.'],
+  ['B1', 'H<sub>2</sub> loss',              '0 %',            'cited', 'KHI reply Q15: no H<sub>2</sub> losses in the plant concept under consideration.'],
+  ['C1/E1', 'BOR at rest',                  '0.1 %/day',      'cited', 'KHI cost-basis slide, both export and receiving terminals.'],
+  ['C1/E1', 'Storage hold time',            '5 days',         'assumption', 'Placeholder; drives BOG mass.'],
+  ['C1/E1', 'BOG re-liquefaction SEC',      '3.94 kWh/kg',    'assumption', 'Derived: 0.438 &times; liquefaction SEC, the ratio of condensation-only ideal work (1.71 kWh/kg) to fresh-feed para-basis ideal work (3.9 kWh/kg, DOE 2009). KHI discloses no BOG SEC.'],
+  ['D1', 'Service speed',                   '29.6 km/h',      'cited', 'KHI supplemental: 160,000 m&sup3; carrier, ~16 kn.'],
+  ['D1', 'Voyage BOR',                      '0.2 %/day',      'estimate', 'KHI discloses no standalone voyage BOR. Not the at-rest 0.1 %/day. An unpromoted public figure (~3.44 %/day, RSER 2026) sits in <code>research/</code> and is deliberately not used here.'],
+  ['D1', 'BOG disposition',                 'burned as fuel', 'cited', 'KHI replies Q23/Q33: dual-fuel engine, no onboard re-liquefaction &rarr; the loss is mass, not electricity.'],
+  ['F1', 'Regas heat duty',                 '3.8 MJ/kg',      'cited', 'KHI reply Q18, ORV seawater. Free ambient heat &mdash; reported, not charged as input energy.'],
+  ['F1', 'Regas electrical draw',           '0.031 kWh/kg',   'assumption', 'Derived pump work: cryogenic pump to 30 barg send-out plus ORV seawater circulation. No ORV electrical figure exists in any source.'],
+  ['B2', 'Haber&ndash;Bosch SEC',           '0.60 kWh/kg-NH<sub>3</sub>', 'estimate', 'ASU, compression, loop, refrigeration. Placeholder pending the internal Gentari NH<sub>3</sub> dataset (D4).'],
+  ['B2', 'H<sub>2</sub> purge loss',        '2 %',            'estimate', 'Placeholder pending the internal dataset.'],
+  ['B2', 'NH<sub>3</sub> per H<sub>2</sub>','5.632 kg/kg',    'assumption', 'First principles: N<sub>2</sub> + 3 H<sub>2</sub> &rarr; 2 NH<sub>3</sub>, standard molar masses (themselves uncited).'],
+  ['C2/E2', 'NH<sub>3</sub> BOR at rest',   '0.04 %/day',     'estimate', 'Refrigerated ammonia at about &minus;33 &deg;C. Placeholder.'],
+  ['C2/E2', 'NH<sub>3</sub> BOG re-liq SEC','0.25 kWh/kg-NH<sub>3</sub>', 'estimate', 'Placeholder.'],
+  ['D2', 'NH<sub>3</sub> carrier speed',    '30 km/h',        'estimate', 'Set close to the LH<sub>2</sub> carrier so voyage time is not a built-in difference.'],
+  ['D2', 'NH<sub>3</sub> voyage BOR',       '0.04 %/day',     'estimate', 'Placeholder.'],
+  ['F2', 'Cracker self-consumption',        '20 % of H<sub>2</sub>', 'estimate', 'Reaction and sensible heat plus PSA tail gas. Floor is 12.7 % from the reaction enthalpy alone (45.9 kJ/mol-NH<sub>3</sub> &rarr; 4.22 kWh/kg-H<sub>2</sub>).'],
+  ['F2', 'Cracker electrical draw',         '0.5 kWh/kg',     'estimate', 'PSA, compression, balance of plant. Placeholder.']
+];
+
+function renderRegister() {
+  document.getElementById('register').innerHTML = REGISTER.map(function (r) {
+    const tagClass = r[3] === 'cited' ? 'cited' : r[3] === 'assumption' ? 'assumption'
+      : r[3] === 'estimate' ? 'estimate' : 'derived';
+    return '<tr><td class="mono">' + r[0] + '</td><td>' + r[1] + '</td>' +
+      '<td class="num">' + r[2] + '</td>' +
+      '<td><span class="tag ' + tagClass + '">' + r[3] + '</span></td>' +
+      '<td class="cell-note">' + r[4] + '</td></tr>';
+  }).join('');
+}
+
+function renderGaps(v, lh2, nh3) {
+  const g = [];
+  g.push('<b>Decision D4 — the whole ammonia column is unsourced.</b> Every NH<sub>3</sub> ' +
+    'figure above is a placeholder awaiting the internal Gentari dataset. Read the ammonia ' +
+    'result as a structure to fill in, not as an answer.');
+  g.push('<b>Voyage boil-off (node D1) is not a KHI figure.</b> KHI ties fuel-gas consumption ' +
+    'to the BOR but never discloses the rate itself. At ' + fmtNum(v.voyBorLh2, 2) + ' %/day over ' +
+    fmtNum(voyageDays(v.distance, v.speedLh2), 1) + ' days this costs ' +
+    fmtNum(lh2.nodes[3].massLoss * 1000, 1) + ' g of hydrogen per kg shipped — the single ' +
+    'largest LH<sub>2</sub> mass loss in the chain, resting on a placeholder.');
+  g.push('<b>BOG re-liquefaction SEC (' + fmtNum(v.bogSec, 2) + ' kWh/kg) is derived, not disclosed.</b> ' +
+    'It assumes BOG handling achieves the same exergetic efficiency as the main liquefier.');
+  g.push('<b>Regas electricity (' + fmtNum(v.regasElec, 3) + ' kWh/kg) is first-principles pump work</b> ' +
+    'at an assumed 30 barg / 30 &deg;C send-out spec. Validate against a real ORV pump curve before use.');
+  g.push('<b>Node A is a placeholder</b> at ' + fmtNum(v.elecSec, 1) + ' kWh/kg. It is shared, so it ' +
+    'does not bias the comparison — but it sets ' +
+    fmtPct(100 * v.elecSec / lh2.totalEnergy) + ' of the LH<sub>2</sub> chain&rsquo;s total input.');
+  g.push('<b>Haber–Bosch heat is not credited.</b> Ammonia synthesis is exothermic; recovering that ' +
+    'heat as steam would lower the NH<sub>3</sub> chain&rsquo;s net penalty below what is shown.');
+  if (v.crackSelf < CRACK_FLOOR_PCT) {
+    g.push('<b>Cracker self-consumption of ' + fmtNum(v.crackSelf, 1) + ' % is below the ' +
+      'thermodynamic floor of ' + fmtNum(CRACK_FLOOR_PCT, 1) + ' %.</b> The reaction enthalpy alone ' +
+      'needs ' + fmtNum(CRACK_DUTY_KWH_PER_KG, 2) + ' kWh per kg H<sub>2</sub>, before any sensible ' +
+      'heating or purification loss. This result is not physically reachable.');
+  }
+  g.push('<b>Outside the boundary for both chains:</b> marine fuel beyond BOG, terminal utilities, ' +
+    'jetty and loading energy, ammonia safety and abatement systems, and all distribution ' +
+    'downstream of the send-out flange.');
+  g.push('<b>Cost is not modelled here.</b> An energy penalty is not a cost ranking — cheap ' +
+    'electricity at the export end and expensive electricity at the import end can invert this ' +
+    'result. LCOH lives in <code>src/lh2/scenario.py</code>.');
+  document.getElementById('gaps').innerHTML = g.map(function (t) { return '<li>' + t + '</li>'; }).join('');
+}
+
+/* --- orchestration ----------------------------------------------------- */
+function recompute() {
+  const v = readInputs();
+  const lh2 = runLh2(v);
+  const nh3 = runNh3(v);
+
+  // node A card
+  const a = lh2.nodes[0];
+  document.getElementById('a-eff').textContent = fmtPct(a.eff);
+  document.getElementById('a-in').textContent = fmtKwhMj(v.elecSec);
+  document.getElementById('a-out').textContent = fmtKwhMj(H2_LHV);
+  document.getElementById('a-pen').textContent = fmtKwhMj(v.elecSec - H2_LHV);
+
+  // verdict cards
+  [[lh2, 'lh2'], [nh3, 'nh3']].forEach(function (pair) {
+    const r = pair[0], p = pair[1];
+    document.getElementById(p + '-eff').innerHTML =
+      fmtNum(r.eff, 1) + '<span class="kpi-unit">%</span>';
+    document.getElementById(p + '-delivered').textContent = fmtNum(r.delivered, 4) + ' kg';
+    document.getElementById(p + '-total').textContent = fmtKwhMj(r.totalEnergy);
+    document.getElementById(p + '-perkg').textContent = fmtNum(r.perKg, 2) + ' kWh/kg';
+    document.getElementById(p + '-penalty').textContent =
+      fmtKwh(r.carrierEnergy + r.lostMass * H2_LHV, 2) + '  (' +
+      fmtPct(100 * (r.carrierEnergy + r.lostMass * H2_LHV) / H2_LHV) + ' of LHV)';
+    document.getElementById(p + '-retained').textContent =
+      fmtNum(r.net, 2) + ' kWh  (' + fmtPct(100 * r.net / H2_LHV) + ')';
+  });
+
+  // node cards
+  [[lh2, 'LH2'], [nh3, 'NH3']].forEach(function (pair) {
+    const r = pair[0];
+    r.nodes.forEach(function (n) {
+      if (n.id === 'A') return;
+      document.getElementById('name-' + n.id).textContent = n.name;
+      document.getElementById('state-' + n.id).textContent = n.state;
+      const eEl = document.getElementById('e-' + n.id);
+      if (n.energy > 0) {
+        eEl.innerHTML = fmtKwh(n.energy) + '<br><span class="sub">' +
+          fmtNum(n.energy * MJ_PER_KWH, n.energy < 1 ? 2 : 1) + ' MJ</span>';
+      } else {
+        eEl.textContent = '—';
+      }
+      document.getElementById('m-' + n.id).innerHTML = fmtNum(n.massOut, 4) + ' kg' +
+        (n.massLoss > 0 ? '<br><span class="sub">−' + fmtNum(n.massLoss * 1000, 1) + ' g</span>' : '');
+      document.getElementById('eff-' + n.id).textContent = fmtPct(n.eff);
+    });
+  });
+
+  // charts
+  const lh2Hue = getComputedStyle(document.documentElement).getPropertyValue('--lh2').trim();
+  const nh3Hue = getComputedStyle(document.documentElement).getPropertyValue('--nh3').trim();
+  drawWaterfall('wf-lh2', lh2, lh2Hue, 'hatch-lh2');
+  drawWaterfall('wf-nh3', nh3, nh3Hue, 'hatch-nh3');
+  document.getElementById('wf-lh2-sub').textContent =
+    'Starts at ' + fmtNum(H2_LHV, 2) + ' kWh, ends at ' + fmtNum(lh2.net, 2) + ' kWh — ' +
+    fmtPct(100 * lh2.net / H2_LHV) + ' retained.';
+  document.getElementById('wf-nh3-sub').textContent =
+    'Starts at ' + fmtNum(H2_LHV, 2) + ' kWh, ends at ' + fmtNum(nh3.net, 2) + ' kWh — ' +
+    fmtPct(100 * nh3.net / H2_LHV) + ' retained.';
+  ['lh2', 'nh3'].forEach(function (k) {
+    const el = document.getElementById('key-hatch-' + k);
+    el.style.background = 'repeating-linear-gradient(45deg, var(--' + k + ') 0 3px, ' +
+      'var(--surface) 3px 6px)';
+    el.style.border = '1px solid var(--' + k + ')';
+  });
+
+  renderLedger(lh2, nh3);
+  renderGaps(v, lh2, nh3);
+}
+
+function resetAll() {
+  INPUTS.forEach(function (spec) {
+    const el = document.getElementById(spec.id);
+    if (el) el.value = spec.def;
+  });
+  const mode = document.getElementById('in-nh3-bog-mode');
+  if (mode) mode.value = 'reliq';
+  recompute();
+}
+
+buildRails();
+renderRegister();
+recompute();
+window.addEventListener('resize', function () { tip.style.opacity = '0'; });
+</script>

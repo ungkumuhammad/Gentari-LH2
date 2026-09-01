@@ -4,7 +4,7 @@
 > Updated every session. `CLAUDE.md` points here — read this at the start of
 > any session where the user references prior work or continuing a task.
 >
-> Last updated: 2026-07-21
+> Last updated: 2026-09-01
 
 ---
 
@@ -12,7 +12,7 @@
 
 - **Repo:** `ungkumuhammad/Gentari-LH2`
 - **User:** ungkumuhammad.work@gmail.com (Gentari / PETRONAS group)
-- **Working branch:** `claude/h2-ammonia-value-chain-nwh8ls`
+- **Working branch:** `claude/lh2-ammonia-value-chain-4a1525`
 - **Context:** Gentari is developing low-carbon H2/NH3 supply projects in Malaysia,
   India (Kakinada green NH3 FID COD 2028, Tamil Nadu FEED-ready COD 2030),
   and Canada (blue NH3, target COD 2031). LH2 offtake interest exists but
@@ -29,7 +29,7 @@ Short version:
 |----|-------------|--------|
 | KR1.1 | LH2 techno-economic database v1 | 🟢 v1 built (M1.1–M1.8 ✅); pending NIST citation for physical props |
 | KR1.2 | LH2 shipping functional-requirements spec (for Excel model team) | 🟡 In progress (M2) |
-| KR1.3 | LH2-vs-NH3 long-distance supply-chain comparison | ⬜ Not started (M3) |
+| KR1.3 | LH2-vs-NH3 long-distance supply-chain comparison | 🟡 Energy dimension (M3.5) built end-to-end; economics/BOG/speed still open; NH3 values all placeholders (D4) |
 
 Hard deadline: **Q4 2026**. Stretch: **mid/end Q3 2026**.
 
@@ -456,3 +456,68 @@ management strategies), **techno-economics** (KHI IAE stack vs RSER ~3.74 $/GJ),
 and **safety** (JMSE "record reflects limited data, not inherent safety"). Verify
 every paper number against the PDF before putting it in the table; keep KHI
 (proprietary) vs public-paper sources clearly separated.
+
+### LH2 vs NH3 node-by-node energy-penalty ledger (2026-09-01)
+
+User asked to start the LH2-vs-ammonia whole-value-chain comparison as a set of
+lettered nodes — LH2: A production → B1 liquefaction → C1 export terminal &
+storage → D1 shipping → E1 import terminal & storage → F1 regasification; NH3:
+A → B2 Haber-Bosch → C2 → D2 → E2 → F2 cracker — with an **energy penalty**
+tracked through the chain, and an artifact built for both. The worked example
+they gave defines the accounting: 60 kWh/kg electrolyser vs H2's 33.33 kWh/kg
+LHV = 26.67 kWh/kg penalty = 55.6 % efficient; then each downstream node's
+consumption is deducted from the 33.33 kWh the stream carries. They said to use
+default numbers first and they will change what needs changing.
+
+**Modelling decisions taken this session:**
+
+| # | Decision | Choice |
+|---|----------|--------|
+| E1 | Basis | 1 kg H2 produced at node A; mass tracked as **H2-equivalent** so the NH3 leg is directly comparable (NH3 = H2e x 5.632) |
+| E2 | Both efficiency views reported | *Input basis* (LHV delivered / total energy consumed — reproduces the user's 55.6 % at node A) **and** *deduction basis* (33.33 kWh less carrier energy less lost LHV — the user's "deduct from 33.33" framing). Both from the same per-node numbers |
+| E3 | Two penalty currencies | Each node takes either **energy drawn** (external power) or **H2 mass lost** — never conflated. LH2 voyage BOG is mass (KHI burns it as fuel, Q23/Q33); terminal BOG is energy (re-liquefied, Q3) |
+| E4 | Regas heat not charged | KHI's 3.8 MJ/kg is free ambient seawater heat through an ORV — reported as thermal duty, never added to input energy. Only derived pump work is charged |
+| E5 | Cracker self-consumption booked as mass loss | With a first-principles floor: reaction enthalpy alone = 4.22 kWh/kg-H2 = **12.7 % of LHV**, so any self-consumption below that is flagged as physically unreachable |
+| E6 | NH3 column stays unsourced | Per D4, **every** NH3 default is an `[ESTIMATE]` placeholder. No external NH3 data was pulled; the artifact says so in its masthead, its register, and its gap list |
+
+**Result at the defaults** (60 kWh/kg, 6,000 km, 5 d holds each end):
+LH2 delivers 0.9832 kg H2 for 69.07 kWh → **47.5 %** chain efficiency, 70.25 kWh
+per kg delivered. NH3 delivers 0.7840 kg for 63.81 kWh → **41.0 %**, 81.39 kWh
+per kg delivered. The shape of the answer: LH2 pays in *energy*, once, at the
+liquefier (9 of its 9.63 kWh carrier penalty is node B1); NH3 pays in *hydrogen*,
+at the far end (19.6 % of the arriving H2e is consumed in the cracker) — which is
+why NH3 draws less total energy yet delivers 20 % less hydrogen.
+
+| File | Action | Purpose |
+|------|--------|---------|
+| `data/carriers/chain-energy-defaults.csv` | Created | Every default for both chains in the repo's tidy schema, cited or tagged. New units added to the test vocabulary: `km`, `kg/kg`, `kJ/mol` |
+| `src/lh2/chain_energy.py` | Created | The model: `ChainInputs`/`NodeResult`/`ChainResult`, `run_lh2_chain`, `run_nh3_chain`, `compare`, `format_report`. Compounding boil-off, stoichiometry, cracker duty derivation, per-chain `gaps` |
+| `scripts/run_chain_comparison.py` | Created | CLI wrapper, `--json` for machine-readable output |
+| `tests/test_chain_energy.py` | Created | 55 tests incl. the user's worked example, mass balance, both efficiency definitions, the 12.7 % cracker floor, and a **drift test** that fails if any Python default diverges from the CSV |
+| `tests/test_data_tables.py` | Updated | New table added to `TABLES`; `km`/`kg/kg`/`kJ/mol` added to `KNOWN_UNITS` |
+| `scripts/build_db_workbook.py` + `data/lh2-database.xlsx` | Updated / regenerated | New `chain_energy_defaults` sheet |
+| `docs/reports/lh2-vs-nh3-energy-penalty.html` | Created | **"LH2 vs Ammonia Energy Ledger"** artifact: masthead with boundary/basis/units/tag policy, two verdict cards, shared node A panel, two node rails with inputs *on* each node card, two waterfall cascade charts (solid = energy drawn, 45° hatch = H2 lost), node ledger table, live gap list, assumption register, sources. Mirrors `chain_energy.py` exactly |
+| `docs/comparison/01-energy-penalty-method.md` | Created | Method write-up |
+| `docs/comparison/00-milestones.md` | Updated | M3.5 → 🟡; new artifacts listed |
+
+**Build notes worth keeping:** the two series hues were validated with the
+dataviz palette checker (light `#0C7C9E`/`#A9660B`, dark `#2E97B9`/`#BA8930` —
+all six checks pass on both surfaces); a third hue for "H2 lost" failed the
+normal-vision separation floor against the amber, so mass loss is encoded by
+**hatch texture** in the chain's own hue instead. Verified against the Python CLI
+via Playwright: every headline figure matched exactly (47.5 %, 41.0 %, 69.07,
+63.81, 0.9832, 0.7840, 23.70, 22.32, 55.6 %, 26.67). Playwright's pip build
+expects browser rev 1234 but the image ships 1194 — launch with
+`executable_path="/opt/pw-browsers/chromium-1194/chrome-linux/chrome"`.
+
+**➡️ Open items for the user on this workstream:**
+1. Replace the NH3 placeholders with the internal dataset (D4) — the single
+   biggest thing standing between this and a decision-grade answer.
+2. Confirm or replace the LH2 voyage BOR (0.2 %/day placeholder). It is the
+   largest LH2 mass loss in the chain and rests on nothing.
+3. Give a named corridor (origin → destination, distance) to replace the generic
+   6,000 km (D1).
+4. Say whether Haber-Bosch steam export should be credited — it is currently not
+   modelled, which is conservative *against* ammonia.
+5. Cost is deliberately absent from this build. Say when the energy ledger should
+   be joined to the LCOH model (`src/lh2/scenario.py`) for KR1.3's economics.

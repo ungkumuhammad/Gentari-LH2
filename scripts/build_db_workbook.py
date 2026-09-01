@@ -28,6 +28,7 @@ TABLES: list[tuple[str, str]] = [
     ("lh2_properties", "properties/lh2-properties.csv"),
     ("lh2_carriers", "vessels/lh2-carriers.csv"),
     ("cost_stack", "costs/lh2-cost-stack.csv"),
+    ("chain_energy_defaults", "carriers/chain-energy-defaults.csv"),
 ]
 
 

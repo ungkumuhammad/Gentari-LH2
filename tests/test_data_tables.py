@@ -27,6 +27,7 @@ TABLES = [
     "properties/lh2-properties.csv",
     "vessels/lh2-carriers.csv",
     "costs/lh2-cost-stack.csv",
+    "carriers/chain-energy-defaults.csv",
 ]
 
 NON_CITED_TAGS = {"ASSUMPTION", "ESTIMATE", "needs-source"}
@@ -41,6 +42,7 @@ KNOWN_UNITS = {
     "kWh/kg", "kWh/Nm3", "t/d", "unit", "tpa", "%", "year",
     "USD/kg", "USD/ship", "kgCO2e/kg", "%/day", "m3", "inch", "TRL",
     "MJ/kg", "K", "kg/m3", "kg/Nm3", "km/h", "ship", "day", "JPY/Nm3",
+    "km", "kg/kg", "kJ/mol",
 }
 
 
