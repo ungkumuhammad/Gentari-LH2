@@ -275,6 +275,39 @@
             font-size: 11.5px; color: var(--muted); }
   .legend span { display: inline-flex; align-items: center; gap: 6px; }
   .legend i { width: 12px; height: 12px; border-radius: 2px; display: inline-block; flex: none; }
+
+  /* --- calculation trail --------------------------------------------- */
+  .calc-block { padding: 16px 18px; }
+  .calc-block + .calc-block { margin-top: 0; }
+  .calc-cols { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+               margin-top: 14px; }
+  .calc-col-head {
+    display: flex; align-items: center; gap: 9px; font-family: "IBM Plex Sans Condensed", sans-serif;
+    font-size: 15px; font-weight: 600; padding-bottom: 12px; margin-bottom: 4px;
+    border-bottom: 1px solid var(--line);
+  }
+  .calc-col-head.lh2 { color: var(--lh2-text); }
+  .calc-col-head.nh3 { color: var(--nh3-text); }
+  .calc-node + .calc-node { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--line); }
+  .calc-node-head { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; }
+  .calc-node-name { font-size: 13.5px; font-weight: 600; }
+  .calc-node.calc-shared .calc-node-name { color: var(--ink-2); font-weight: 500; }
+  .calc-lines { display: flex; flex-direction: column; gap: 5px; }
+  .calc-line {
+    display: grid; grid-template-columns: minmax(120px, .78fr) minmax(160px, 1.4fr) minmax(110px, .9fr);
+    gap: 4px 14px; align-items: baseline; font-size: 12px; line-height: 1.4;
+    padding: 3px 0;
+  }
+  .calc-lbl { color: var(--muted); font-size: 11px; letter-spacing: .02em; }
+  .calc-expr { font-family: "IBM Plex Mono", monospace; color: var(--ink-2); white-space: nowrap;
+               overflow-x: auto; }
+  .calc-res { font-family: "IBM Plex Mono", monospace; font-weight: 600; color: var(--ink);
+              text-align: right; white-space: nowrap; }
+  .calc-res.warn { color: var(--flag); }
+  @media (max-width: 640px) {
+    .calc-line { grid-template-columns: 1fr; gap: 1px; }
+    .calc-res { text-align: left; }
+  }
   svg.wf { width: 100%; height: auto; display: block; overflow: visible; }
   svg.wf text { font-family: "IBM Plex Mono", monospace; font-variant-numeric: tabular-nums; }
   .wf-grid { stroke: var(--line); stroke-width: 1; }
@@ -501,6 +534,34 @@
         <span class="rail-title">Ammonia &mdash; nodes B2 to F2</span>
       </div>
       <div class="rail-scroll"><div class="rail-row" id="rail-nh3"></div></div>
+    </div>
+  </section>
+
+  <!-- ============== CALCULATION TRAIL ============== -->
+  <section>
+    <div class="sec-head"><h2>Show your work &mdash; the full calculation, node by node</h2></div>
+    <p class="sec-note">
+      Every line below is arithmetic, not narrative: the formula, your current numbers
+      substituted in, and the result &mdash; recomputed the instant you edit an input above.
+      This is exactly what <code class="mono">src/lh2/chain_energy.py</code> computes, written
+      out step by step.
+    </p>
+    <div class="panel calc-block">
+      <div class="calc-node calc-shared">
+        <div class="calc-node-head"><span class="node-id" style="background:var(--stream)">A</span>
+          <span class="calc-node-name">H<sub>2</sub> production &mdash; shared by both chains</span></div>
+        <div class="calc-lines" id="calc-A"></div>
+      </div>
+    </div>
+    <div class="calc-cols">
+      <div class="panel calc-block lh2">
+        <div class="calc-col-head lh2"><span class="swatch"></span>Liquid hydrogen</div>
+        <div id="calc-col-lh2"></div>
+      </div>
+      <div class="panel calc-block nh3">
+        <div class="calc-col-head nh3"><span class="swatch"></span>Ammonia</div>
+        <div id="calc-col-nh3"></div>
+      </div>
     </div>
   </section>
 
@@ -769,41 +830,109 @@ function finish(chain, c) {
   };
 }
 
+/* --- calc-trail line builder -------------------------------------------
+   One line of visible arithmetic: label, the formula with numbers plugged
+   in, and the result. Used to build each node's `calc` array below so the
+   page can show its work, not just the answer. */
+function cLine(label, expr, result, warn) {
+  return '<div class="calc-line"><span class="calc-lbl">' + label + '</span>' +
+    '<span class="calc-expr">' + expr + '</span>' +
+    '<span class="calc-res' + (warn ? ' warn' : '') + '">' + result + '</span></div>';
+}
+function fmtG(kg, d) { return fmtNum(kg * 1000, d === undefined ? 3 : d) + ' g'; }
+function fmtFrac(x, d) { return fmtPct(x * 100, d === undefined ? 4 : d); }
+
+const PRODUCTION_CALC = function (v) {
+  return [
+    cLine('Energy in', fmtNum(v.elecSec, 2) + ' kWh/kg &times; 1.0000 kg', fmtKwh(v.elecSec)),
+    cLine('LHV out', fmtNum(H2_LHV, 2) + ' kWh/kg &times; 1.0000 kg', fmtKwh(H2_LHV)),
+    cLine('Penalty', fmtKwh(v.elecSec) + ' &minus; ' + fmtKwh(H2_LHV),
+      fmtKwh(v.elecSec - H2_LHV) + '  (' + fmtPct(100 * H2_LHV / v.elecSec) + ' eff.)')
+  ].join('');
+};
+
 /* --- LH2 chain: A -> B1 -> C1 -> D1 -> E1 -> F1 ----------------------- */
 function runLh2(v) {
   const c = makeCascade();
   c.add({ id: 'A', name: 'H2 production', state: 'GH2 · 30 barg', tag: 'assumption',
           energy: v.elecSec });
 
+  const massInB1 = c.mass;
   c.add({ id: 'B1', name: 'Liquefaction', state: 'LH2 · 20.3 K', tag: 'cited',
           energy: v.liqSec * c.mass, massLossFrac: v.liqLoss / 100,
-          basis: 'SEC ' + fmtNum(v.liqSec, 1) + ' kWh/kg (KHI 8–9, cited); zero-loss claim reply Q15.' });
+          basis: 'SEC ' + fmtNum(v.liqSec, 1) + ' kWh/kg (KHI 8–9, cited); zero-loss claim reply Q15.',
+          calc: [
+            cLine('Energy', fmtNum(v.liqSec, 2) + ' kWh/kg &times; ' + fmtNum(massInB1, 4) + ' kg',
+              fmtKwh(v.liqSec * massInB1)),
+            cLine('H<sub>2</sub> loss', fmtNum(v.liqLoss, 1) + '% &times; ' + fmtNum(massInB1, 4) + ' kg',
+              fmtG(massInB1 * v.liqLoss / 100)),
+            cLine('H<sub>2</sub> out', fmtNum(massInB1, 4) + ' &minus; loss',
+              fmtNum(massInB1 * (1 - v.liqLoss / 100), 4) + ' kg')
+          ].join('') });
 
+  const massInC1 = c.mass;
   const expBog = boilOffFraction(v.expBor, v.expDays);
   c.add({ id: 'C1', name: 'Export terminal', state: 'LH2 · at rest', tag: 'cited',
           energy: expBog * c.mass * v.bogSec,
           basis: 'BOG ' + fmtNum(expBog * 100, 3) + ' % over ' + fmtNum(v.expDays, 0) +
-                 ' d at ' + fmtNum(v.expBor, 2) + ' %/d (cited), re-liquefied at a derived SEC.' });
+                 ' d at ' + fmtNum(v.expBor, 2) + ' %/d (cited), re-liquefied at a derived SEC.',
+          calc: [
+            cLine('BOG fraction', '1 &minus; (1 &minus; ' + fmtNum(v.expBor, 2) + '%)<sup>' +
+              fmtNum(v.expDays, 0) + 'd</sup>', fmtFrac(expBog)),
+            cLine('BOG mass', fmtFrac(expBog) + ' &times; ' + fmtNum(massInC1, 4) + ' kg', fmtG(expBog * massInC1)),
+            cLine('Energy (re-liq.)', fmtG(expBog * massInC1, 4) + ' &times; ' + fmtNum(v.bogSec, 2) + ' kWh/kg',
+              fmtKwh(expBog * massInC1 * v.bogSec)),
+            cLine('H<sub>2</sub> out', 'BOG re-liquefied, no mass lost', fmtNum(massInC1, 4) + ' kg')
+          ].join('') });
 
+  const massInD1 = c.mass;
   const daysLh2 = voyageDays(v.distance, v.speedLh2);
   const voyBog = boilOffFraction(v.voyBorLh2, daysLh2);
   c.add({ id: 'D1', name: 'LH2 shipping', state: fmtNum(daysLh2, 1) + ' d laden', tag: 'estimate',
           massLossFrac: voyBog,
           basis: fmtNum(daysLh2, 2) + ' d at ' + fmtNum(v.speedLh2, 1) + ' km/h (cited); BOG ' +
                  fmtNum(v.voyBorLh2, 2) + ' %/d burned as propulsion fuel (cited), so it leaves as ' +
-                 'mass, not as an electrical draw.' });
+                 'mass, not as an electrical draw.',
+          calc: [
+            cLine('Voyage time', fmtNum(v.distance, 0) + ' km &divide; ' + fmtNum(v.speedLh2, 1) +
+              ' km/h &divide; 24', fmtNum(daysLh2, 2) + ' d'),
+            cLine('BOG fraction', '1 &minus; (1 &minus; ' + fmtNum(v.voyBorLh2, 2) + '%)<sup>' +
+              fmtNum(daysLh2, 2) + 'd</sup>', fmtFrac(voyBog)),
+            cLine('BOG mass (burned)', fmtFrac(voyBog) + ' &times; ' + fmtNum(massInD1, 4) + ' kg',
+              fmtG(voyBog * massInD1)),
+            cLine('H<sub>2</sub> out', fmtNum(massInD1, 4) + ' &minus; ' + fmtG(voyBog * massInD1, 4),
+              fmtNum(massInD1 * (1 - voyBog), 4) + ' kg'),
+            cLine('Energy', 'burned onboard, not purchased', '0 kWh')
+          ].join('') });
 
+  const massInE1 = c.mass;
   const impBog = boilOffFraction(v.impBor, v.impDays);
   c.add({ id: 'E1', name: 'Import terminal', state: 'LH2 · at rest', tag: 'cited',
           energy: impBog * c.mass * v.bogSec,
           basis: 'BOG ' + fmtNum(impBog * 100, 3) + ' % over ' + fmtNum(v.impDays, 0) +
-                 ' d at ' + fmtNum(v.impBor, 2) + ' %/d (cited), re-liquefied.' });
+                 ' d at ' + fmtNum(v.impBor, 2) + ' %/d (cited), re-liquefied.',
+          calc: [
+            cLine('BOG fraction', '1 &minus; (1 &minus; ' + fmtNum(v.impBor, 2) + '%)<sup>' +
+              fmtNum(v.impDays, 0) + 'd</sup>', fmtFrac(impBog)),
+            cLine('BOG mass', fmtFrac(impBog) + ' &times; ' + fmtNum(massInE1, 4) + ' kg', fmtG(impBog * massInE1)),
+            cLine('Energy (re-liq.)', fmtG(impBog * massInE1, 4) + ' &times; ' + fmtNum(v.bogSec, 2) + ' kWh/kg',
+              fmtKwh(impBog * massInE1 * v.bogSec)),
+            cLine('H<sub>2</sub> out', 'BOG re-liquefied, no mass lost', fmtNum(massInE1, 4) + ' kg')
+          ].join('') });
 
+  const massInF1 = c.mass;
   c.add({ id: 'F1', name: 'Regasification', state: 'GH2 · ORV', tag: 'cited',
           energy: v.regasElec * c.mass,
           ambient: (v.regasDuty / MJ_PER_KWH) * c.mass,
           basis: 'Heat duty ' + fmtNum(v.regasDuty, 1) + ' MJ/kg (cited) is free seawater heat — ' +
-                 'reported, never charged. The charged term is derived pump work.' });
+                 'reported, never charged. The charged term is derived pump work.',
+          calc: [
+            cLine('Ambient heat (not charged)', fmtNum(v.regasDuty, 2) + ' MJ/kg &divide; 3.6 &times; ' +
+              fmtNum(massInF1, 4) + ' kg', fmtKwh((v.regasDuty / MJ_PER_KWH) * massInF1)),
+            cLine('Electrical (charged)', fmtNum(v.regasElec, 3) + ' kWh/kg &times; ' + fmtNum(massInF1, 4) + ' kg',
+              fmtKwh(v.regasElec * massInF1)),
+            cLine('H<sub>2</sub> out', 'no mass change at regas', fmtNum(massInF1, 4) + ' kg')
+          ].join('') });
 
   return finish('LH2', c);
 }
@@ -814,41 +943,107 @@ function runNh3(v) {
   c.add({ id: 'A', name: 'H2 production', state: 'GH2 · 30 barg', tag: 'assumption',
           energy: v.elecSec });
 
+  const massInB2 = c.mass;
   const hbLoss = v.hbLoss / 100;
   const nh3PerH2e = (1 - hbLoss) * NH3_PER_H2;
   c.add({ id: 'B2', name: 'Haber–Bosch', state: 'NH3 · synthesis', tag: 'estimate',
           energy: v.hbSec * nh3PerH2e * c.mass, massLossFrac: hbLoss,
           basis: '1 kg H2 → ' + fmtNum(NH3_PER_H2, 3) + ' kg NH3 (stoichiometric). SEC ' +
                  fmtNum(v.hbSec, 2) + ' kWh/kg-NH3 and ' + fmtNum(v.hbLoss, 1) +
-                 ' % purge loss are both placeholders. Steam export credit not modelled.' });
+                 ' % purge loss are both placeholders. Steam export credit not modelled.',
+          calc: [
+            cLine('NH<sub>3</sub> made', fmtNum(massInB2, 4) + ' kg &times; (1&minus;' + fmtNum(v.hbLoss, 1) +
+              '%) &times; ' + fmtNum(NH3_PER_H2, 3), fmtNum(nh3PerH2e * massInB2, 3) + ' kg NH<sub>3</sub>'),
+            cLine('Energy', fmtNum(nh3PerH2e * massInB2, 3) + ' kg NH<sub>3</sub> &times; ' +
+              fmtNum(v.hbSec, 2) + ' kWh/kg', fmtKwh(v.hbSec * nh3PerH2e * massInB2)),
+            cLine('H<sub>2</sub>e out', fmtNum(massInB2, 4) + ' &times; (1&minus;' + fmtNum(v.hbLoss, 1) + '%)',
+              fmtNum(massInB2 * (1 - hbLoss), 4) + ' kg')
+          ].join('') });
 
+  const massInC2 = c.mass;
   const nExpBog = boilOffFraction(v.nExpBor, v.nExpDays);
   c.add({ id: 'C2', name: 'Export terminal', state: 'NH3 · −33 °C', tag: 'estimate',
           energy: nExpBog * c.mass * NH3_PER_H2 * v.nBogSec,
           basis: 'BOG ' + fmtNum(nExpBog * 100, 3) + ' % over ' + fmtNum(v.nExpDays, 0) +
-                 ' d at ' + fmtNum(v.nExpBor, 3) + ' %/d, re-liquefied. Every figure a placeholder.' });
+                 ' d at ' + fmtNum(v.nExpBor, 3) + ' %/d, re-liquefied. Every figure a placeholder.',
+          calc: [
+            cLine('BOG fraction', '1 &minus; (1 &minus; ' + fmtNum(v.nExpBor, 3) + '%)<sup>' +
+              fmtNum(v.nExpDays, 0) + 'd</sup>', fmtFrac(nExpBog)),
+            cLine('BOG mass (H<sub>2</sub>e)', fmtFrac(nExpBog) + ' &times; ' + fmtNum(massInC2, 4) + ' kg',
+              fmtG(nExpBog * massInC2)),
+            cLine('BOG mass (NH<sub>3</sub>)', fmtG(nExpBog * massInC2, 3) + ' &times; ' + fmtNum(NH3_PER_H2, 3),
+              fmtG(nExpBog * massInC2 * NH3_PER_H2)),
+            cLine('Energy (re-liq.)', fmtG(nExpBog * massInC2 * NH3_PER_H2, 4) + ' &times; ' +
+              fmtNum(v.nBogSec, 2) + ' kWh/kg', fmtKwh(nExpBog * massInC2 * NH3_PER_H2 * v.nBogSec)),
+            cLine('H<sub>2</sub>e out', 'BOG re-liquefied, no mass lost', fmtNum(massInC2, 4) + ' kg')
+          ].join('') });
 
+  const massInD2 = c.mass;
   const daysNh3 = voyageDays(v.distance, v.speedNh3);
   const nVoyBog = boilOffFraction(v.voyBorNh3, daysNh3);
   const reliq = v.nh3VoyageReliq;
+  const calcD2 = [
+    cLine('Voyage time', fmtNum(v.distance, 0) + ' km &divide; ' + fmtNum(v.speedNh3, 1) +
+      ' km/h &divide; 24', fmtNum(daysNh3, 2) + ' d'),
+    cLine('BOG fraction', '1 &minus; (1 &minus; ' + fmtNum(v.voyBorNh3, 3) + '%)<sup>' +
+      fmtNum(daysNh3, 2) + 'd</sup>', fmtFrac(nVoyBog)),
+    cLine('BOG mass (H<sub>2</sub>e)', fmtFrac(nVoyBog) + ' &times; ' + fmtNum(massInD2, 4) + ' kg',
+      fmtG(nVoyBog * massInD2))
+  ];
+  if (reliq) {
+    calcD2.push(cLine('BOG mass (NH<sub>3</sub>)', fmtG(nVoyBog * massInD2, 3) + ' &times; ' + fmtNum(NH3_PER_H2, 3),
+      fmtG(nVoyBog * massInD2 * NH3_PER_H2)));
+    calcD2.push(cLine('Energy (re-liq. on board)', fmtG(nVoyBog * massInD2 * NH3_PER_H2, 4) + ' &times; ' +
+      fmtNum(v.nBogSec, 2) + ' kWh/kg', fmtKwh(nVoyBog * massInD2 * NH3_PER_H2 * v.nBogSec)));
+    calcD2.push(cLine('H<sub>2</sub>e out', 'BOG re-liquefied, no mass lost', fmtNum(massInD2, 4) + ' kg'));
+  } else {
+    calcD2.push(cLine('H<sub>2</sub>e out (burned as fuel)', fmtNum(massInD2, 4) + ' &minus; ' +
+      fmtG(nVoyBog * massInD2, 4), fmtNum(massInD2 * (1 - nVoyBog), 4) + ' kg'));
+    calcD2.push(cLine('Energy', 'burned onboard, not purchased', '0 kWh'));
+  }
   c.add({ id: 'D2', name: 'NH3 shipping', state: fmtNum(daysNh3, 1) + ' d laden', tag: 'estimate',
           energy: reliq ? nVoyBog * c.mass * NH3_PER_H2 * v.nBogSec : 0,
           massLossFrac: reliq ? 0 : nVoyBog,
           basis: fmtNum(daysNh3, 2) + ' d at ' + fmtNum(v.speedNh3, 1) + ' km/h; BOG ' +
                  fmtNum(v.voyBorNh3, 3) + ' %/d, ' + (reliq ? 're-liquefied on board' : 'burned as fuel') +
-                 '. Every figure a placeholder.' });
+                 '. Every figure a placeholder.',
+          calc: calcD2.join('') });
 
+  const massInE2 = c.mass;
   const nImpBog = boilOffFraction(v.nImpBor, v.nImpDays);
   c.add({ id: 'E2', name: 'Import terminal', state: 'NH3 · −33 °C', tag: 'estimate',
           energy: nImpBog * c.mass * NH3_PER_H2 * v.nBogSec,
           basis: 'BOG ' + fmtNum(nImpBog * 100, 3) + ' % over ' + fmtNum(v.nImpDays, 0) +
-                 ' d at ' + fmtNum(v.nImpBor, 3) + ' %/d, re-liquefied. Every figure a placeholder.' });
+                 ' d at ' + fmtNum(v.nImpBor, 3) + ' %/d, re-liquefied. Every figure a placeholder.',
+          calc: [
+            cLine('BOG fraction', '1 &minus; (1 &minus; ' + fmtNum(v.nImpBor, 3) + '%)<sup>' +
+              fmtNum(v.nImpDays, 0) + 'd</sup>', fmtFrac(nImpBog)),
+            cLine('BOG mass (H<sub>2</sub>e)', fmtFrac(nImpBog) + ' &times; ' + fmtNum(massInE2, 4) + ' kg',
+              fmtG(nImpBog * massInE2)),
+            cLine('BOG mass (NH<sub>3</sub>)', fmtG(nImpBog * massInE2, 3) + ' &times; ' + fmtNum(NH3_PER_H2, 3),
+              fmtG(nImpBog * massInE2 * NH3_PER_H2)),
+            cLine('Energy (re-liq.)', fmtG(nImpBog * massInE2 * NH3_PER_H2, 4) + ' &times; ' +
+              fmtNum(v.nBogSec, 2) + ' kWh/kg', fmtKwh(nImpBog * massInE2 * NH3_PER_H2 * v.nBogSec)),
+            cLine('H<sub>2</sub>e out', 'BOG re-liquefied, no mass lost', fmtNum(massInE2, 4) + ' kg')
+          ].join('') });
 
+  const massInF2 = c.mass;
   c.add({ id: 'F2', name: 'Cracking', state: 'GH2 · PSA', tag: 'estimate',
           energy: v.crackElec * c.mass, massLossFrac: v.crackSelf / 100,
           basis: fmtNum(v.crackSelf, 1) + ' % of the H2-equivalent entering is burned for heat or ' +
                  'lost in PSA tail gas. Thermodynamic floor is ' + fmtNum(CRACK_FLOOR_PCT, 1) +
-                 ' % from the reaction enthalpy alone (' + fmtNum(CRACK_DUTY_KWH_PER_KG, 2) + ' kWh/kg).' });
+                 ' % from the reaction enthalpy alone (' + fmtNum(CRACK_DUTY_KWH_PER_KG, 2) + ' kWh/kg).',
+          calc: [
+            cLine('Self-consumption', fmtNum(v.crackSelf, 1) + '% &times; ' + fmtNum(massInF2, 4) + ' kg',
+              fmtNum(massInF2 * v.crackSelf / 100, 4) + ' kg'),
+            cLine('H<sub>2</sub> out', fmtNum(massInF2, 4) + ' &minus; ' +
+              fmtNum(massInF2 * v.crackSelf / 100, 4), fmtNum(massInF2 * (1 - v.crackSelf / 100), 4) + ' kg'),
+            cLine('Electrical', fmtNum(v.crackElec, 2) + ' kWh/kg &times; ' + fmtNum(massInF2, 4) + ' kg',
+              fmtKwh(v.crackElec * massInF2)),
+            cLine('Reaction floor (ref. only)', fmtNum(CRACK_DUTY_KWH_PER_KG, 2) + ' kWh/kg = ' +
+              fmtNum(CRACK_FLOOR_PCT, 1) + '% of LHV, physical minimum',
+              v.crackSelf < CRACK_FLOOR_PCT ? 'below floor' : 'OK', v.crackSelf < CRACK_FLOOR_PCT)
+          ].join('') });
 
   return finish('NH3', c);
 }
@@ -1188,6 +1383,20 @@ const REGISTER = [
   ['F2', 'Cracker electrical draw',         '0.5 kWh/kg',     'estimate', 'PSA, compression, balance of plant. Placeholder.']
 ];
 
+function renderCalcTrail(v, lh2, nh3) {
+  document.getElementById('calc-A').innerHTML = PRODUCTION_CALC(v);
+  [[lh2, 'calc-col-lh2'], [nh3, 'calc-col-nh3']].forEach(function (pair) {
+    const r = pair[0], hostId = pair[1];
+    const html = r.nodes.filter(function (n) { return n.id !== 'A'; }).map(function (n) {
+      return '<div class="calc-node"><div class="calc-node-head">' +
+        '<span class="node-id">' + n.id + '</span>' +
+        '<span class="calc-node-name">' + n.name + '</span></div>' +
+        '<div class="calc-lines">' + (n.calc || '') + '</div></div>';
+    }).join('');
+    document.getElementById(hostId).innerHTML = html;
+  });
+}
+
 function renderRegister() {
   document.getElementById('register').innerHTML = REGISTER.map(function (r) {
     const tagClass = r[3] === 'cited' ? 'cited' : r[3] === 'assumption' ? 'assumption'
@@ -1301,6 +1510,7 @@ function recompute() {
 
   renderLedger(lh2, nh3);
   renderGaps(v, lh2, nh3);
+  renderCalcTrail(v, lh2, nh3);
 }
 
 function resetAll() {
