@@ -403,7 +403,8 @@
       </div>
       <div>
         <dt>Basis</dt>
-        <dd>1 kg H<sub>2</sub> produced at node A. Mass tracked as H<sub>2</sub>-equivalent
+        <dd>Study scale is 100 ktpa H<sub>2</sub> supplied at node A (editable); every cascade
+            is computed per 1 kg produced, then scaled. Mass tracked as H<sub>2</sub>-equivalent
             throughout.</dd>
       </div>
       <div>
@@ -508,10 +509,22 @@
       </div>
       <div>
         <div class="field">
+          <label for="in-annual">Annual H<sub>2</sub> supply <span class="hint">ktpa</span></label>
+          <input type="number" id="in-annual" value="100" min="0" step="10" oninput="recompute()">
+          <span class="hint">The study's headline scale, anchored at node A &mdash; replaces the
+            1&nbsp;kg normalized basis below. <span class="tag assumption">assumption</span></span>
+        </div>
+        <div class="field">
           <label for="in-distance">Shipping distance <span class="hint">km, one way</span></label>
           <input type="number" id="in-distance" value="6000" min="0" step="100" oninput="recompute()">
           <span class="hint">Laden leg, shared by both chains. No corridor is fixed yet
             (decision D1). <span class="tag assumption">assumption</span></span>
+        </div>
+        <div class="field">
+          <label for="in-availability">Fleet availability <span class="hint">%</span></label>
+          <input type="number" id="in-availability" value="90" min="1" max="100" step="1" oninput="recompute()">
+          <span class="hint">Dry-docking, maintenance, weather margin &mdash; shared by both fleets.
+            <span class="tag assumption">assumption</span></span>
         </div>
       </div>
     </div>
@@ -534,6 +547,55 @@
         <span class="rail-title">Ammonia &mdash; nodes B2 to F2</span>
       </div>
       <div class="rail-scroll"><div class="rail-row" id="rail-nh3"></div></div>
+    </div>
+  </section>
+
+  <!-- ============== ANNUAL SCALE & FLEET ============== -->
+  <section>
+    <div class="sec-head"><h2>Annual scale &amp; fleet</h2></div>
+    <p class="sec-note">
+      Every per-kg figure above, scaled by the annual H<sub>2</sub> supply you set at node A,
+      then sized into a shipping fleet using each carrier's vessel spec (below, on the D1/D2
+      node cards). Reuses the same fleet-sizing formula as
+      <code class="mono">src/lh2/shipping.py</code>: round-trip days &times; availability
+      &rarr; trips/year/vessel &times; cargo/voyage &rarr; annual capacity/vessel &rarr;
+      fleet size = ceil(annual cargo &divide; annual capacity/vessel).
+    </p>
+    <div class="verdict">
+      <article class="panel vcard lh2">
+        <div class="vcard-head">
+          <span class="swatch"></span><h2>Liquid hydrogen</h2>
+          <span class="chain-sub" id="lh2-annual-sub">&mdash;</span>
+        </div>
+        <div class="kpi-num" id="lh2-fleet">&mdash;</div>
+        <div class="kpi-cap">vessels required &mdash; 40,000 m&sup3; class</div>
+        <div class="vrows">
+          <div class="vrow"><span class="k">Annual energy</span><span class="cell-v" id="lh2-annual-energy">&mdash;</span></div>
+          <div class="vrow"><span class="k">Annual H<sub>2</sub> delivered</span><span class="cell-v" id="lh2-annual-delivered">&mdash;</span></div>
+          <div class="vrow"><span class="k">Annual LH<sub>2</sub> shipped</span><span class="cell-v" id="lh2-annual-cargo">&mdash;</span></div>
+          <div class="vrow"><span class="k">Cargo per voyage</span><span class="cell-v" id="lh2-cargo-voyage">&mdash;</span></div>
+          <div class="vrow"><span class="k">Round-trip cycle</span><span class="cell-v" id="lh2-roundtrip">&mdash;</span></div>
+          <div class="vrow"><span class="k">Trips / year / vessel</span><span class="cell-v" id="lh2-trips">&mdash;</span></div>
+        </div>
+      </article>
+
+      <article class="panel vcard nh3">
+        <div class="vcard-head">
+          <span class="swatch"></span><h2>Ammonia</h2>
+          <span class="chain-sub" id="nh3-annual-sub">&mdash;</span>
+        </div>
+        <div class="kpi-num" id="nh3-fleet">&mdash;</div>
+        <div class="kpi-cap">vessels required &mdash; 40,000 m&sup3; class</div>
+        <div class="vrows">
+          <div class="vrow"><span class="k">Annual energy</span><span class="cell-v" id="nh3-annual-energy">&mdash;</span></div>
+          <div class="vrow"><span class="k">Annual H<sub>2</sub> delivered</span><span class="cell-v" id="nh3-annual-delivered">&mdash;</span></div>
+          <div class="vrow"><span class="k">Annual NH<sub>3</sub> shipped</span><span class="cell-v" id="nh3-annual-cargo">&mdash;</span></div>
+          <div class="vrow"><span class="k">Cargo per voyage</span><span class="cell-v" id="nh3-cargo-voyage">&mdash;</span></div>
+          <div class="vrow"><span class="k">Round-trip cycle</span><span class="cell-v" id="nh3-roundtrip">&mdash;</span></div>
+          <div class="vrow"><span class="k">Trips / year / vessel</span><span class="cell-v" id="nh3-trips">&mdash;</span></div>
+          <div class="vrow"><span class="k">Ammonia supply ratio</span><span class="cell-v" id="nh3-supply-ratio">&mdash;</span></div>
+        </div>
+      </article>
     </div>
   </section>
 
@@ -662,10 +724,14 @@
           &mdash; KHI reply (Rev.1)</i>, Mar&ndash;Apr 2026. Liquefaction SEC 8&ndash;9 kWh/kg (Q1);
           no H<sub>2</sub> losses claimed (Q15); terminal BOG re-liquefied (Q3); BOG burned as
           propulsion fuel, no onboard re-liquefaction (Q23/Q33); regas heat duty 3.8 MJ/kg-LH<sub>2</sub>
-          via ORV (Q17/Q18). <code>kawasaki-2026-questionnaire</code> &middot; proprietary tier.</li>
+          via ORV (Q17/Q18); 40,000 m&sup3; vessel under construction, same tank tech as Suiso
+          Frontier, no major issues flagged (Q29) &mdash; this session's vessel-capacity default.
+          <code>kawasaki-2026-questionnaire</code> &middot; proprietary tier.</li>
         <li><b>Kawasaki Heavy Industries, Ltd.</b> <i>Supplemental Information &mdash; Comparison
           between LH<sub>2</sub> and other Carriers of Hydrogen</i>, May 2026. At-rest BOR 0.1 %/day
-          both terminals; carrier 160,000 m&sup3; at 29.6 km/h.
+          both terminals; commercial-scale target carrier 160,000 m&sup3; at 29.6 km/h &mdash; the
+          speed is reused for this session's 40,000 m&sup3; vessel (no separate figure is disclosed
+          for it); the 160,000 m&sup3; capacity itself is no longer this build's default.
           <code>kawasaki-2026-supplemental</code> &middot; proprietary tier.</li>
         <li><b>U.S. DOE Hydrogen and Fuel Cells Program Record #9013</b> (Gardiner, 2009).
           Ideal liquefaction work 3.3 kWh/kg normal-H<sub>2</sub>, 3.9 kWh/kg para-H<sub>2</sub> &mdash;
@@ -711,6 +777,8 @@ const CRACK_FLOOR_PCT = 100 * CRACK_DUTY_KWH_PER_KG / H2_LHV;             // 12.
 const INPUTS = [
   { id: 'in-elec',        def: 60 },
   { id: 'in-distance',    def: 6000 },
+  { id: 'in-annual',      def: 100 },
+  { id: 'in-availability', def: 90 },
   // LH2
   { id: 'in-liq-sec',     def: 9 },
   { id: 'in-liq-loss',    def: 0 },
@@ -719,6 +787,10 @@ const INPUTS = [
   { id: 'in-bog-sec',     def: 3.94 },
   { id: 'in-speed-lh2',   def: 29.6 },
   { id: 'in-voy-bor-lh2', def: 0.2 },
+  { id: 'in-lh2-capacity', def: 40000 },
+  { id: 'in-lh2-fill',    def: 98 },
+  { id: 'in-lh2-density', def: 70.8 },
+  { id: 'in-lh2-port',    def: 1.25 },
   { id: 'in-imp-bor',     def: 0.1 },
   { id: 'in-imp-days',    def: 5 },
   { id: 'in-regas-duty',  def: 3.8 },
@@ -731,9 +803,15 @@ const INPUTS = [
   { id: 'in-nbog-sec',    def: 0.25 },
   { id: 'in-speed-nh3',   def: 30 },
   { id: 'in-voy-bor-nh3', def: 0.04 },
+  { id: 'in-nh3-capacity', def: 40000 },
+  { id: 'in-nh3-fill',    def: 98 },
+  { id: 'in-nh3-density', def: 682 },
+  { id: 'in-nh3-port',    def: 1.25 },
+  { id: 'in-bunker-rate', def: 1.3 },
   { id: 'in-nimp-bor',    def: 0.04 },
   { id: 'in-nimp-days',   def: 5 },
-  { id: 'in-crack-self',  def: 20 },
+  { id: 'in-crack-loss',  def: 3 },
+  { id: 'in-ng-eff',      def: 85 },
   { id: 'in-crack-elec',  def: 0.5 }
 ];
 
@@ -752,6 +830,8 @@ function readInputs() {
   return {
     elecSec: g('in-elec'),
     distance: g('in-distance'),
+    annualKtpa: g('in-annual'),
+    availability: g('in-availability'),
     liqSec: g('in-liq-sec'),
     liqLoss: g('in-liq-loss'),
     expBor: g('in-exp-bor'),
@@ -759,6 +839,10 @@ function readInputs() {
     bogSec: g('in-bog-sec'),
     speedLh2: g('in-speed-lh2'),
     voyBorLh2: g('in-voy-bor-lh2'),
+    lh2Capacity: g('in-lh2-capacity'),
+    lh2Fill: g('in-lh2-fill'),
+    lh2Density: g('in-lh2-density'),
+    lh2Port: g('in-lh2-port'),
     impBor: g('in-imp-bor'),
     impDays: g('in-imp-days'),
     regasDuty: g('in-regas-duty'),
@@ -770,9 +854,15 @@ function readInputs() {
     nBogSec: g('in-nbog-sec'),
     speedNh3: g('in-speed-nh3'),
     voyBorNh3: g('in-voy-bor-nh3'),
+    nh3Capacity: g('in-nh3-capacity'),
+    nh3Fill: g('in-nh3-fill'),
+    nh3Density: g('in-nh3-density'),
+    nh3Port: g('in-nh3-port'),
+    bunkerRate: g('in-bunker-rate'),
     nImpBor: g('in-nimp-bor'),
     nImpDays: g('in-nimp-days'),
-    crackSelf: g('in-crack-self'),
+    crackLoss: g('in-crack-loss'),
+    ngEff: g('in-ng-eff'),
     crackElec: g('in-crack-elec'),
     nh3VoyageReliq: (document.getElementById('in-nh3-bog-mode') || { value: 'reliq' }).value === 'reliq'
   };
@@ -981,32 +1071,44 @@ function runNh3(v) {
   const massInD2 = c.mass;
   const daysNh3 = voyageDays(v.distance, v.speedNh3);
   const nVoyBog = boilOffFraction(v.voyBorNh3, daysNh3);
+  const bunkerFrac = Math.min(v.bunkerRate * daysNh3 / 100, 1);
   const reliq = v.nh3VoyageReliq;
   const calcD2 = [
     cLine('Voyage time', fmtNum(v.distance, 0) + ' km &divide; ' + fmtNum(v.speedNh3, 1) +
       ' km/h &divide; 24', fmtNum(daysNh3, 2) + ' d'),
-    cLine('BOG fraction', '1 &minus; (1 &minus; ' + fmtNum(v.voyBorNh3, 3) + '%)<sup>' +
+    cLine('Ordinary BOG fraction', '1 &minus; (1 &minus; ' + fmtNum(v.voyBorNh3, 3) + '%)<sup>' +
       fmtNum(daysNh3, 2) + 'd</sup>', fmtFrac(nVoyBog)),
-    cLine('BOG mass (H<sub>2</sub>e)', fmtFrac(nVoyBog) + ' &times; ' + fmtNum(massInD2, 4) + ' kg',
-      fmtG(nVoyBog * massInD2))
+    cLine('Bunker fuel fraction', fmtNum(v.bunkerRate, 2) + '%/d &times; ' + fmtNum(daysNh3, 2) + 'd',
+      fmtFrac(bunkerFrac)),
+    cLine('Bunker fuel mass (always lost)', fmtFrac(bunkerFrac) + ' &times; ' + fmtNum(massInD2, 4) + ' kg',
+      fmtG(bunkerFrac * massInD2))
   ];
+  let shipEnergy, shipLoss;
   if (reliq) {
-    calcD2.push(cLine('BOG mass (NH<sub>3</sub>)', fmtG(nVoyBog * massInD2, 3) + ' &times; ' + fmtNum(NH3_PER_H2, 3),
-      fmtG(nVoyBog * massInD2 * NH3_PER_H2)));
-    calcD2.push(cLine('Energy (re-liq. on board)', fmtG(nVoyBog * massInD2 * NH3_PER_H2, 4) + ' &times; ' +
-      fmtNum(v.nBogSec, 2) + ' kWh/kg', fmtKwh(nVoyBog * massInD2 * NH3_PER_H2 * v.nBogSec)));
-    calcD2.push(cLine('H<sub>2</sub>e out', 'BOG re-liquefied, no mass lost', fmtNum(massInD2, 4) + ' kg'));
+    shipEnergy = nVoyBog * massInD2 * NH3_PER_H2 * v.nBogSec;
+    shipLoss = bunkerFrac;
+    calcD2.push(cLine('Ordinary BOG mass (NH<sub>3</sub>)', fmtFrac(nVoyBog) + ' &times; ' + fmtNum(massInD2, 4) +
+      ' kg &times; ' + fmtNum(NH3_PER_H2, 3), fmtG(nVoyBog * massInD2 * NH3_PER_H2)));
+    calcD2.push(cLine('Energy (ordinary BOG re-liq.)', fmtG(nVoyBog * massInD2 * NH3_PER_H2, 4) + ' &times; ' +
+      fmtNum(v.nBogSec, 2) + ' kWh/kg', fmtKwh(shipEnergy)));
+    calcD2.push(cLine('H<sub>2</sub>e out', fmtNum(massInD2, 4) + ' &minus; bunker fuel only',
+      fmtNum(massInD2 * (1 - shipLoss), 4) + ' kg'));
   } else {
-    calcD2.push(cLine('H<sub>2</sub>e out (burned as fuel)', fmtNum(massInD2, 4) + ' &minus; ' +
-      fmtG(nVoyBog * massInD2, 4), fmtNum(massInD2 * (1 - nVoyBog), 4) + ' kg'));
+    shipEnergy = 0;
+    shipLoss = 1 - (1 - nVoyBog) * (1 - bunkerFrac);
+    calcD2.push(cLine('Combined loss fraction', '1 &minus; (1&minus;' + fmtFrac(nVoyBog) + ')(1&minus;' +
+      fmtFrac(bunkerFrac) + ')', fmtFrac(shipLoss)));
+    calcD2.push(cLine('H<sub>2</sub>e out (both burned)', fmtNum(massInD2, 4) + ' &times; (1&minus;' +
+      fmtFrac(shipLoss) + ')', fmtNum(massInD2 * (1 - shipLoss), 4) + ' kg'));
     calcD2.push(cLine('Energy', 'burned onboard, not purchased', '0 kWh'));
   }
   c.add({ id: 'D2', name: 'NH3 shipping', state: fmtNum(daysNh3, 1) + ' d laden', tag: 'estimate',
-          energy: reliq ? nVoyBog * c.mass * NH3_PER_H2 * v.nBogSec : 0,
-          massLossFrac: reliq ? 0 : nVoyBog,
-          basis: fmtNum(daysNh3, 2) + ' d at ' + fmtNum(v.speedNh3, 1) + ' km/h; BOG ' +
-                 fmtNum(v.voyBorNh3, 3) + ' %/d, ' + (reliq ? 're-liquefied on board' : 'burned as fuel') +
-                 '. Every figure a placeholder.',
+          energy: shipEnergy,
+          massLossFrac: shipLoss,
+          basis: fmtNum(daysNh3, 2) + ' d at ' + fmtNum(v.speedNh3, 1) + ' km/h; ordinary BOG ' +
+                 fmtNum(v.voyBorNh3, 3) + ' %/d + bunker fuel ' + fmtNum(v.bunkerRate, 2) + ' %/d (' +
+                 (reliq ? 'ordinary BOG re-liquefied, bunker fuel burned' : 'both burned') +
+                 '). Every figure a placeholder.',
           calc: calcD2.join('') });
 
   const massInE2 = c.mass;
@@ -1028,24 +1130,75 @@ function runNh3(v) {
           ].join('') });
 
   const massInF2 = c.mass;
-  c.add({ id: 'F2', name: 'Cracking', state: 'GH2 · PSA', tag: 'estimate',
-          energy: v.crackElec * c.mass, massLossFrac: v.crackSelf / 100,
-          basis: fmtNum(v.crackSelf, 1) + ' % of the H2-equivalent entering is burned for heat or ' +
-                 'lost in PSA tail gas. Thermodynamic floor is ' + fmtNum(CRACK_FLOOR_PCT, 1) +
-                 ' % from the reaction enthalpy alone (' + fmtNum(CRACK_DUTY_KWH_PER_KG, 2) + ' kWh/kg).',
+  const ngThermalKwh = CRACK_DUTY_KWH_PER_KG * massInF2 / (v.ngEff / 100);
+  const crackElecKwh = v.crackElec * massInF2;
+  c.add({ id: 'F2', name: 'Cracking', state: 'GH2 · NG-fired', tag: 'estimate',
+          energy: ngThermalKwh + crackElecKwh, massLossFrac: v.crackLoss / 100,
+          basis: 'Reaction heat is now natural-gas-fired (purchased, charged energy), not combusted ' +
+                 'product H2/NH3 — ' + fmtNum(v.crackLoss, 1) + '% mass loss is a small PSA/purification ' +
+                 'slip only.',
           calc: [
-            cLine('Self-consumption', fmtNum(v.crackSelf, 1) + '% &times; ' + fmtNum(massInF2, 4) + ' kg',
-              fmtNum(massInF2 * v.crackSelf / 100, 4) + ' kg'),
+            cLine('NG thermal duty', fmtNum(CRACK_DUTY_KWH_PER_KG, 2) + ' kWh/kg &times; ' +
+              fmtNum(massInF2, 4) + ' kg &divide; ' + fmtNum(v.ngEff, 0) + '%', fmtKwh(ngThermalKwh)),
+            cLine('Electrical (BOP)', fmtNum(v.crackElec, 2) + ' kWh/kg &times; ' + fmtNum(massInF2, 4) + ' kg',
+              fmtKwh(crackElecKwh)),
+            cLine('Process loss (PSA slip)', fmtNum(v.crackLoss, 1) + '% &times; ' + fmtNum(massInF2, 4) + ' kg',
+              fmtNum(massInF2 * v.crackLoss / 100, 4) + ' kg'),
             cLine('H<sub>2</sub> out', fmtNum(massInF2, 4) + ' &minus; ' +
-              fmtNum(massInF2 * v.crackSelf / 100, 4), fmtNum(massInF2 * (1 - v.crackSelf / 100), 4) + ' kg'),
-            cLine('Electrical', fmtNum(v.crackElec, 2) + ' kWh/kg &times; ' + fmtNum(massInF2, 4) + ' kg',
-              fmtKwh(v.crackElec * massInF2)),
-            cLine('Reaction floor (ref. only)', fmtNum(CRACK_DUTY_KWH_PER_KG, 2) + ' kWh/kg = ' +
-              fmtNum(CRACK_FLOOR_PCT, 1) + '% of LHV, physical minimum',
-              v.crackSelf < CRACK_FLOOR_PCT ? 'below floor' : 'OK', v.crackSelf < CRACK_FLOOR_PCT)
+              fmtNum(massInF2 * v.crackLoss / 100, 4), fmtNum(massInF2 * (1 - v.crackLoss / 100), 4) + ' kg'),
+            cLine('Reaction floor (ref.)', fmtNum(CRACK_DUTY_KWH_PER_KG, 2) + ' kWh/kg = ' +
+              fmtNum(CRACK_FLOOR_PCT, 1) + '% of LHV — this IS charged above, at ' + fmtNum(v.ngEff, 0) +
+              '% fired efficiency', 'charged')
           ].join('') });
 
   return finish('NH3', c);
+}
+
+/* --- ammonia supply ratio: physical NH3 made (B2) / H2 delivered (F2) --- */
+function nh3SupplyRatio(result) {
+  const b2 = result.nodes.find(function (n) { return n.id === 'B2'; });
+  if (!b2 || result.delivered <= 0) return NaN;
+  return (b2.massOut * NH3_PER_H2) / result.delivered;
+}
+
+/* --- annual scale & fleet: mirrors src/lh2/chain_energy.py annual_scale() -
+   reuses the same round-trip-days / fleet-size formula as
+   src/lh2/shipping.py (an effective capacity = nameplate x fill fraction is
+   passed in, since that helper takes no fill-fraction argument itself). --- */
+function roundTripDays(distanceKm, speedKmh, portDaysPerCall) {
+  return 2 * voyageDays(distanceKm, speedKmh) + 2 * portDaysPerCall;
+}
+function annualScale(v, result) {
+  const annualSupplyKg = v.annualKtpa * 1e6;               // 1 kt = 1e6 kg
+  const annualDeliveredKg = result.delivered * annualSupplyKg;
+  const annualEnergyKwh = result.totalEnergy * annualSupplyKg;
+
+  const isNh3 = result.chain === 'NH3';
+  const dNode = result.nodes.find(function (n) { return n.id === (isNh3 ? 'D2' : 'D1'); });
+  const physicalMassFrac = isNh3 ? dNode.massIn * NH3_PER_H2 : dNode.massIn;
+  const capacityM3 = isNh3 ? v.nh3Capacity : v.lh2Capacity;
+  const fillPct = isNh3 ? v.nh3Fill : v.lh2Fill;
+  const density = isNh3 ? v.nh3Density : v.lh2Density;
+  const portDays = isNh3 ? v.nh3Port : v.lh2Port;
+  const speed = isNh3 ? v.speedNh3 : v.speedLh2;
+
+  const annualCargoKg = physicalMassFrac * annualSupplyKg;
+  const rtd = roundTripDays(v.distance, speed, portDays);
+  const effectiveCapacityM3 = capacityM3 * (fillPct / 100);
+  const availability = v.availability / 100;
+  const cargoPerVoyageKg = effectiveCapacityM3 * density;
+  const tripsPerYear = rtd > 0 ? (365 / rtd) * availability : 0;
+  const annualCapacityPerVesselKg = cargoPerVoyageKg * tripsPerYear;
+  const fleetSize = annualCapacityPerVesselKg > 0
+    ? Math.ceil(annualCargoKg / annualCapacityPerVesselKg) : 0;
+
+  return {
+    annualSupplyKg: annualSupplyKg, annualDeliveredKg: annualDeliveredKg,
+    annualEnergyKwh: annualEnergyKwh, annualCargoKg: annualCargoKg,
+    vesselCapacityM3: capacityM3, fillFractionPct: fillPct,
+    cargoPerVoyageKg: cargoPerVoyageKg, roundTripDays: rtd,
+    tripsPerYear: tripsPerYear, fleetSize: fleetSize
+  };
 }
 
 /* --- formatting -------------------------------------------------------- */
@@ -1062,6 +1215,9 @@ function fmtKwhMj(x) {
   return fmtNum(x, dec) + ' kWh · ' + fmtNum(x * MJ_PER_KWH, Math.abs(x) < 1 ? 2 : 1) + ' MJ';
 }
 function fmtPct(x, d) { return fmtNum(x, d === undefined ? 1 : d) + ' %'; }
+function fmtKt(kg, d) { return fmtNum(kg / 1e6, d === undefined ? 1 : d) + ' kt/y'; }
+function fmtT(kg, d) { return fmtNum(kg / 1e3, d === undefined ? 0 : d) + ' t'; }
+function fmtTwh(kwh, d) { return fmtNum(kwh / 1e9, d === undefined ? 3 : d) + ' TWh/y'; }
 
 /* --- node cards ------------------------------------------------------- */
 const NODE_FIELDS = {
@@ -1080,10 +1236,18 @@ const NODE_FIELDS = {
       hint: 'Derived: 0.438 × liquefaction SEC, from the ideal-work ratio of condensation-only (1.71) to fresh feed (3.9 kWh/kg). Shared with node E1.' }
   ],
   D1: [
+    { id: 'in-lh2-capacity', label: 'Vessel capacity', unit: 'm³', step: 1000, min: 1,
+      hint: 'Cited: KHI reply Q29 — vessel under construction, same tank tech as Suiso Frontier, no major issues flagged.' },
     { id: 'in-speed-lh2',   label: 'Service speed', unit: 'km/h', step: 0.1, min: 1,
-      hint: 'Cited: 29.6 km/h (~16 kn), 160,000 m³ commercial carrier.' },
+      hint: 'Cited: 29.6 km/h (~16 kn), disclosed for the 160,000 m³ commercial-scale vessel; reused here as no separate speed is disclosed for the 40,000 m³ ship.' },
     { id: 'in-voy-bor-lh2', label: 'Voyage BOR', unit: '%/day', step: 0.01, min: 0,
-      hint: 'KHI discloses no standalone voyage BOR — this is NOT the 0.1 %/day at-rest figure. Placeholder.' }
+      hint: 'KHI discloses no standalone voyage BOR — this is NOT the 0.1 %/day at-rest figure. Placeholder.' },
+    { id: 'in-lh2-fill',    label: 'Cargo fill fraction', unit: '%', step: 1, min: 1, max: 100,
+      hint: 'Usable fill vs full tank volume. Placeholder, not KHI-specific.' },
+    { id: 'in-lh2-density', label: 'LH2 density', unit: 'kg/m³', step: 0.1, min: 0,
+      hint: 'At NBP; mirrors data/properties/lh2-properties.csv, pending a formal NIST/CODATA citation.' },
+    { id: 'in-lh2-port',    label: 'Port time per call', unit: 'days', step: 0.05, min: 0,
+      hint: 'Cited: KHI reply Q27, ~1–1.5 days; midpoint used for both loading and unloading.' }
   ],
   E1: [
     { id: 'in-imp-bor',  label: 'BOR at rest', unit: '%/day', step: 0.01, min: 0,
@@ -1112,10 +1276,20 @@ const NODE_FIELDS = {
       hint: 'Refrigeration compressor duty per kg of ammonia BOG. Placeholder, shared with nodes D2 and E2.' }
   ],
   D2: [
+    { id: 'in-nh3-capacity', label: 'Vessel capacity', unit: 'm³', step: 1000, min: 1,
+      hint: 'User-specified mid-size ammonia/LPG-type carrier; not KHI-specific.' },
     { id: 'in-speed-nh3',   label: 'Service speed', unit: 'km/h', step: 0.1, min: 1,
       hint: 'Set close to the LH2 carrier so voyage time is not a built-in difference. Placeholder.' },
-    { id: 'in-voy-bor-nh3', label: 'Voyage BOR', unit: '%/day', step: 0.01, min: 0,
-      hint: 'Placeholder pending the internal dataset.' }
+    { id: 'in-voy-bor-nh3', label: 'Ordinary voyage BOR', unit: '%/day', step: 0.01, min: 0,
+      hint: 'Ordinary cargo boil-off only, separate from bunker fuel below. Placeholder pending the internal dataset.' },
+    { id: 'in-bunker-rate', label: 'Bunker fuel rate', unit: '%/day', step: 0.05, min: 0,
+      hint: 'Ammonia burned as the ship\'s own propulsion fuel — linear in voyage days, always lost. Calibrated so the defaults reproduce the ~6.5:1 ammonia-to-delivered-H2 ratio (see the verdict card). Real ammonia-fuelled engines are not yet commercial at scale.' },
+    { id: 'in-nh3-fill',    label: 'Cargo fill fraction', unit: '%', step: 1, min: 1, max: 100,
+      hint: 'Matched to the LH2 side.' },
+    { id: 'in-nh3-density', label: 'NH3 density', unit: 'kg/m³', step: 1, min: 0,
+      hint: 'Refrigerated liquid NH3 at about −33 °C, 1 atm. Standard published value, no citation logged.' },
+    { id: 'in-nh3-port',    label: 'Port time per call', unit: 'days', step: 0.05, min: 0,
+      hint: 'Placeholder, matched to the LH2 side pending an NH3-specific figure.' }
   ],
   E2: [
     { id: 'in-nimp-bor',  label: 'BOR at rest', unit: '%/day', step: 0.01, min: 0,
@@ -1124,8 +1298,10 @@ const NODE_FIELDS = {
       hint: 'Matched to the LH2 side.' }
   ],
   F2: [
-    { id: 'in-crack-self', label: 'Self-consumption', unit: '% of H2', step: 0.5, min: 0, max: 100,
-      hint: 'H2-equivalent burned for reaction and sensible heat, plus PSA tail-gas losses. Below 12.7 % is thermodynamically impossible — that is the reaction enthalpy alone.' },
+    { id: 'in-ng-eff',     label: 'NG-fired efficiency', unit: '%', step: 1, min: 1, max: 100,
+      hint: 'Fired-heater efficiency converting purchased natural-gas energy into delivered cracking reaction heat. Typical industrial figure, not a disclosed value.' },
+    { id: 'in-crack-loss', label: 'Process loss', unit: '% of H2', step: 0.5, min: 0, max: 100,
+      hint: 'PSA/purification tail-gas slip only — reaction heat now comes from natural gas (above), not from combusting product H2/NH3, so this is a much smaller figure than the old self-consumption assumption.' },
     { id: 'in-crack-elec', label: 'Electrical draw', unit: 'kWh/kg', step: 0.05, min: 0,
       hint: 'PSA, compression and balance of plant, per kg H2-equivalent entering. Placeholder.' }
   ]
@@ -1361,27 +1537,62 @@ function renderLedger(lh2, nh3) {
 const REGISTER = [
   ['A',  'Electrolyser plant efficiency',   '60 kWh/kg',      'assumption', 'User-specified worked example. Production is outside KHI&rsquo;s LH<sub>2</sub> scope, so the repo holds no sourced figure.'],
   ['—',  'Shipping distance',               '6,000 km',       'assumption', 'Generic placeholder; no corridor fixed (decision D1).'],
+  ['—',  'Annual H<sub>2</sub> supply',     '100 ktpa',       'assumption', 'User-specified study basis (2026-09-02), anchored at node A. Replaces the 1&nbsp;kg normalized basis as the headline scale.'],
+  ['—',  'Fleet availability',              '90 %',           'assumption', 'Dry-docking, maintenance, weather margin; shared by both fleets. Same convention as <code>src/lh2/shipping.py</code>.'],
   ['—',  'H<sub>2</sub> lower heating value','33.33 kWh/kg',   'needs-source', '120 MJ/kg from <code>data/properties/lh2-properties.csv</code>, pending a NIST/CODATA citation.'],
   ['B1', 'Liquefaction SEC',                '9 kWh/kg',       'cited', 'KHI reply Q1: 8&ndash;9 kWh/kg. Default is the conservative top of the range.'],
   ['B1', 'H<sub>2</sub> loss',              '0 %',            'cited', 'KHI reply Q15: no H<sub>2</sub> losses in the plant concept under consideration.'],
   ['C1/E1', 'BOR at rest',                  '0.1 %/day',      'cited', 'KHI cost-basis slide, both export and receiving terminals.'],
   ['C1/E1', 'Storage hold time',            '5 days',         'assumption', 'Placeholder; drives BOG mass.'],
   ['C1/E1', 'BOG re-liquefaction SEC',      '3.94 kWh/kg',    'assumption', 'Derived: 0.438 &times; liquefaction SEC, the ratio of condensation-only ideal work (1.71 kWh/kg) to fresh-feed para-basis ideal work (3.9 kWh/kg, DOE 2009). KHI discloses no BOG SEC.'],
-  ['D1', 'Service speed',                   '29.6 km/h',      'cited', 'KHI supplemental: 160,000 m&sup3; carrier, ~16 kn.'],
+  ['D1', 'Vessel capacity',                 '40,000 m&sup3;', 'cited', 'KHI reply Q29: vessel under construction, same tank tech as Suiso Frontier, no major issues flagged.'],
+  ['D1', 'Service speed',                   '29.6 km/h',      'cited', 'KHI supplemental: disclosed for the 160,000 m&sup3; commercial-scale vessel; reused here as no speed is disclosed for the 40,000 m&sup3; ship.'],
   ['D1', 'Voyage BOR',                      '0.2 %/day',      'estimate', 'KHI discloses no standalone voyage BOR. Not the at-rest 0.1 %/day. An unpromoted public figure (~3.44 %/day, RSER 2026) sits in <code>research/</code> and is deliberately not used here.'],
   ['D1', 'BOG disposition',                 'burned as fuel', 'cited', 'KHI replies Q23/Q33: dual-fuel engine, no onboard re-liquefaction &rarr; the loss is mass, not electricity.'],
+  ['D1', 'Cargo fill / port time',          '98% / 1.25 d',   'assumption', 'Fill fraction is a placeholder; port time midpoint is cited (KHI reply Q27, ~1&ndash;1.5 days).'],
   ['F1', 'Regas heat duty',                 '3.8 MJ/kg',      'cited', 'KHI reply Q18, ORV seawater. Free ambient heat &mdash; reported, not charged as input energy.'],
   ['F1', 'Regas electrical draw',           '0.031 kWh/kg',   'assumption', 'Derived pump work: cryogenic pump to 30 barg send-out plus ORV seawater circulation. No ORV electrical figure exists in any source.'],
   ['B2', 'Haber&ndash;Bosch SEC',           '0.60 kWh/kg-NH<sub>3</sub>', 'estimate', 'ASU, compression, loop, refrigeration. Placeholder pending the internal Gentari NH<sub>3</sub> dataset (D4).'],
   ['B2', 'H<sub>2</sub> purge loss',        '2 %',            'estimate', 'Placeholder pending the internal dataset.'],
-  ['B2', 'NH<sub>3</sub> per H<sub>2</sub>','5.632 kg/kg',    'assumption', 'First principles: N<sub>2</sub> + 3 H<sub>2</sub> &rarr; 2 NH<sub>3</sub>, standard molar masses (themselves uncited).'],
+  ['B2', 'NH<sub>3</sub> per H<sub>2</sub>','5.632 kg/kg',    'assumption', 'First principles: N<sub>2</sub> + 3 H<sub>2</sub> &rarr; 2 NH<sub>3</sub>, standard molar masses (themselves uncited). Mass-balance floor &mdash; see the ammonia supply ratio below.'],
   ['C2/E2', 'NH<sub>3</sub> BOR at rest',   '0.04 %/day',     'estimate', 'Refrigerated ammonia at about &minus;33 &deg;C. Placeholder.'],
   ['C2/E2', 'NH<sub>3</sub> BOG re-liq SEC','0.25 kWh/kg-NH<sub>3</sub>', 'estimate', 'Placeholder.'],
-  ['D2', 'NH<sub>3</sub> carrier speed',    '30 km/h',        'estimate', 'Set close to the LH<sub>2</sub> carrier so voyage time is not a built-in difference.'],
-  ['D2', 'NH<sub>3</sub> voyage BOR',       '0.04 %/day',     'estimate', 'Placeholder.'],
-  ['F2', 'Cracker self-consumption',        '20 % of H<sub>2</sub>', 'estimate', 'Reaction and sensible heat plus PSA tail gas. Floor is 12.7 % from the reaction enthalpy alone (45.9 kJ/mol-NH<sub>3</sub> &rarr; 4.22 kWh/kg-H<sub>2</sub>).'],
+  ['D2', 'Vessel capacity',                 '40,000 m&sup3;', 'estimate', 'User-specified (2026-09-02) mid-size ammonia/LPG-type carrier; not KHI-specific.'],
+  ['D2', 'Service speed',                   '30 km/h',        'estimate', 'Set close to the LH<sub>2</sub> carrier so voyage time is not a built-in difference.'],
+  ['D2', 'Ordinary voyage BOR',             '0.04 %/day',     'estimate', 'Ordinary cargo boil-off only. Placeholder.'],
+  ['D2', 'Bunker fuel rate',                '1.3 %/day',      'estimate', 'Ammonia burned as the ship&rsquo;s own propulsion fuel &mdash; the mechanism behind the ~6.5:1 ammonia supply ratio (user direction 2026-09-02). Not a disclosed figure; real ammonia-fuelled engines are not yet commercial at scale.'],
+  ['D2', 'Cargo fill / port time',          '98% / 1.25 d',   'estimate', 'Placeholder, matched to the LH2 side.'],
+  ['F2', 'NG-fired efficiency',             '85 %',           'assumption', 'Typical industrial fired-heater efficiency. New (2026-09-02): reaction heat is now purchased natural gas, not combusted product H<sub>2</sub>/NH<sub>3</sub>.'],
+  ['F2', 'Process loss (PSA slip)',         '3 % of H<sub>2</sub>', 'estimate', 'Replaces the earlier 20% self-consumption default now that the cracker is NG-fired &mdash; this is a much smaller residual purification loss only.'],
   ['F2', 'Cracker electrical draw',         '0.5 kWh/kg',     'estimate', 'PSA, compression, balance of plant. Placeholder.']
 ];
+
+function renderAnnualScale(v, lh2, nh3) {
+  const aLh2 = annualScale(v, lh2);
+  const aNh3 = annualScale(v, nh3);
+
+  document.getElementById('lh2-annual-sub').textContent = v.annualKtpa + ' ktpa H2 supply';
+  document.getElementById('lh2-fleet').textContent = aLh2.fleetSize;
+  document.getElementById('lh2-annual-energy').textContent = fmtTwh(aLh2.annualEnergyKwh);
+  document.getElementById('lh2-annual-delivered').textContent = fmtKt(aLh2.annualDeliveredKg);
+  document.getElementById('lh2-annual-cargo').textContent = fmtKt(aLh2.annualCargoKg);
+  document.getElementById('lh2-cargo-voyage').textContent =
+    fmtT(aLh2.cargoPerVoyageKg) + ' (' + fmtNum(v.lh2Capacity, 0) + ' m³ @ ' + fmtNum(v.lh2Fill, 0) + '%)';
+  document.getElementById('lh2-roundtrip').textContent = fmtNum(aLh2.roundTripDays, 2) + ' d';
+  document.getElementById('lh2-trips').textContent = fmtNum(aLh2.tripsPerYear, 1);
+
+  document.getElementById('nh3-annual-sub').textContent = v.annualKtpa + ' ktpa H2 supply';
+  document.getElementById('nh3-fleet').textContent = aNh3.fleetSize;
+  document.getElementById('nh3-annual-energy').textContent = fmtTwh(aNh3.annualEnergyKwh);
+  document.getElementById('nh3-annual-delivered').textContent = fmtKt(aNh3.annualDeliveredKg);
+  document.getElementById('nh3-annual-cargo').textContent = fmtKt(aNh3.annualCargoKg);
+  document.getElementById('nh3-cargo-voyage').textContent =
+    fmtT(aNh3.cargoPerVoyageKg) + ' (' + fmtNum(v.nh3Capacity, 0) + ' m³ @ ' + fmtNum(v.nh3Fill, 0) + '%)';
+  document.getElementById('nh3-roundtrip').textContent = fmtNum(aNh3.roundTripDays, 2) + ' d';
+  document.getElementById('nh3-trips').textContent = fmtNum(aNh3.tripsPerYear, 1);
+  document.getElementById('nh3-supply-ratio').textContent =
+    fmtNum(nh3SupplyRatio(nh3), 2) + ' : 1  (floor ' + fmtNum(NH3_PER_H2, 2) + ':1)';
+}
 
 function renderCalcTrail(v, lh2, nh3) {
   document.getElementById('calc-A').innerHTML = PRODUCTION_CALC(v);
@@ -1427,13 +1638,18 @@ function renderGaps(v, lh2, nh3) {
     fmtPct(100 * v.elecSec / lh2.totalEnergy) + ' of the LH<sub>2</sub> chain&rsquo;s total input.');
   g.push('<b>Haber–Bosch heat is not credited.</b> Ammonia synthesis is exothermic; recovering that ' +
     'heat as steam would lower the NH<sub>3</sub> chain&rsquo;s net penalty below what is shown.');
-  if (v.crackSelf < CRACK_FLOOR_PCT) {
-    g.push('<b>Cracker self-consumption of ' + fmtNum(v.crackSelf, 1) + ' % is below the ' +
-      'thermodynamic floor of ' + fmtNum(CRACK_FLOOR_PCT, 1) + ' %.</b> The reaction enthalpy alone ' +
-      'needs ' + fmtNum(CRACK_DUTY_KWH_PER_KG, 2) + ' kWh per kg H<sub>2</sub>, before any sensible ' +
-      'heating or purification loss. This result is not physically reachable.');
-  }
-  g.push('<b>Outside the boundary for both chains:</b> marine fuel beyond BOG, terminal utilities, ' +
+  g.push('<b>Cracker is assumed natural-gas-fired</b> (user direction 2026-09-02): reaction heat ' +
+    'is purchased NG at ' + fmtNum(v.ngEff, 0) + '% fired efficiency, not combusted product H<sub>2</sub>/' +
+    'NH<sub>3</sub>. Both the efficiency and the residual ' + fmtNum(v.crackLoss, 1) + '% PSA/purification ' +
+    'slip are placeholders. Natural-gas combustion emissions are outside this energy-only boundary.');
+  g.push('<b>Ammonia bunker-fuel rate (' + fmtNum(v.bunkerRate, 2) + ' %/day, node D2) is a placeholder ' +
+    'mechanism</b>, calibrated so the defaults reproduce the target ~6.5:1 ammonia-to-delivered-H<sub>2</sub> ' +
+    'supply ratio (currently ' + fmtNum(nh3SupplyRatio(nh3), 2) + ':1) — not a disclosed figure. ' +
+    'Real ammonia-fuelled marine engines are not yet commercial at scale.');
+  g.push('<b>Vessel capacity is 40,000 m&sup3; for both carriers.</b> LH<sub>2</sub> is cited (KHI reply ' +
+    'Q29, vessel under construction); the ammonia vessel is a user-specified placeholder, not KHI-specific. ' +
+    'Fill fraction, port time, and fleet availability are all placeholder assumptions.');
+  g.push('<b>Outside the boundary for both chains:</b> marine fuel beyond BOG/bunker, terminal utilities, ' +
     'jetty and loading energy, ammonia safety and abatement systems, and all distribution ' +
     'downstream of the send-out flange.');
   g.push('<b>Cost is not modelled here.</b> An energy penalty is not a cost ranking — cheap ' +
@@ -1511,6 +1727,7 @@ function recompute() {
   renderLedger(lh2, nh3);
   renderGaps(v, lh2, nh3);
   renderCalcTrail(v, lh2, nh3);
+  renderAnnualScale(v, lh2, nh3);
 }
 
 function resetAll() {

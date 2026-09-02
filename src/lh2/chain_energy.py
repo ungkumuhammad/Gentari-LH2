@@ -31,11 +31,32 @@ them as module constants so it can run without pandas, and
 **Standing caveat (decision D4):** *no* ammonia figure in the defaults below is
 sourced. Every NH3 number is a placeholder awaiting the internal Gentari NH3
 dataset, and every result carries that in its ``gaps`` list.
+
+**Annual scale & fleet (2026-09-02).** The per-kg cascade above is the
+normalized basis; ``AnnualScaleResult`` (via ``annual_scale()``) multiplies it
+by the study's annual H2 supply -- ``ChainInputs.annual_h2_supply_ktpa``,
+[ASSUMPTION] anchored at node A, same basis as the per-kg cascade -- and sizes
+the shipping fleet needed to move it, reusing ``src/lh2/shipping.py``'s
+``round_trip_days``/``fleet_size`` for consistency with the rest of the repo.
+
+**Cracker re-basis (2026-09-02).** Per user direction the cracker is now
+natural-gas-fired: reaction heat is purchased NG (an external, charged energy
+input, converted via ``ChainInputs.ng_fired_thermal_efficiency_pct``), not
+combusted product H2/NH3. ``cracker_process_loss_pct`` replaces the old
+``cracker_self_consumption_pct`` and covers only a small PSA/purification
+slip. The resulting ammonia-per-delivered-H2 ratio (``nh3_supply_ratio()``,
+computed from the physical NH3 made at B2 divided by the H2 delivered at F2)
+comes out near the user's target of ~6.5:1 at the defaults -- above the pure
+stoichiometric ~5.63:1 (``NH3_PER_H2_MASS_RATIO``) because
+``nh3_bunker_fuel_rate_pct_per_day`` models ammonia consumed as the carrier's
+own marine fuel during shipping (node D2), on top of ordinary cargo boil-off.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+
+from . import shipping
 
 MJ_PER_KWH = 3.6
 
@@ -69,9 +90,10 @@ def cracking_reaction_duty_kwh_per_kg_h2() -> float:
 
     Derivation: 2 NH3 -> N2 + 3 H2 needs 2/3 mol NH3 per mol H2, so the duty
     per kg H2 is ``(2/3) x 45.9 kJ/mol x 496.03 mol/kg`` = 15.2 MJ/kg =
-    4.22 kWh/kg. [ASSUMPTION: derived] -- reported for reference only; the heat
-    is actually supplied by the cracker's self-consumption term, so this is
-    never added again to the energy total.
+    4.22 kWh/kg. [ASSUMPTION: derived] -- this is the minimum heat a
+    natural-gas-fired heater must deliver (before its own firing losses) to
+    crack 1 kg of H2 worth of ammonia; see ``ChainInputs.ng_fired_thermal_efficiency_pct``
+    for how it becomes a purchased-NG energy figure at node F2.
     """
     kj_per_kg_h2 = (2.0 / 3.0) * NH3_CRACKING_ENTHALPY_KJ_PER_MOL * H2_MOL_PER_KG
     return kj_per_kg_h2 / 1000.0 / MJ_PER_KWH
@@ -95,6 +117,14 @@ class ChainInputs:
     electrolyser_sec_kwh_per_kg: float = 60.0
     #: [ASSUMPTION] placeholder; no named corridor fixed yet (decision D1).
     voyage_distance_km: float = 6000.0
+    #: [ASSUMPTION] the study's annual H2 supply, anchored at node A -- same
+    #: basis as the per-kg cascade. User-specified (2026-09-02), replacing the
+    #: normalized 1 kg basis as the headline scale.
+    annual_h2_supply_ktpa: float = 100.0
+    #: [ASSUMPTION] fleet-wide operational availability (dry-docking,
+    #: maintenance, weather margin), shared by both carriers. Same convention
+    #: as ``src/lh2/shipping.py``'s ``fleet_size()`` default.
+    fleet_availability_pct: float = 90.0
 
     # -- LH2 chain (nodes B1-F1) -------------------------------------------
     #: cited: kawasaki-2026-questionnaire (reply Q1, 8-9 kWh/kg range).
@@ -116,6 +146,17 @@ class ChainInputs:
     lh2_carrier_speed_km_per_h: float = 29.6
     #: [ESTIMATE - needs source] KHI discloses no standalone voyage BOR.
     lh2_voyage_bor_pct_per_day: float = 0.2
+    #: cited: kawasaki-2026-questionnaire (reply Q29, vessel under
+    #: construction, same tank tech as Suiso Frontier).
+    lh2_vessel_capacity_m3: float = 40000.0
+    #: [ASSUMPTION] usable fill vs full tank volume; not KHI-specific.
+    lh2_vessel_fill_fraction_pct: float = 98.0
+    #: [needs-source] LH2 density at NBP; mirrors
+    #: data/properties/lh2-properties.csv (pending NIST/CODATA).
+    lh2_density_kg_per_m3: float = 70.8
+    #: cited: kawasaki-2026-questionnaire (reply Q27, ~1-1.5 d midpoint), same
+    #: convention as ``src/lh2/shipping.py``'s ``KHI_LOAD_UNLOAD_DAYS_MID``.
+    lh2_port_days_per_call: float = 1.25
     #: cited: kawasaki-2026-questionnaire (reply Q18, 3.8 MJ/kg ORV duty).
     lh2_regas_heat_duty_mj_per_kg: float = 3.8
     #: [ASSUMPTION: derived] cryo pump to send-out + ORV seawater pump.
@@ -143,9 +184,37 @@ class ChainInputs:
     #: [ESTIMATE] disposition switch: True re-liquefies voyage BOG (energy
     #: penalty), False burns it as fuel (mass loss), as the LH2 carrier does.
     nh3_voyage_bog_reliquefied: bool = True
-    #: [ESTIMATE - needs source] H2-equivalent burned for reaction + sensible
-    #: heat and lost in PSA tail gas. Floor is 12.7 % (reaction enthalpy only).
-    cracker_self_consumption_pct: float = 20.0
+    #: [ESTIMATE] user-specified (2026-09-02) mid-size ammonia/LPG-type
+    #: carrier; not KHI-specific.
+    nh3_vessel_capacity_m3: float = 40000.0
+    #: [ASSUMPTION] matched to the LH2 side.
+    nh3_vessel_fill_fraction_pct: float = 98.0
+    #: [ESTIMATE - needs source] refrigerated liquid NH3 at ~ -33 C, 1 atm;
+    #: standard published value, no citation logged.
+    nh3_density_kg_per_m3: float = 682.0
+    #: [ESTIMATE] placeholder, matched to the LH2 side pending an
+    #: NH3-specific figure.
+    nh3_port_days_per_call: float = 1.25
+    #: [ESTIMATE] ammonia burned as the carrier's own propulsion fuel, on top
+    #: of ordinary cargo boil-off -- linear in voyage days (fuel consumption
+    #: tracks time at sea, not remaining inventory, so this is NOT compounded
+    #: like boil-off). User direction (2026-09-02): the cracker is now
+    #: NG-fired, so the ammonia-vs-delivered-H2 ratio (target ~6.5:1) exceeds
+    #: the pure mass-balance ratio (~5.63:1, ``NH3_PER_H2_MASS_RATIO``); this
+    #: is where that gap is modelled. Ammonia-fuelled marine engines are not
+    #: yet commercial at scale -- this is a placeholder mechanism, not a
+    #: disclosed figure.
+    nh3_bunker_fuel_rate_pct_per_day: float = 1.3
+    #: [ESTIMATE - needs source] PSA/purification tail-gas slip only -- the
+    #: cracker's reaction heat now comes from natural gas (see
+    #: ``ng_fired_thermal_efficiency_pct``), not from combusting product
+    #: H2/NH3, so this replaces the old ``cracker_self_consumption_pct`` with
+    #: a much smaller figure.
+    cracker_process_loss_pct: float = 3.0
+    #: [ASSUMPTION] typical industrial fired-heater efficiency converting NG
+    #: HHV/LHV energy into delivered cracking reaction heat; not a disclosed
+    #: figure.
+    ng_fired_thermal_efficiency_pct: float = 85.0
     #: [ESTIMATE - needs source] PSA/compression/BOP, per kg H2-equiv entering.
     cracker_electrical_kwh_per_kg: float = 0.5
 
@@ -499,10 +568,14 @@ def run_nh3_chain(inp: ChainInputs | None = None) -> ChainResult:
         ),
     )
 
-    # D2 -- NH3 shipping. Default disposition is onboard re-liquefaction
-    # (energy); flipping the switch burns BOG as fuel (mass loss) instead.
+    # D2 -- NH3 shipping. Two independent mass-loss mechanisms: ordinary cargo
+    # BOG (compounding; reliquefied by default, or burned if the switch is
+    # flipped) and bunker-fuel consumption (linear in voyage days; always
+    # burned -- it is deliberately combusted as the ship's own propulsion
+    # fuel, so it is never a candidate for re-liquefaction).
     days = voyage_days(inp.voyage_distance_km, inp.nh3_carrier_speed_km_per_h)
     voyage_bog = boil_off_fraction(inp.nh3_voyage_bor_pct_per_day, days)
+    bunker_fuel_frac = min(inp.nh3_bunker_fuel_rate_pct_per_day * days / 100.0, 1.0)
     if inp.nh3_voyage_bog_reliquefied:
         ship_energy = (
             voyage_bog
@@ -510,12 +583,12 @@ def run_nh3_chain(inp: ChainInputs | None = None) -> ChainResult:
             * NH3_PER_H2_MASS_RATIO
             * inp.nh3_bog_reliquefaction_sec_kwh_per_kg
         )
-        ship_loss = 0.0
-        disposition = "re-liquefied on board"
+        ship_loss = bunker_fuel_frac
+        disposition = "ordinary BOG re-liquefied on board; bunker fuel burned"
     else:
         ship_energy = 0.0
-        ship_loss = voyage_bog
-        disposition = "burned as fuel"
+        ship_loss = 1.0 - (1.0 - voyage_bog) * (1.0 - bunker_fuel_frac)
+        disposition = "ordinary BOG and bunker fuel both burned"
     c.add(
         "D2",
         "NH3 shipping",
@@ -524,8 +597,9 @@ def run_nh3_chain(inp: ChainInputs | None = None) -> ChainResult:
         mass_loss_frac=ship_loss,
         tag="ESTIMATE",
         note=(
-            f"{days:.2f} d laden at {inp.nh3_carrier_speed_km_per_h:g} km/h; voyage BOR "
-            f"{inp.nh3_voyage_bor_pct_per_day:g} %/d, {disposition}. Every figure "
+            f"{days:.2f} d laden at {inp.nh3_carrier_speed_km_per_h:g} km/h; ordinary "
+            f"voyage BOR {inp.nh3_voyage_bor_pct_per_day:g} %/d + bunker fuel "
+            f"{inp.nh3_bunker_fuel_rate_pct_per_day:g} %/d ({disposition}). Every figure "
             "[ESTIMATE - needs source]."
         ),
     )
@@ -552,23 +626,31 @@ def run_nh3_chain(inp: ChainInputs | None = None) -> ChainResult:
         ),
     )
 
-    # F2 -- cracking. Self-consumption is booked as mass loss (H2-equivalent
-    # burned for heat or lost in PSA tail gas); the reaction duty is therefore
-    # NOT added again as an energy term.
+    # F2 -- cracking. Reaction heat is now natural-gas-fired (purchased,
+    # charged energy), not combusted product H2/NH3, per user direction
+    # (2026-09-02). Mass loss is a small PSA/purification slip only.
+    ng_thermal_kwh = (
+        cracking_reaction_duty_kwh_per_kg_h2()
+        * c.mass
+        / (inp.ng_fired_thermal_efficiency_pct / 100.0)
+    )
+    electrical_kwh = inp.cracker_electrical_kwh_per_kg * c.mass
     c.add(
         "F2",
         "NH3 cracking + purification",
         "GH2",
-        energy_kwh=inp.cracker_electrical_kwh_per_kg * c.mass,
-        mass_loss_frac=inp.cracker_self_consumption_pct / 100.0,
+        energy_kwh=ng_thermal_kwh + electrical_kwh,
+        mass_loss_frac=inp.cracker_process_loss_pct / 100.0,
         tag="ESTIMATE",
         note=(
-            f"{inp.cracker_self_consumption_pct:g}% of the H2-equivalent entering is "
-            "burned for reaction + sensible heat or lost in PSA tail gas "
-            "[ESTIMATE - needs source]; floor is "
-            f"{100 * cracking_reaction_duty_kwh_per_kg_h2() / H2_LHV_KWH_PER_KG:.1f}% "
-            "from the reaction enthalpy alone. Electrical term is a separate "
-            "[ESTIMATE]."
+            f"NG thermal {ng_thermal_kwh:.3f} kWh (reaction floor "
+            f"{cracking_reaction_duty_kwh_per_kg_h2():.2f} kWh/kg-H2 @ "
+            f"{inp.ng_fired_thermal_efficiency_pct:g}% fired efficiency) "
+            "[ASSUMPTION] + electrical "
+            f"{electrical_kwh:.3f} kWh (BOP/PSA/compression) [ESTIMATE]. "
+            f"Mass loss is a {inp.cracker_process_loss_pct:g}% PSA/purification "
+            "slip only [ESTIMATE - needs source] -- no product H2/NH3 is burned "
+            "for reaction heat."
         ),
     )
 
@@ -578,10 +660,17 @@ def run_nh3_chain(inp: ChainInputs | None = None) -> ChainResult:
         "[ESTIMATE - needs source]",
         "Haber-Bosch exothermic heat is not credited; recovering it as steam "
         "would lower the NH3 chain's net penalty. [needs source]",
-        "Cracker self-consumption is booked as H2 mass loss. If a real cracker "
-        "is fired on ammonia rather than product H2, the split between mass "
-        "loss and NH3 consumption changes. [ESTIMATE]",
+        "Cracker is assumed natural-gas-fired (user direction 2026-09-02); "
+        "the NG-fired thermal efficiency and the small process-loss slip left "
+        "over are both placeholders. [ASSUMPTION / ESTIMATE]",
+        "Ammonia bunker-fuel consumption during shipping (node D2) is a "
+        "placeholder mechanism sized to reproduce the ~6.5:1 ammonia-to-"
+        "delivered-H2 supply ratio at the default voyage length; real "
+        "ammonia-fuelled marine engines are not yet commercial at scale. "
+        "[ESTIMATE]",
         "Electrolyser SEC (node A) is a user-supplied placeholder. [ASSUMPTION]",
+        "Natural gas combustion emissions (CO2 from the cracker's own fuel) "
+        "are outside this energy-only boundary and are not counted.",
         "Marine fuel, terminal utilities, and NH3 abatement/safety systems are "
         "outside this boundary and are not counted for either chain.",
     ]
@@ -601,6 +690,115 @@ def compare(inp: ChainInputs | None = None) -> dict[str, ChainResult]:
     return {"LH2": run_lh2_chain(inp), "NH3": run_nh3_chain(inp)}
 
 
+def nh3_supply_ratio(result: ChainResult) -> float:
+    """Physical kg ammonia made (at B2/C2) per kg H2 ultimately delivered (F2).
+
+    Reported for verification against the user's target ratio (~6.5:1,
+    2026-09-02) -- it is a derived output, not a separate input. At the
+    defaults this comes out near 6.5 because of the bunker-fuel loss modelled
+    at node D2; it moves toward the pure stoichiometric ~5.63:1
+    (``NH3_PER_H2_MASS_RATIO``) as that loss is reduced toward zero.
+    """
+    try:
+        b2 = next(n for n in result.nodes if n.node_id == "B2")
+    except StopIteration:
+        return float("nan")
+    nh3_produced_kg = b2.mass_out_kg_h2e * NH3_PER_H2_MASS_RATIO
+    if result.delivered_kg_h2 <= 0:
+        return float("nan")
+    return nh3_produced_kg / result.delivered_kg_h2
+
+
+# --------------------------------------------------------------------------
+# Annual scale & fleet
+# --------------------------------------------------------------------------
+
+
+@dataclass
+class AnnualScaleResult:
+    """Scales the per-kg cascade to the study's annual H2 supply and sizes
+    the shipping fleet needed to move it.
+
+    [ASSUMPTION] ``annual_h2_supply_ktpa`` is anchored at node A (H2
+    produced), matching the per-kg cascade's own basis -- not the delivered
+    (import-side) quantity. See docs/comparison/01-energy-penalty-method.md.
+    """
+
+    chain: str
+    annual_h2_supply_kg: float
+    annual_delivered_kg: float
+    annual_energy_kwh: float
+    #: Physical cargo mass loaded onto vessels per year (kg) -- LH2 kg for the
+    #: LH2 chain, physical NH3 kg (via ``NH3_PER_H2_MASS_RATIO``) for NH3.
+    annual_cargo_kg: float
+    vessel_capacity_m3: float
+    fill_fraction_pct: float
+    cargo_per_voyage_kg: float
+    round_trip_days: float
+    trips_per_year_per_vessel: float
+    annual_capacity_per_vessel_kg: float
+    fleet_size: int
+
+
+def annual_scale(result: ChainResult, inp: ChainInputs) -> AnnualScaleResult:
+    """Derive annual energy, cargo tonnage, and fleet size from a per-kg
+    ``ChainResult`` and the study's ``annual_h2_supply_ktpa``.
+
+    Reuses ``src/lh2/shipping.py``'s ``round_trip_days``/``fleet_size`` (an
+    effective capacity = nameplate capacity x fill fraction is passed in,
+    since that helper does not itself take a fill fraction) so the fleet math
+    stays identical to the rest of the repo.
+    """
+    annual_h2_supply_kg = inp.annual_h2_supply_ktpa * 1.0e6  # 1 kt = 1e6 kg
+    annual_delivered_kg = result.delivered_kg_h2 * annual_h2_supply_kg
+    annual_energy_kwh = result.total_energy_kwh * annual_h2_supply_kg
+
+    d_node = next(n for n in result.nodes if n.node_id in ("D1", "D2"))
+    if result.chain == "NH3":
+        physical_mass_frac = d_node.mass_in_kg_h2e * NH3_PER_H2_MASS_RATIO
+        capacity_m3 = inp.nh3_vessel_capacity_m3
+        fill_pct = inp.nh3_vessel_fill_fraction_pct
+        density = inp.nh3_density_kg_per_m3
+        port_days = inp.nh3_port_days_per_call
+        speed = inp.nh3_carrier_speed_km_per_h
+    else:
+        physical_mass_frac = d_node.mass_in_kg_h2e
+        capacity_m3 = inp.lh2_vessel_capacity_m3
+        fill_pct = inp.lh2_vessel_fill_fraction_pct
+        density = inp.lh2_density_kg_per_m3
+        port_days = inp.lh2_port_days_per_call
+        speed = inp.lh2_carrier_speed_km_per_h
+
+    annual_cargo_kg = physical_mass_frac * annual_h2_supply_kg
+    rtd = shipping.round_trip_days(inp.voyage_distance_km, speed, port_days, port_days)
+    effective_capacity_m3 = capacity_m3 * (fill_pct / 100.0)
+    availability = inp.fleet_availability_pct / 100.0
+    n_vessels = shipping.fleet_size(
+        annual_cargo_kg,
+        rtd,
+        cargo_capacity=effective_capacity_m3,
+        lh2_density=density,
+        availability=availability,
+    )
+    cargo_per_voyage_kg = effective_capacity_m3 * density
+    trips_per_year = (365.0 / rtd) * availability if rtd > 0 else 0.0
+
+    return AnnualScaleResult(
+        chain=result.chain,
+        annual_h2_supply_kg=annual_h2_supply_kg,
+        annual_delivered_kg=annual_delivered_kg,
+        annual_energy_kwh=annual_energy_kwh,
+        annual_cargo_kg=annual_cargo_kg,
+        vessel_capacity_m3=capacity_m3,
+        fill_fraction_pct=fill_pct,
+        cargo_per_voyage_kg=cargo_per_voyage_kg,
+        round_trip_days=rtd,
+        trips_per_year_per_vessel=trips_per_year,
+        annual_capacity_per_vessel_kg=cargo_per_voyage_kg * trips_per_year,
+        fleet_size=n_vessels,
+    )
+
+
 # --------------------------------------------------------------------------
 # Reporting
 # --------------------------------------------------------------------------
@@ -616,6 +814,7 @@ def format_report(inp: ChainInputs | None = None) -> str:
     lines.append("Boundary: electrolyser battery limit -> GH2 at import send-out flange")
     lines.append(f"Basis:    1 kg H2 produced at node A; H2 LHV {H2_LHV_KWH_PER_KG:.2f} kWh/kg")
     lines.append(f"Corridor: {inp.voyage_distance_km:g} km one-way [ASSUMPTION]")
+    lines.append(f"Scale:    {inp.annual_h2_supply_ktpa:g} ktpa H2 supply at node A [ASSUMPTION]")
     lines.append("")
 
     for key in ("LH2", "NH3"):
@@ -643,6 +842,22 @@ def format_report(inp: ChainInputs | None = None) -> str:
                      f"= {r.retained_pct:.1f} % of the H2's own LHV")
         if r.ambient_heat_kwh:
             lines.append(f"  Ambient heat (not charged): {r.ambient_heat_kwh:.2f} kWh")
+        if key == "NH3":
+            lines.append(f"  Ammonia supply ratio    : {nh3_supply_ratio(r):.2f} kg NH3 per kg H2 "
+                         f"delivered (mass-balance floor {NH3_PER_H2_MASS_RATIO:.2f}:1)")
+        lines.append("")
+
+        a = annual_scale(r, inp)
+        lines.append(f"  --- Annual scale & fleet ({inp.annual_h2_supply_ktpa:g} ktpa H2 supply) ---")
+        lines.append(f"  Annual energy           : {a.annual_energy_kwh / 1e9:.3f} TWh/y")
+        lines.append(f"  Annual H2 delivered     : {a.annual_delivered_kg / 1e6:.1f} kt/y")
+        lines.append(f"  Annual cargo shipped    : {a.annual_cargo_kg / 1e6:.1f} kt/y "
+                     f"({r.chain} mass)")
+        lines.append(f"  Vessel                  : {a.vessel_capacity_m3:,.0f} m3 @ "
+                     f"{a.fill_fraction_pct:g}% fill = {a.cargo_per_voyage_kg / 1e3:.0f} t/voyage")
+        lines.append(f"  Round-trip cycle        : {a.round_trip_days:.2f} d, "
+                     f"{a.trips_per_year_per_vessel:.1f} trips/y/vessel")
+        lines.append(f"  Fleet size required     : {a.fleet_size} vessel(s)")
         lines.append("")
         lines.append("  Gaps:")
         for g in r.gaps:

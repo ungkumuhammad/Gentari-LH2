@@ -17,11 +17,14 @@ import pytest
 from lh2.chain_energy import (
     H2_LHV_KWH_PER_KG,
     NH3_PER_H2_MASS_RATIO,
+    AnnualScaleResult,
     ChainInputs,
+    annual_scale,
     boil_off_fraction,
     compare,
     cracking_reaction_duty_kwh_per_kg_h2,
     format_report,
+    nh3_supply_ratio,
     run_lh2_chain,
     run_nh3_chain,
     voyage_days,
@@ -157,16 +160,58 @@ def test_cracking_reaction_duty_and_floor():
     assert isclose(100 * duty / H2_LHV_KWH_PER_KG, 12.66, abs_tol=0.05)
 
 
-def test_cracker_self_consumption_default_exceeds_the_thermodynamic_floor():
-    floor_pct = 100 * cracking_reaction_duty_kwh_per_kg_h2() / H2_LHV_KWH_PER_KG
-    assert ChainInputs().cracker_self_consumption_pct > floor_pct
+def test_cracker_is_ng_fired_not_self_consuming():
+    """NG thermal energy = reaction floor / fired efficiency, and is charged
+    as purchased energy at F2, not booked as a mass loss."""
+    inp = ChainInputs()
+    f2 = run_nh3_chain(inp).nodes[-1]
+    mass_in_f2 = f2.mass_in_kg_h2e
+    expected_ng_kwh = (
+        cracking_reaction_duty_kwh_per_kg_h2()
+        * mass_in_f2
+        / (inp.ng_fired_thermal_efficiency_pct / 100.0)
+    )
+    expected_elec_kwh = inp.cracker_electrical_kwh_per_kg * mass_in_f2
+    assert isclose(f2.energy_kwh, expected_ng_kwh + expected_elec_kwh, rel_tol=1e-9)
+    # NG alone exceeds the old self-consumption default's implied energy share,
+    # confirming it is genuinely charged, not a token amount.
+    assert f2.energy_kwh > expected_elec_kwh
+
+
+def test_cracker_process_loss_is_much_smaller_than_the_old_self_consumption():
+    """The NG-fired reframe (2026-09-02) should leave only a small residual
+    mass loss, well under the pre-reframe 20% self-consumption default."""
+    assert ChainInputs().cracker_process_loss_pct < 10.0
 
 
 def test_nh3_voyage_bog_disposition_switch_moves_the_penalty():
+    """Ordinary BOG's fate flips with the switch; bunker fuel is always lost."""
     reliq = run_nh3_chain(ChainInputs(nh3_voyage_bog_reliquefied=True)).nodes[3]
     burned = run_nh3_chain(ChainInputs(nh3_voyage_bog_reliquefied=False)).nodes[3]
-    assert reliq.energy_kwh > 0 and reliq.mass_loss_kg_h2e == 0
-    assert burned.energy_kwh == 0 and burned.mass_loss_kg_h2e > 0
+    assert reliq.energy_kwh > 0  # ordinary BOG re-liquefied -> energy
+    assert burned.energy_kwh == 0  # both mechanisms burned -> no energy
+    assert reliq.mass_loss_kg_h2e > 0  # bunker fuel is lost either way
+    assert burned.mass_loss_kg_h2e > reliq.mass_loss_kg_h2e  # + ordinary BOG
+
+
+def test_nh3_bunker_fuel_scales_with_voyage_length():
+    short = run_nh3_chain(ChainInputs(voyage_distance_km=1000)).nodes[3]
+    long = run_nh3_chain(ChainInputs(voyage_distance_km=12000)).nodes[3]
+    assert long.mass_loss_kg_h2e > short.mass_loss_kg_h2e
+
+
+def test_nh3_supply_ratio_near_user_target():
+    """User direction (2026-09-02): NG-fired cracker -> ~6.5 kg NH3 per kg H2
+    delivered, above the pure mass-balance ratio (~5.63:1)."""
+    r = run_nh3_chain()
+    ratio = nh3_supply_ratio(r)
+    assert isclose(ratio, 6.5, abs_tol=0.1)
+    assert ratio > NH3_PER_H2_MASS_RATIO
+
+
+def test_nh3_supply_ratio_falls_to_mass_balance_with_no_bunker_fuel():
+    r = run_nh3_chain(ChainInputs(nh3_bunker_fuel_rate_pct_per_day=0.0, cracker_process_loss_pct=0.0))
+    assert isclose(nh3_supply_ratio(r), NH3_PER_H2_MASS_RATIO, abs_tol=0.01)
 
 
 # -- helpers ----------------------------------------------------------------
@@ -250,8 +295,20 @@ _CSV_LINKS = {
     ),
     "nh3_carrier_speed_km_per_h": ("service_speed", "nh3_carrier"),
     "nh3_voyage_bor_pct_per_day": ("voyage_boil_off_rate", "nh3_carrier"),
-    "cracker_self_consumption_pct": ("hydrogen_self_consumption", "nh3_cracker"),
+    "cracker_process_loss_pct": ("process_loss", "nh3_cracker"),
+    "ng_fired_thermal_efficiency_pct": ("ng_fired_thermal_efficiency", "nh3_cracker"),
     "cracker_electrical_kwh_per_kg": ("electrical_energy", "nh3_cracker"),
+    "annual_h2_supply_ktpa": ("annual_h2_supply", "study"),
+    "fleet_availability_pct": ("availability", "fleet"),
+    "lh2_vessel_capacity_m3": ("cargo_capacity", "lh2_carrier"),
+    "lh2_vessel_fill_fraction_pct": ("cargo_fill_fraction", "lh2_carrier"),
+    "lh2_density_kg_per_m3": ("cargo_density", "lh2_carrier"),
+    "lh2_port_days_per_call": ("port_days_per_call", "lh2_carrier"),
+    "nh3_vessel_capacity_m3": ("cargo_capacity", "nh3_carrier"),
+    "nh3_vessel_fill_fraction_pct": ("cargo_fill_fraction", "nh3_carrier"),
+    "nh3_density_kg_per_m3": ("cargo_density", "nh3_carrier"),
+    "nh3_port_days_per_call": ("port_days_per_call", "nh3_carrier"),
+    "nh3_bunker_fuel_rate_pct_per_day": ("bunker_fuel_rate", "nh3_carrier"),
 }
 
 
@@ -282,3 +339,92 @@ def test_every_numeric_default_is_traceable_to_the_data_table():
     assert numeric_fields == set(_CSV_LINKS), (
         "every numeric input must be linked to data/carriers/chain-energy-defaults.csv"
     )
+
+
+# -- annual scale & fleet (2026-09-02) ---------------------------------------
+
+
+def test_annual_scale_uses_the_study_basis():
+    """100 ktpa at node A -> 1e8 kg/y feeding the per-kg cascade."""
+    r = run_lh2_chain()
+    a = annual_scale(r, ChainInputs())
+    assert isclose(a.annual_h2_supply_kg, 1.0e8, rel_tol=1e-9)
+    assert isclose(a.annual_delivered_kg, r.delivered_kg_h2 * 1.0e8, rel_tol=1e-9)
+    assert isclose(a.annual_energy_kwh, r.total_energy_kwh * 1.0e8, rel_tol=1e-9)
+
+
+def test_annual_scale_is_linear_in_supply():
+    inp_50 = ChainInputs(annual_h2_supply_ktpa=50.0)
+    inp_200 = ChainInputs(annual_h2_supply_ktpa=200.0)
+    a50 = annual_scale(run_lh2_chain(inp_50), inp_50)
+    a200 = annual_scale(run_lh2_chain(inp_200), inp_200)
+    assert isclose(a200.annual_energy_kwh, 4 * a50.annual_energy_kwh, rel_tol=1e-9)
+    assert isclose(a200.fleet_size, a50.fleet_size, abs_tol=0) or a200.fleet_size >= a50.fleet_size
+
+
+def test_lh2_annual_cargo_needs_no_stoichiometric_conversion():
+    """LH2 mass IS H2 mass throughout -- no NH3-style ratio applies."""
+    r = run_lh2_chain()
+    inp = ChainInputs()
+    a = annual_scale(r, inp)
+    d1 = next(n for n in r.nodes if n.node_id == "D1")
+    assert isclose(a.annual_cargo_kg, d1.mass_in_kg_h2e * inp.annual_h2_supply_ktpa * 1e6, rel_tol=1e-9)
+
+
+def test_nh3_annual_cargo_uses_physical_ammonia_mass():
+    """NH3 shipped tonnage is the H2-equivalent scaled by the stoichiometric
+    ratio -- much larger than the H2-equivalent figure alone."""
+    r = run_nh3_chain()
+    inp = ChainInputs()
+    a = annual_scale(r, inp)
+    d2 = next(n for n in r.nodes if n.node_id == "D2")
+    expected = d2.mass_in_kg_h2e * NH3_PER_H2_MASS_RATIO * inp.annual_h2_supply_ktpa * 1e6
+    assert isclose(a.annual_cargo_kg, expected, rel_tol=1e-9)
+    assert a.annual_cargo_kg > d2.mass_in_kg_h2e * inp.annual_h2_supply_ktpa * 1e6
+
+
+@pytest.mark.parametrize("runner", [run_lh2_chain, run_nh3_chain])
+def test_fleet_size_is_a_positive_integer(runner):
+    r = runner()
+    a = annual_scale(r, ChainInputs())
+    assert isinstance(a, AnnualScaleResult)
+    assert isinstance(a.fleet_size, int)
+    assert a.fleet_size >= 1
+
+
+def test_more_vessel_capacity_needs_a_smaller_fleet():
+    small = annual_scale(run_lh2_chain(), ChainInputs(lh2_vessel_capacity_m3=40000.0))
+    large = annual_scale(
+        run_lh2_chain(ChainInputs(lh2_vessel_capacity_m3=160000.0)),
+        ChainInputs(lh2_vessel_capacity_m3=160000.0),
+    )
+    assert large.fleet_size <= small.fleet_size
+
+
+def test_annual_scale_reuses_shippingpy_fleet_math():
+    """Cross-check against src/lh2/shipping.py directly, so the two modules
+    can never silently diverge on the fleet formula."""
+    from lh2 import shipping as shipping_mod
+
+    inp = ChainInputs()
+    r = run_lh2_chain(inp)
+    a = annual_scale(r, inp)
+    rtd = shipping_mod.round_trip_days(
+        inp.voyage_distance_km, inp.lh2_carrier_speed_km_per_h,
+        inp.lh2_port_days_per_call, inp.lh2_port_days_per_call,
+    )
+    expected_fleet = shipping_mod.fleet_size(
+        a.annual_cargo_kg, rtd,
+        cargo_capacity=inp.lh2_vessel_capacity_m3 * inp.lh2_vessel_fill_fraction_pct / 100.0,
+        lh2_density=inp.lh2_density_kg_per_m3,
+        availability=inp.fleet_availability_pct / 100.0,
+    )
+    assert a.fleet_size == expected_fleet
+    assert isclose(a.round_trip_days, rtd, rel_tol=1e-9)
+
+
+def test_format_report_includes_annual_scale_and_supply_ratio():
+    text = format_report()
+    assert "Annual scale & fleet" in text
+    assert "Fleet size required" in text
+    assert "Ammonia supply ratio" in text

@@ -11,7 +11,8 @@ Usage::
 
     python scripts/run_chain_comparison.py
     python scripts/run_chain_comparison.py --electrolyser-sec 55 --distance 5300
-    python scripts/run_chain_comparison.py --cracker-self-consumption 25 --json
+    python scripts/run_chain_comparison.py --annual-supply 250 --lh2-vessel-capacity 160000
+    python scripts/run_chain_comparison.py --cracker-process-loss 5 --json
 """
 
 from __future__ import annotations
@@ -24,18 +25,28 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-from lh2.chain_energy import ChainInputs, compare, format_report  # noqa: E402
+from lh2.chain_energy import (  # noqa: E402
+    ChainInputs,
+    annual_scale,
+    compare,
+    format_report,
+    nh3_supply_ratio,
+)
 
 
 def _parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--electrolyser-sec", type=float, help="kWh/kg H2, node A [ASSUMPTION]")
     p.add_argument("--distance", type=float, help="km, one-way laden voyage [ASSUMPTION]")
+    p.add_argument("--annual-supply", type=float, help="ktpa H2 at node A [ASSUMPTION]")
     p.add_argument("--liquefaction-sec", type=float, help="kWh/kg, node B1 (KHI 8-9, cited)")
     p.add_argument("--voyage-bor", type=float, help="%%/day, node D1 [ESTIMATE]")
+    p.add_argument("--lh2-vessel-capacity", type=float, help="m3, node D1 (KHI Q29, cited)")
+    p.add_argument("--nh3-vessel-capacity", type=float, help="m3, node D2 [ESTIMATE]")
     p.add_argument("--hb-sec", type=float, help="kWh/kg-NH3, node B2 [ESTIMATE]")
     p.add_argument(
-        "--cracker-self-consumption", type=float, help="%% of H2-equivalent, node F2 [ESTIMATE]"
+        "--cracker-process-loss", type=float,
+        help="%% PSA/purification slip, node F2 (NG-fired cracker) [ESTIMATE]",
     )
     p.add_argument("--json", action="store_true", help="emit machine-readable results")
     return p
@@ -46,10 +57,13 @@ def main(argv: list[str] | None = None) -> int:
     overrides = {
         "electrolyser_sec_kwh_per_kg": args.electrolyser_sec,
         "voyage_distance_km": args.distance,
+        "annual_h2_supply_ktpa": args.annual_supply,
         "liquefaction_sec_kwh_per_kg": args.liquefaction_sec,
         "lh2_voyage_bor_pct_per_day": args.voyage_bor,
+        "lh2_vessel_capacity_m3": args.lh2_vessel_capacity,
+        "nh3_vessel_capacity_m3": args.nh3_vessel_capacity,
         "hb_sec_kwh_per_kg_nh3": args.hb_sec,
-        "cracker_self_consumption_pct": args.cracker_self_consumption,
+        "cracker_process_loss_pct": args.cracker_process_loss,
     }
     inputs = ChainInputs(**{k: v for k, v in overrides.items() if v is not None})
 
@@ -66,6 +80,8 @@ def main(argv: list[str] | None = None) -> int:
                     "efficiency_pct": r.efficiency_pct,
                     "net_energy_kwh": r.net_energy_kwh,
                     "retained_pct": r.retained_pct,
+                    "nh3_supply_ratio": nh3_supply_ratio(r) if key == "NH3" else None,
+                    "annual_scale": asdict(annual_scale(r, inputs)),
                     "gaps": r.gaps,
                 }
                 for key, r in results.items()

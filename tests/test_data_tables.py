@@ -42,7 +42,7 @@ KNOWN_UNITS = {
     "kWh/kg", "kWh/Nm3", "t/d", "unit", "tpa", "%", "year",
     "USD/kg", "USD/ship", "kgCO2e/kg", "%/day", "m3", "inch", "TRL",
     "MJ/kg", "K", "kg/m3", "kg/Nm3", "km/h", "ship", "day", "JPY/Nm3",
-    "km", "kg/kg", "kJ/mol",
+    "km", "kg/kg", "kJ/mol", "ktpa",
 }
 
 

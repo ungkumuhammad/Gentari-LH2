@@ -4,7 +4,7 @@
 > Updated every session. `CLAUDE.md` points here — read this at the start of
 > any session where the user references prior work or continuing a task.
 >
-> Last updated: 2026-09-01
+> Last updated: 2026-09-02
 
 ---
 
@@ -521,3 +521,71 @@ expects browser rev 1234 but the image ships 1194 — launch with
    modelled, which is conservative *against* ammonia.
 5. Cost is deliberately absent from this build. Say when the energy ledger should
    be joined to the LCOH model (`src/lh2/scenario.py`) for KR1.3's economics.
+
+
+### Annual scale, fleet sizing, and the NG-fired cracker reframe (2026-09-02)
+
+Follow-up to the energy-penalty ledger. User asked to (1) replace the 1 kg
+normalized basis with **100 ktpa H2 supply** as the study's headline scale,
+"deriving from this" — i.e. sizing the shipping fleet, not just re-scaling
+energy; (2) set **both** carriers to **40,000 m³** vessels (previously the
+model didn't size vessels at all, only used a disclosed speed); (3) assume the
+**cracker is natural-gas-fired**, giving an ammonia-to-H2 supply ratio of
+**~6.5:1**, above the pure mass-balance ratio (~5.63:1, i.e. this repo's
+existing `NH3_PER_H2_MASS_RATIO` = 5.632) — the user framed the gap as
+"ammonia used as a fuel."
+
+**Modelling decisions taken this session:**
+
+| # | Decision | Choice |
+|---|----------|--------|
+| E7 | Annual supply basis | Anchored at **node A** (H2 produced), matching the per-kg cascade's own basis — not the delivered/import-side quantity. Stated prominently in the artifact masthead so the user can flag if they meant delivered demand instead |
+| E8 | Fleet sizing | Reused `src/lh2/shipping.py`'s existing `round_trip_days()`/`fleet_size()` rather than duplicating the formula — new `annual_scale()` in `chain_energy.py` passes an *effective capacity* (nameplate × fill fraction) since that helper takes no fill-fraction argument itself |
+| E9 | LH2 vessel = 40,000 m³ | **Cited**, not invented — this figure already existed in-repo (`data/vessels/lh2-carriers.csv`, KHI reply Q29: vessel under construction, same tank tech as Suiso Frontier). The 160,000 m³ commercial-scale figure is no longer this build's default; its disclosed 29.6 km/h speed is reused (no separate speed exists for the 40k ship) |
+| E10 | NH3 vessel = 40,000 m³, density 682 kg/m³ | Both `[ESTIMATE]` — mid-size ammonia/LPG-type carrier and standard refrigerated-NH3 density, neither KHI-specific nor externally sourced (D4 still stands) |
+| E11 | Cracker reframe | Reaction heat (4.22 kWh/kg-H2 floor) now **charged** as purchased natural gas at an 85% fired efficiency `[ASSUMPTION]`, not paid for by burning product H2/NH3. Mass loss at F2 drops from the old 20% self-consumption default to a 3% PSA/purification slip `[ESTIMATE]` only |
+| E12 | Where the extra ammonia goes | The gap between the mass-balance floor (5.632:1) and the user's target (~6.5:1) is modelled as **ammonia burned as the carrier's own bunker fuel during shipping** (new node-D2 mechanic, linear in voyage days, always lost — never re-liquefied), calibrated (1.3 %/day default) to land near 6.5:1 at the default voyage length. Chosen over alternatives (cracker-side combustion, an unplaced aggregate factor) because it's the one mechanism with a real-world analog (ammonia-fuelled marine engines) and mirrors the LH2 chain's own D1 BOG-as-fuel treatment structurally. Flagged as a placeholder *device*, not a validated shipping-fuel model — real ammonia engines aren't commercial at scale yet |
+| E13 | `nh3_supply_ratio()` reported, not hard-coded | The ~6.5:1 figure is a **derived, live-recomputing output** (physical NH3 made at B2 ÷ H2 delivered at F2), not a fixed input — so every atomic assumption behind it (HB loss, bunker rate, process loss) stays independently editable and the ratio updates with them, per the user's "editable, autocalculate" requirement from the prior turn |
+
+**Result at the new defaults** (100 ktpa, 60 kWh/kg electrolyser, 6,000 km,
+40,000 m³ both vessels): LH2 delivers 0.9832 kg/kg (unchanged — LH2-side
+mechanics didn't change) at 47.5% chain efficiency; **3 vessels**. NH3 now
+delivers 0.8476 kg/kg (up from 0.7840 pre-reframe, since the old 20%
+self-consumption mass loss dropped to 3%) at **41.5%** chain efficiency, total
+energy 68.09 kWh (close to LH2's 69.07, vs clearly lower before — the NG
+purchase now shows up as a real charged cost instead of a "free" internal
+burn); ammonia supply ratio **6.51:1**; **2 vessels** (fewer than LH2 despite
+shipping 5.5× the physical tonnage, because liquid ammonia is ~10× denser than
+LH2 — 682 vs 70.8 kg/m³ — in the same 40,000 m³ hull).
+
+| File | Action | Purpose |
+|------|--------|---------|
+| `src/lh2/chain_energy.py` | Updated | New `ChainInputs` fields (annual supply, fleet availability, vessel capacity/fill/density/port-days both carriers, bunker fuel rate, NG-fired efficiency, renamed `cracker_self_consumption_pct` → `cracker_process_loss_pct`); new `AnnualScaleResult` dataclass + `annual_scale()` (reuses `src/lh2/shipping.py`); new `nh3_supply_ratio()`; D2 now models ordinary BOG *and* bunker fuel as independent mass-loss mechanisms; F2 now charges NG thermal + electrical energy instead of self-consumption; `format_report()` prints the annual/fleet block and the supply ratio |
+| `data/carriers/chain-energy-defaults.csv` | Updated | 13 new/changed rows (annual supply, fleet availability, both vessels' capacity/fill/density/port-days, bunker fuel rate, NG-fired efficiency, process loss replacing self-consumption); new unit `ktpa` added to the test vocabulary |
+| `tests/test_chain_energy.py` | Updated | 80 tests (was 55): NG-fired energy accounting, process-loss-vs-old-floor sanity, bunker-fuel voyage scaling, `nh3_supply_ratio()` ≈6.5 at defaults and → mass-balance floor at zero bunker fuel, annual-scale linearity, LH2 cargo needs no stoichiometric conversion vs NH3 does, fleet-size cross-check directly against `src/lh2/shipping.py` (so the two can never silently diverge), format_report includes the new sections |
+| `scripts/run_chain_comparison.py` | Updated | New CLI flags `--annual-supply`, `--lh2-vessel-capacity`, `--nh3-vessel-capacity`, `--cracker-process-loss` (renamed from `--cracker-self-consumption`); JSON output now includes `annual_scale` and `nh3_supply_ratio` per chain |
+| `docs/reports/lh2-vs-nh3-energy-penalty.html` | Updated | New "Annual H2 supply" + "Fleet availability" inputs on the shared Node A panel; D1/D2 node cards gained vessel capacity/fill/density/port-time inputs (D2 also gained the bunker-fuel-rate input); F2 rewired to NG-fired efficiency + process-loss inputs; new **"Annual scale & fleet"** section (two cards: annual energy/delivered/cargo, cargo-per-voyage, round-trip days, trips/year, headline fleet-size number, ammonia supply ratio); calc trail extended for D2 (ordinary BOG + bunker fuel lines) and F2 (NG thermal + electrical breakdown); gap list and assumption register rewritten for the new mechanics |
+| `docs/comparison/01-energy-penalty-method.md` | Updated | New §6a "Annual scale & fleet"; §4 formulas/choices extended (NG-fired cracker as "choice 3"); §5/§6/§7/§9 numbers, defaults tables, and sources updated |
+| `docs/comparison/00-milestones.md`, `docs/memory.md` | Updated | This entry; M3.5 status note |
+
+**Verified:** every headline HTML figure matched the Python CLI exactly
+(41.5%, 68.09, 0.8476, 20.16, 6.51:1, fleet 3/2, 6.907/6.809 TWh/y) via
+Playwright; zeroing bunker-fuel-rate and process-loss in the browser collapsed
+the live ratio to 5.63:1 (the pure mass-balance floor), confirming the
+derived-not-hardcoded requirement; reset-to-defaults round-trips correctly;
+no new console errors; both themes and the 420px narrow layout still hold.
+Full suite: 124 passing (was 99).
+
+**➡️ Open items for the user on this workstream (carried forward + new):**
+1. Replace the NH3 placeholders with the internal dataset (D4) — including,
+   now, the vessel spec, NG-fired efficiency, and bunker-fuel mechanism.
+2. Confirm whether "100 ktpa H2 supply" should be anchored at node A
+   (production, current assumption) or at the delivered/import side instead —
+   the two differ by the chain's own loss fraction.
+3. Confirm or replace the LH2 voyage BOR (0.2 %/day placeholder).
+4. Give a named corridor (origin → destination, distance) to replace 6,000 km.
+5. Confirm the ammonia bunker-fuel mechanism is the right *place* to put the
+   6.5:1 gap (vs. e.g. attributing it to the cracker itself) — it's currently
+   a modelling choice (E12 above), not something the user explicitly located.
+6. Cost is deliberately absent from this build. Say when the energy ledger
+   should be joined to the LCOH model (`src/lh2/scenario.py`).
