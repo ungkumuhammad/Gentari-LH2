@@ -102,12 +102,74 @@ def voyage_boil_off(cargo_kg: object, voyage_days: float, voyage_bor_pct_per_day
     return cargo_kg * (1.0 - retained_fraction)
 
 
+def cargo_mass_per_voyage(
+    cargo_capacity: object,
+    cargo_density: object,
+    fill_fraction: float = 1.0,
+) -> float:
+    """Liquid cargo mass carried per voyage, in kg.
+
+    Generic across carrier/commodity — the caller supplies the vessel's own
+    capacity, liquid density, and usable fill fraction. Used identically for
+    LH2 and NH3 carriers; only the inputs differ.
+
+    Args:
+        cargo_capacity: Tank capacity, as a ``pint`` quantity or bare m3.
+        cargo_density: Liquid density at carriage conditions, as a ``pint``
+            quantity or bare kg/m3.
+        fill_fraction: Usable fill vs full tank volume (0-1). Default 1.0
+            (no ullage limit applied) — pass an explicit tagged value at the
+            call site for a realistic figure.
+
+    Returns:
+        Cargo mass per voyage, kg (float).
+    """
+    if not hasattr(cargo_capacity, "units"):
+        cargo_capacity = Q_(cargo_capacity, "m^3")
+    if not hasattr(cargo_density, "units"):
+        cargo_density = Q_(cargo_density, "kg/m^3")
+    return (cargo_capacity * cargo_density * fill_fraction).to("kg").magnitude
+
+
+def annual_capacity_per_vessel(
+    round_trip_days_value: float,
+    cargo_capacity: object,
+    cargo_density: object,
+    fill_fraction: float = 1.0,
+    availability: float = 0.90,
+) -> float:
+    """Annual cargo throughput a single vessel can deliver on a route, in kg/y.
+
+    Generic across carrier/commodity (see ``cargo_mass_per_voyage``). Shared
+    by ``fleet_size`` and by cross-carrier shipping comparisons so the two
+    never silently diverge.
+
+    Args:
+        round_trip_days_value: Round-trip cycle time, days (see
+            ``round_trip_days``).
+        cargo_capacity: Per-vessel tank capacity.
+        cargo_density: Liquid density at carriage conditions.
+        fill_fraction: Usable fill vs full tank volume (0-1). Default 1.0.
+        availability: [ASSUMPTION] fleet-wide operational availability
+            (default 0.90 — dry-docking/maintenance/weather margin; not
+            carrier-specific).
+
+    Returns:
+        Annual cargo mass delivered per vessel, kg/y (float). This is
+        *cargo* mass as loaded, before any voyage boil-off loss.
+    """
+    mass_per_voyage = cargo_mass_per_voyage(cargo_capacity, cargo_density, fill_fraction)
+    trips_per_year = (365.0 / round_trip_days_value) * availability
+    return mass_per_voyage * trips_per_year
+
+
 def fleet_size(
     annual_volume_kg: float,
     round_trip_days_value: float,
     cargo_capacity: object = KHI_COMMERCIAL_CARGO_CAPACITY,
     lh2_density: object = Q_(70.8, "kg/m^3"),
     availability: float = 0.90,
+    fill_fraction: float = 1.0,
 ) -> int:
     """Number of carriers needed to deliver an annual LH2 volume on a route.
 
@@ -123,17 +185,15 @@ def fleet_size(
         availability: [ASSUMPTION] fleet-wide operational availability
             (default 0.90 — dry-docking/maintenance/weather margin; KHI does
             not disclose a fleet availability figure).
+        fill_fraction: Usable fill vs full tank volume (0-1). Default 1.0
+            (matches this function's pre-existing behavior).
 
     Returns:
         Number of vessels (rounded up).
     """
-    if not hasattr(cargo_capacity, "units"):
-        cargo_capacity = Q_(cargo_capacity, "m^3")
-    if not hasattr(lh2_density, "units"):
-        lh2_density = Q_(lh2_density, "kg/m^3")
-    cargo_mass_per_voyage = (cargo_capacity * lh2_density).to("kg").magnitude
-    trips_per_year_per_ship = (365.0 / round_trip_days_value) * availability
-    annual_capacity_per_ship = cargo_mass_per_voyage * trips_per_year_per_ship
+    annual_capacity_per_ship = annual_capacity_per_vessel(
+        round_trip_days_value, cargo_capacity, lh2_density, fill_fraction, availability
+    )
     return math.ceil(annual_volume_kg / annual_capacity_per_ship)
 
 
@@ -146,5 +206,7 @@ __all__ = [
     "one_way_transit_days",
     "round_trip_days",
     "voyage_boil_off",
+    "cargo_mass_per_voyage",
+    "annual_capacity_per_vessel",
     "fleet_size",
 ]

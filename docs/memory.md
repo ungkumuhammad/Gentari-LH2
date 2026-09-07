@@ -704,3 +704,91 @@ deliverables (2026-09-07)
    under `docs/` or `sources/` — if the user wants a persistent copy in the
    repo, ask where it should live (`docs/reports/` seems the natural home,
    matching `docs/reports/khi-lh2-solution-database.md` etc.).
+
+### Shipping-only LH2 vs NH3 comparison: 40,000 m³ vs 24,000 m³, Kakinada→Hamburg (2026-09-07)
+
+User asked to start the LH2-vs-ammonia comparison from the **shipping side
+only**, comparing the existing 40,000 m³ LH2 carrier to a **24,000 m³ (24
+kcbm)** liquid ammonia carrier, and asked (via AskUserQuestion, decision-first
+per user preference) what NH3 shipping data was needed before building.
+
+**Decisions/inputs from the user this session:**
+
+| # | Decision | Chosen |
+|---|----------|--------|
+| S1 | NH3 data source | User answers questions directly (no Zane dispatch this round); every NH3 shipping figure is either user-specified `[ASSUMPTION]` or a flagged placeholder |
+| S2 | NH3 cargo condition | Fully refrigerated, ~-33°C, 682 kg/m³ (standard published value, `[ESTIMATE]`, no primary citation) |
+| S3 | NH3 service speed | **13 knots** (24.076 km/h) |
+| S4 | NH3 voyage BOR | 0.1-0.2%/day range selected; **0.15%/day midpoint** used as point default |
+| S5 | NH3 BOG handling | **Onboard reliquefaction** (energy cost, no cargo mass loss) — contrasts with LH2's KHI-disclosed "burned as fuel" (cargo mass loss) |
+| S6 | NH3 port time | 1.5 days/call, matched to LH2's KHI range for comparability |
+| S7 | Corridor | **Kakinada, India → Hamburg, Germany** |
+| S8 | Priority framing | User wants the analysis framed as a **"sweet spot" / breakeven search** — under what conditions does each carrier win — not just a static table |
+| S9 | Route basis | **Cape of Good Hope** (~21,200 km one-way) chosen as primary over Suez (~10,260 km) to reflect current Red Sea/Suez security-driven rerouting reality, not the classic shortest route |
+
+**Distance-sourcing limitation discovered:** WebFetch to searoutes.com and
+similar sea-distance calculators is blocked by this environment's egress
+policy, and WebSearch could not surface the exact published Kakinada-Hamburg
+figure either. Computed both route distances **first-principles** via
+great-circle waypoint summation (Kakinada → S. tip Sri Lanka → [Bab-el-Mandeb
+→ Suez → Port Said, or → Cape of Good Hope] → Gibraltar → Hamburg, +8% margin)
+and cross-checked the method against a public Karachi→Hamburg figure (11,076
+NM) surfaced by search — it matched a Cape-route computation of that same
+pair to within 2%, which also revealed that public figure is itself a
+Cape-route number, not Suez. Both figures tagged `[ESTIMATE, needs source:
+primary distance table]`.
+
+**Headline finding:** at these specific vessel/route specs, **LH2 wins
+per-vessel annual H2-equivalent shipping throughput at every distance tested
+(1,000-40,000 km)**, by 1.07-1.18× depending on distance. This is *not* a
+volumetric story — NH3's density (682 vs 70.8 kg/m³) nearly offsets its
+smaller hull (24k vs 40k m³) on a per-voyage cargo basis (NH3 is actually
+*slightly* ahead before boil-off). LH2 wins on **turnaround cadence**: faster
+speed (16 vs 13 kn) + shorter port time (1.25 vs 1.5 d) yields more trips/y,
+outweighing NH3's small per-trip cargo edge. LH2's margin *narrows* with
+distance because its voyage boil-off (burned as fuel, cargo lost) compounds
+over the longer laden leg, while NH3's reliquefaction loses no cargo mass.
+
+**Sweet-spot / breakeven analysis (the actual deliverable the user asked
+for):**
+- LH2 voyage BOR breakeven: **0.60%/day (Cape) / 1.23%/day (Suez)** — above
+  this, NH3 wins. Current default is 0.2%/day (KHI never disclosed a voyage
+  figure); the unpromoted RSER-2026 literature figure is ~3.44%/day — nearly
+  6× the Cape breakeven. **This is the single highest-leverage open number**
+  in the whole comparison, more than anything about the NH3 vessel itself.
+- NH3 speed breakeven: **14.73 kn** (vs current 13 kn) at Cape distance,
+  holding LH2 at its default BOR.
+- NH3 capacity breakeven: **≈27,060 m³** (vs current 24,000 m³) at 13 kn,
+  Cape distance.
+
+| File | Action | Purpose |
+|------|--------|---------|
+| `data/vessels/nh3-carriers.csv` | Created | 24,000 m³ NH3 vessel spec table (capacity, density, speed, voyage BOR range, BOG disposition, port days, fill fraction), every row tagged ASSUMPTION/ESTIMATE with rationale — distinct from the generic 40,000 m³ NH3 placeholder already in `chain-energy-defaults.csv` (that one stays untouched, serves the full six-node energy ledger) |
+| `data/routes/kakinada-hamburg.csv` | Created | Suez (~10,260 km) and Cape (~21,200 km, primary) one-way distances, both `[ESTIMATE]` with full derivation in notes |
+| `src/lh2/shipping.py` | Extended | New generic `cargo_mass_per_voyage()` and `annual_capacity_per_vessel()` helpers (factored out of `fleet_size()`'s internals so LH2/NH3/any future carrier share one implementation); `fleet_size()` gained an optional `fill_fraction` kwarg (default 1.0 — no behavior change for existing callers) |
+| `scripts/run_shipping_comparison.py` | Created | The full comparison + breakeven solvers (`breakeven_lh2_voyage_bor`, `breakeven_nh3_speed_km_per_h`, `breakeven_nh3_capacity_m3`, generic bisection `find_crossover_km`); prints headline results at both distances, a distance-sensitivity sweep, and the sweet-spot breakeven table |
+| `tests/test_shipping_comparison.py` | Created | 15 tests: mass-loss-vs-energy-cost BOG split, cross-checks against `shipping.py` primitives, "LH2 wins at defaults" regression, and each breakeven solver verified to actually zero its underlying difference function |
+| `tests/test_data_tables.py` | Updated | Registered the two new CSV tables in `TABLES` |
+| `scripts/build_db_workbook.py`, `data/lh2-database.xlsx` | Updated / regenerated | New `nh3_carriers` and `kakinada_hamburg_route` sheets |
+| `docs/comparison/02-shipping-lh2-vs-nh3.md` | Created | Full write-up: vessels compared, corridor distance derivation, headline result, sensitivity sweep, sweet-spot breakeven table with interpretation, explicit gap register, open items |
+| `docs/comparison/00-milestones.md` | Updated | M3.4 → 🟡 with pointer; new artifact row |
+
+**Verified:** full test suite 151 passing (was 124); script output numbers
+cross-checked by hand against the breakeven solvers (each confirmed to
+equalize the two carriers' annual H2-equivalent to within 0.1%).
+
+**➡️ Open items for the user on this workstream:**
+1. Any real voyage BOR for a fully-refrigerated NH3 carrier and/or a
+   confirmed LH2 voyage BOR — resolves the single biggest lever in the
+   entire comparison (§5/§6.1 of the new doc).
+2. NH3 onboard-reliquefaction SEC (kWh/kg) — currently an unquantified energy
+   cost, not zero.
+3. Confirm/correct NH3 speed (13 kn), capacity (24,000 m³), port time (1.5 d)
+   against the internal dataset (D4) — sensitivity for each already computed.
+4. When to join this to cost (CapEx/day-rate/OpEx) for a shipping-cost-per-kg
+   comparison, and whether to fold this specific 40k/24k pairing back into
+   the full six-node `chain_energy.py` model (which still defaults to a
+   generic 40k/40k pairing).
+5. Confirm the Kakinada→Hamburg distance with a primary source if this
+   corridor becomes decision-relevant — current figures are first-principles
+   estimates, not AIS/route-planning-tool output.

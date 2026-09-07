@@ -27,6 +27,8 @@ TABLES = [
     "properties/lh2-properties.csv",
     "properties/regulatory-compliance.csv",
     "vessels/lh2-carriers.csv",
+    "vessels/nh3-carriers.csv",
+    "routes/kakinada-hamburg.csv",
     "costs/lh2-cost-stack.csv",
     "carriers/chain-energy-defaults.csv",
 ]
