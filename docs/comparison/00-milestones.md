@@ -121,10 +121,10 @@ pre-built to de-risk; NH3 side unlocks when the internal dataset lands.
 |----|------|-----------------|---------------------|--------|
 | M3.1 | **LH2 chain cost stack → LCOH** ($/kg delivered) on generic basis | memo §Economics, `data/costs/` | M1.5, `economics.lcoh` | 🟡 `economics.lcoh` + `scenario.run_scenario` implemented and runnable (`scripts/run_project_model.py`); still gated on user-supplied CapEx/OpEx since KHI has not disclosed them |
 | M3.2 | **NH3 chain cost stack → LCOH** (incl. cracking/reconversion) | memo §Economics | **user NH3 dataset (D4)** | 🔒 |
-| M3.3 | **BOG / boil-off** comparison across chain (terminal + voyage) | memo §BOG | M1, NH3 data | ⬜ |
+| M3.3 | **BOG / boil-off** comparison across chain (terminal + voyage) | memo §BOG | M1, NH3 data | 🟡 LH2-vs-literature BOG comparison drafted in `docs/comparison/khi-vs-literature-lh2-comparison.md` §1; still blocked on NH3 data for the full LH2-vs-NH3 memo |
 | M3.4 | **Speed / voyage time** on existing vessels (LH2 16 kn vs NH3 carrier) | memo §Speed | M1.3, NH3 data | ⬜ |
 | M3.5 | **End-to-end energy** consumption (liquefaction vs synthesis+cracking, regas) | memo §Energy | M1.1/1.4, NH3 data | 🟡 node-by-node energy-penalty model for both chains, now including annual-scale/fleet sizing (100 ktpa H2 study basis, 40,000 m³ vessels both carriers, NG-fired cracker) — `docs/comparison/01-energy-penalty-method.md`, `src/lh2/chain_energy.py`, interactive ledger in `docs/reports/lh2-vs-nh3-energy-penalty.html`. LH2 side runs on cited KHI figures (incl. the 40,000 m³ vessel, reply Q29); NH3 side is structurally complete but every value is an `[ESTIMATE]` placeholder until the D4 dataset lands |
-| M3.6 | **Complexity / TRL + safety / permitting** (toxicity, separation distances, loading-arm TRL 6–7) | memo §Complexity | `kawasaki-2026-questionnaire`, `-comparison` | ⬜ |
+| M3.6 | **Complexity / TRL + safety / permitting** (toxicity, separation distances, loading-arm TRL 6–7) | memo §Complexity | `kawasaki-2026-questionnaire`, `-comparison` | 🟡 KHI-vs-literature materials/tank-design/safety comparison drafted in `docs/comparison/khi-vs-literature-lh2-comparison.md` §§2–3, 6; still blocked on NH3 data for the full LH2-vs-NH3 memo |
 | M3.7 | **Sensitivities** on dominant drivers (scale, distance, energy price) | memo §Sensitivity | M3.1–M3.2 | ⬜ |
 | M3.8 | **Corridor re-run** (D1) once origin→destination, distance, volume given | memo addendum | **user corridor inputs (D1)** | 🔒 |
 | M3.9 | **Memo write-up + go/no-go** (boundary, units, cost-year, assumptions up front; Sources list) | `docs/comparison/lh2-vs-nh3.md` | M3.1–M3.7 | ⬜ |
@@ -173,6 +173,7 @@ tracked here rather than renumbering the plan:
 | `data/carriers/chain-energy-defaults.csv` | Every default for both chains, cited or tagged. LH2 side is cited to KHI; **the entire NH3 column is `[ESTIMATE]` pending decision D4** | ✅ v1 |
 | `tests/test_chain_energy.py` | 55 tests: the user's 60 kWh/kg worked example, mass balance, both efficiency definitions, the cracker's 12.7 % thermodynamic floor, and a drift test that fails if a Python default ever diverges from the CSV | ✅ |
 | `docs/comparison/01-energy-penalty-method.md` | Method write-up: boundary, basis, formulas, defaults with tags, result at defaults, gap register | ✅ |
+| `docs/comparison/khi-vs-literature-lh2-comparison.md` (2026-07-21) | KHI proprietary LH2 solution vs. two ingested public papers (RSER 2026 Towhid & Hossain; JMSE 2025 Passalacqua & Traverso) — sourced comparison tables across BOR (at-rest vs voyage), tank design/insulation, materials, BOG management strategy, techno-economics, and safety. Feeds M3.3 (BOG), M3.6 (complexity/TRL/safety) directly; every paper figure re-verified against the full-text `.md`, not just `research/sources/staging.csv`. Provenance kept separate per cell ([KHI]/[RSER]/[JMSE]); closes with a gaps + promotion-candidates list (not promoted — separate user approval needed) | ✅ |
 
 **Relationship to KR1.2/KR1.3:** this Python calculator is a working reference
 implementation of much of what M2.3 (shipping calc logic) and M3.1 (LCOH)

@@ -589,3 +589,52 @@ Full suite: 124 passing (was 99).
    a modelling choice (E12 above), not something the user explicitly located.
 6. Cost is deliberately absent from this build. Say when the energy ledger
    should be joined to the LCOH model (`src/lh2/scenario.py`).
+
+### KHI-vs-literature comparison table built (2026-07-21, same session)
+
+Built the artifact flagged above as "NEXT SESSION." Re-read all four KHI
+proprietary source files and both paper `.fulltext.md` files directly (not
+just `staging.csv` summaries) to verify every figure before citing it.
+
+| File | Action | Purpose |
+|------|--------|---------|
+| `docs/comparison/khi-vs-literature-lh2-comparison.md` | Created | Sourced comparison of KHI's proprietary LH2 solution vs. RSER 2026 (Towhid & Hossain) and JMSE 2025 (Passalacqua & Traverso), across 6 axes: (1) BOR at-rest vs voyage, (2) tank design/insulation, (3) materials, (4) BOG management strategy, (5) techno-economics, (6) safety. Every cell tagged `[KHI]`/`[RSER]`/`[JMSE]` — no blended/unattributed numbers. Closes with a "Gaps & promotion candidates" section (KHI disclosure gaps + 6 paper-figure promotion candidates, none actually promoted — that stays a separate explicit user approval per `research/AGENT.md`). Does **not** touch `research/sources/staging.csv` promotion status, per task instruction — this lives in `docs/comparison/`, cross-referencing already-ingested sources rather than doing new Zane research. |
+| `docs/comparison/00-milestones.md` | Updated | Added the new artifact under "Additional artifacts"; bumped M3.3 (BOG) and M3.6 (complexity/TRL/safety) to 🟡 with a pointer to the new file — full LH2-vs-NH3 memo (M3.9) still blocked on the NH3 dataset (D4) |
+
+**Key findings/citation issues surfaced while building it:**
+- **KHI's biggest confirmed gap:** no standalone voyage/laden BOR for the
+  160,000 m³ commercial vessel — KHI only says fuel consumption = BOR, never
+  a %/day figure. RSER's ~3.44%/day is at a comparable ship scale but is
+  itself RSER's synthesis of a *third-party* cited study (not RSER's own new
+  experiment) — flagged so it isn't mistaken for a KHI-validated benchmark.
+- **RSER's tank-diameter BOR scaling (~1.8%→~0.2%/day)** covers 2–1,200 m³
+  tanks — 2–3 orders of magnitude smaller than KHI's 64,000–160,000 m³ tanks;
+  flagged that extrapolating the curve to KHI's scale isn't supported by
+  either source.
+- **New data point found in JMSE, not previously in any repo file:** on the
+  Suiso Frontier's actual Australia→Japan demo voyage, "roughly 10% of the
+  loaded LH2 is dispersed through the vent mast" (JMSE fulltext, lines
+  405–409) — a rare *real operational* number, distinct from any
+  commercial-scale (160,000 m³) claim. Flagged as a promotion candidate for
+  `data/vessels/lh2-carriers.csv`.
+- **Strongest cross-source corroboration:** KHI's "burn BOG as DF engine
+  fuel, no onboard reliquefaction" choice is independently reached by JMSE
+  from a first-principles energy-balance argument (reliquefaction SEC
+  6–8 kWh/kg vs cryocooler power draw ~0.45 kW/W), with no contradiction
+  from either paper.
+- **Techno-economics apples-to-oranges flag:** KHI's IAE cost stack (native
+  unlabelled-axis JPY/Nm³~2019, whole-chain) and RSER's ~3.74 $/GJ (USD/GJ,
+  transportation-phase only, from a 2020 secondary source with its own
+  Qatar→Japan/160,000 m³/20 kn baseline) are **not directly comparable**
+  without resolving the IAE axis/cost-year gap first — did not force a false
+  conversion; left as an explicit gap.
+- **Materials:** KHI discloses no tank alloy at all in any of the 4 files
+  reviewed; JMSE's AISI 316/316L baseline (confirmed via the real Suiso
+  Frontier vessel) is the strongest materials evidence across all three
+  sources — used as context, not attributed to KHI.
+- **Safety:** kept KHI's vendor-positioning framing ("not as challenging as
+  often assumed," qualitative separation-distance comparison to NH3)
+  clearly separate from JMSE's independent, incident-data-based caution that
+  LH2's safety record reflects *limited operational data*, not proven
+  inherent safety — presented as two different kinds of claims, not
+  reconciled into one.
