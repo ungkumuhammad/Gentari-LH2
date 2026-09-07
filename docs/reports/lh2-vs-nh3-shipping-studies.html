@@ -1,0 +1,768 @@
+<title>LH2 vs Ammonia at Sea</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@500;600;700&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --ground:#F4F6F8; --surface:#FFFFFF; --surface-2:#EDF1F4; --chart-surface:#FFFFFF;
+  --ink:#131A21; --ink-2:#46545F; --ink-3:#78868F; --rule:#DCE3E8; --rule-2:#C7D1D8;
+  --lh2:#0C7C9E; --nh3:#A9660B;
+  --lh2-soft:rgba(12,124,158,.10); --nh3-soft:rgba(169,102,11,.10);
+  --warn:#B3453A; --warn-soft:rgba(179,69,58,.10);
+  --good:#3F7A48;
+  --div-0:#EDEFF1;
+  --div-a1:#E3EEF2; --div-a2:#B9D8E2; --div-a3:#85BCCE; --div-a4:#4A9DB6; --div-a5:#0C7C9E;
+  --div-b1:#F4EBDD; --div-b2:#E7D2AE; --div-b3:#D6B172; --div-b4:#C58E3C; --div-b5:#A9660B;
+  --focus:#0C7C9E;
+  --shadow:0 1px 2px rgba(19,26,33,.06), 0 6px 18px -12px rgba(19,26,33,.22);
+  --display:"Archivo Narrow","Arial Narrow",Helvetica,sans-serif;
+  --body:"Public Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#0E1418; --surface:#151C22; --surface-2:#1B242B; --chart-surface:#151C22;
+  --ink:#E7EEF3; --ink-2:#A2B2BE; --ink-3:#6F808D; --rule:#242F37; --rule-2:#31404A;
+  --lh2:#2E97B9; --nh3:#BA8930;
+  --lh2-soft:rgba(46,151,185,.14); --nh3-soft:rgba(186,137,48,.14);
+  --warn:#D2685C; --warn-soft:rgba(210,104,92,.14);
+  --good:#6FA878;
+  --div-0:#1E272E;
+  --div-a1:#22343D; --div-a2:#234A5A; --div-a3:#226478; --div-a4:#277F99; --div-a5:#2E97B9;
+  --div-b1:#33291B; --div-b2:#4A3A1E; --div-b3:#6B5320; --div-b4:#937026; --div-b5:#BA8930;
+  --focus:#2E97B9;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 22px -14px rgba(0,0,0,.7);
+}}
+:root[data-theme="dark"]{
+  --ground:#0E1418; --surface:#151C22; --surface-2:#1B242B; --chart-surface:#151C22;
+  --ink:#E7EEF3; --ink-2:#A2B2BE; --ink-3:#6F808D; --rule:#242F37; --rule-2:#31404A;
+  --lh2:#2E97B9; --nh3:#BA8930;
+  --lh2-soft:rgba(46,151,185,.14); --nh3-soft:rgba(186,137,48,.14);
+  --warn:#D2685C; --warn-soft:rgba(210,104,92,.14);
+  --good:#6FA878;
+  --div-0:#1E272E;
+  --div-a1:#22343D; --div-a2:#234A5A; --div-a3:#226478; --div-a4:#277F99; --div-a5:#2E97B9;
+  --div-b1:#33291B; --div-b2:#4A3A1E; --div-b3:#6B5320; --div-b4:#937026; --div-b5:#BA8930;
+  --focus:#2E97B9;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 22px -14px rgba(0,0,0,.7);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1120px;margin:0 auto;padding:28px 20px 72px}
+h1,h2,h3{font-family:var(--display);font-weight:700;text-wrap:balance;margin:0}
+a{color:var(--lh2)}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:3px}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);font-weight:500}
+
+/* masthead */
+.masthead{border-bottom:2px solid var(--ink);padding-bottom:18px;margin-bottom:22px}
+.masthead h1{font-size:clamp(30px,5vw,46px);line-height:1.02;letter-spacing:-.015em;margin:6px 0 8px}
+.deck{color:var(--ink-2);max-width:66ch;font-size:16px;margin:0}
+.spec{display:flex;flex-wrap:wrap;gap:0 22px;margin-top:16px;font-family:var(--mono);font-size:11.5px;color:var(--ink-3);line-height:1.9}
+.spec b{color:var(--ink-2);font-weight:500}
+
+/* controls */
+.controls{background:var(--surface);border:1px solid var(--rule);border-radius:4px;padding:16px 18px 18px;margin-bottom:22px;box-shadow:var(--shadow)}
+.controls-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.presets{display:flex;gap:6px;flex-wrap:wrap}
+button{font-family:var(--body);font-size:12.5px;cursor:pointer}
+.preset{background:var(--surface-2);border:1px solid var(--rule-2);color:var(--ink-2);border-radius:3px;padding:5px 11px;font-weight:500;transition:background .12s,color .12s}
+.preset:hover{background:var(--lh2-soft);color:var(--lh2);border-color:var(--lh2)}
+.preset[aria-pressed="true"]{background:var(--ink);color:var(--ground);border-color:var(--ink)}
+.grid-in{display:grid;grid-template-columns:repeat(auto-fit,minmax(178px,1fr));gap:14px 18px}
+.field label{display:block;font-size:11.5px;color:var(--ink-2);font-weight:500;margin-bottom:5px;letter-spacing:.01em}
+.field .tag{font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;padding:1px 4px;border-radius:2px;margin-left:5px;vertical-align:1px}
+.tag.est{background:var(--warn-soft);color:var(--warn)}
+.tag.cit{background:var(--lh2-soft);color:var(--lh2)}
+.field input[type=number]{width:100%;font-family:var(--mono);font-size:13.5px;padding:7px 9px;border:1px solid var(--rule-2);border-radius:3px;background:var(--ground);color:var(--ink)}
+.field input[type=range]{width:100%;accent-color:var(--lh2);margin:6px 0 0}
+details.adv{margin-top:14px;border-top:1px solid var(--rule);padding-top:12px}
+details.adv summary{cursor:pointer;font-size:12.5px;color:var(--ink-2);font-weight:500;font-family:var(--body)}
+details.adv .grid-in{margin-top:14px}
+
+/* verdict */
+.verdict{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:4px;overflow:hidden;margin-bottom:34px}
+.tile{background:var(--surface);padding:15px 17px 16px}
+.tile .k{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+.tile .v{font-family:var(--display);font-size:31px;font-weight:700;line-height:1.1;margin-top:5px;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.tile .s{font-size:12.5px;color:var(--ink-2);margin-top:3px}
+.tile.win-lh2{box-shadow:inset 3px 0 0 var(--lh2)}
+.tile.win-nh3{box-shadow:inset 3px 0 0 var(--nh3)}
+.v.lh2{color:var(--lh2)} .v.nh3{color:var(--nh3)}
+
+/* studies */
+.study{margin-bottom:38px}
+.study-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:4px}
+.study h2{font-size:clamp(19px,2.4vw,24px);letter-spacing:-.01em}
+.lever{font-family:var(--mono);font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);border:1px solid var(--rule-2);border-radius:2px;padding:2px 7px;white-space:nowrap}
+.study .intro{color:var(--ink-2);max-width:70ch;margin:0 0 14px;font-size:14.5px}
+.panel{background:var(--surface);border:1px solid var(--rule);border-radius:4px;box-shadow:var(--shadow)}
+.panel-pad{padding:16px 18px 10px}
+.legend{display:flex;gap:16px;flex-wrap:wrap;align-items:center;padding:0 18px 10px;font-size:12.5px;color:var(--ink-2)}
+.legend .sw{display:inline-block;width:22px;height:3px;border-radius:2px;vertical-align:3px;margin-right:7px}
+.legend .sq{display:inline-block;width:11px;height:11px;border-radius:2px;vertical-align:-1px;margin-right:7px}
+.chart-scroll{overflow-x:auto;position:relative;padding:0 6px 4px}
+svg.chart{display:block;width:100%;height:auto;min-width:600px}
+.readout{border-top:1px solid var(--rule);padding:13px 18px;font-size:14px;color:var(--ink-2);background:var(--surface-2);border-radius:0 0 3px 3px}
+.readout b{color:var(--ink);font-weight:600}
+.readout .num{font-family:var(--mono);font-weight:500;font-variant-numeric:tabular-nums}
+.two-up{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:760px){.two-up{grid-template-columns:1fr}}
+
+/* tooltip */
+.tip{position:absolute;pointer-events:none;background:var(--surface);border:1px solid var(--rule-2);border-radius:3px;padding:8px 10px;font-size:12px;box-shadow:var(--shadow);opacity:0;transition:opacity .1s;z-index:5;min-width:132px}
+.tip .th{font-family:var(--mono);font-size:10.5px;color:var(--ink-3);letter-spacing:.05em;margin-bottom:5px}
+.tip .tr{display:flex;justify-content:space-between;gap:14px;line-height:1.7}
+.tip .tr .n{font-family:var(--mono);font-variant-numeric:tabular-nums;color:var(--ink);font-weight:500}
+.tip .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:0}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* tables & register */
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);font-weight:500;border-bottom:1px solid var(--rule-2)}
+td.n{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+tbody tr:last-child td{border-bottom:none}
+.tbl-scroll{overflow-x:auto}
+.gaps{background:var(--surface);border:1px solid var(--rule);border-left:3px solid var(--warn);border-radius:4px;padding:16px 20px;margin-bottom:22px}
+.gaps h3{font-size:16px;margin-bottom:8px}
+.gaps ol{margin:0;padding-left:20px;color:var(--ink-2);font-size:14px}
+.gaps li{margin-bottom:7px}
+.gaps li b{color:var(--ink)}
+footer{margin-top:44px;border-top:1px solid var(--rule);padding-top:16px;font-size:12.5px;color:var(--ink-3);max-width:74ch}
+footer code{font-family:var(--mono);font-size:11.5px;color:var(--ink-2)}
+.sect-rule{border:0;border-top:1px solid var(--rule);margin:34px 0 26px}
+</style>
+
+<div class="wrap">
+
+<header class="masthead">
+  <div class="eyebrow">Gentari · KR1.3 · Shipping segment (nodes D1 / D2)</div>
+  <h1>LH<span style="font-size:.62em;vertical-align:-.08em">2</span> vs Ammonia at Sea</h1>
+  <p class="deck">Six studies on one question: moving hydrogen from <b>Kakinada to Hamburg</b>, does a 40,000 m³ liquid-hydrogen carrier or a 24,000 m³ fully-refrigerated ammonia carrier put more hydrogen on the quay — and what would have to change for the answer to flip?</p>
+  <div class="spec">
+    <span><b>Boundary</b> shipping only — loaded → discharged. No production, liquefaction, synthesis, terminal or cracking.</span>
+    <span><b>Basis</b> per vessel, and fleet for annual demand</span>
+    <span><b>Units</b> SI · no cost in this pass</span>
+    <span><b>Comparison metric</b> kg H₂-equivalent delivered (NH₃ ÷ 5.632)</span>
+  </div>
+</header>
+
+<section class="controls" aria-label="Study inputs">
+  <div class="controls-head">
+    <div>
+      <div class="eyebrow">Study inputs — every chart below recomputes live</div>
+    </div>
+    <div class="presets">
+      <button class="preset" id="p-cape" aria-pressed="true">Cape route 21,200 km</button>
+      <button class="preset" id="p-suez" aria-pressed="false">Suez route 10,260 km</button>
+      <button class="preset" id="p-reset" aria-pressed="false">Reset all</button>
+    </div>
+  </div>
+  <div class="grid-in">
+    <div class="field">
+      <label for="i-dist">One-way distance, km <span class="tag est">EST</span></label>
+      <input type="number" id="i-dist" value="21200" min="200" max="30000" step="100">
+    </div>
+    <div class="field">
+      <label for="i-lh2bor">LH₂ voyage boil-off, %/day <span class="tag est">EST</span></label>
+      <input type="number" id="i-lh2bor" value="0.2" min="0" max="5" step="0.05">
+      <input type="range" id="r-lh2bor" value="0.2" min="0" max="4" step="0.05" aria-label="LH2 voyage boil-off rate slider">
+    </div>
+    <div class="field">
+      <label for="i-nh3speed">NH₃ service speed, knots <span class="tag est">USER</span></label>
+      <input type="number" id="i-nh3speed" value="13" min="6" max="24" step="0.5">
+      <input type="range" id="r-nh3speed" value="13" min="8" max="20" step="0.25" aria-label="NH3 service speed slider">
+    </div>
+    <div class="field">
+      <label for="i-nh3cap">NH₃ capacity, m³ <span class="tag est">USER</span></label>
+      <input type="number" id="i-nh3cap" value="24000" min="5000" max="90000" step="1000">
+    </div>
+    <div class="field">
+      <label for="i-nh3sec">NH₃ reliq. energy, kWh/kg BOG <span class="tag est">EST</span></label>
+      <input type="number" id="i-nh3sec" value="0.25" min="0" max="8" step="0.05">
+    </div>
+    <div class="field">
+      <label for="i-demand">Annual demand, ktpa H₂-eq <span class="tag est">ASSUM</span></label>
+      <input type="number" id="i-demand" value="100" min="5" max="1000" step="5">
+    </div>
+  </div>
+  <details class="adv">
+    <summary>Vessel &amp; fleet detail — LH₂ figures below are KHI-disclosed, the ammonia ones are not</summary>
+    <div class="grid-in">
+      <div class="field"><label for="i-lh2cap">LH₂ capacity, m³ <span class="tag cit">KHI</span></label><input type="number" id="i-lh2cap" value="40000" min="1000" max="200000" step="1000"></div>
+      <div class="field"><label for="i-lh2speed">LH₂ speed, km/h <span class="tag cit">KHI</span></label><input type="number" id="i-lh2speed" value="29.6" min="10" max="45" step="0.4"></div>
+      <div class="field"><label for="i-lh2port">LH₂ port days / call <span class="tag cit">KHI</span></label><input type="number" id="i-lh2port" value="1.25" min="0.25" max="6" step="0.25"></div>
+      <div class="field"><label for="i-lh2rho">LH₂ density, kg/m³ <span class="tag est">NIST?</span></label><input type="number" id="i-lh2rho" value="70.8" min="60" max="80" step="0.1"></div>
+      <div class="field"><label for="i-nh3port">NH₃ port days / call <span class="tag est">USER</span></label><input type="number" id="i-nh3port" value="1.5" min="0.25" max="6" step="0.25"></div>
+      <div class="field"><label for="i-nh3rho">NH₃ density, kg/m³ <span class="tag est">EST</span></label><input type="number" id="i-nh3rho" value="682" min="600" max="720" step="1"></div>
+      <div class="field"><label for="i-nh3bor">NH₃ voyage boil-off, %/day <span class="tag est">EST</span></label><input type="number" id="i-nh3bor" value="0.15" min="0" max="2" step="0.05"></div>
+      <div class="field"><label for="i-fill">Cargo fill fraction, % <span class="tag est">ASSUM</span></label><input type="number" id="i-fill" value="98" min="80" max="100" step="1"></div>
+      <div class="field"><label for="i-avail">Fleet availability, % <span class="tag est">ASSUM</span></label><input type="number" id="i-avail" value="90" min="60" max="100" step="1"></div>
+    </div>
+  </details>
+</section>
+
+<section class="verdict" id="verdict" aria-label="Headline result at current inputs"></section>
+
+<!-- STUDY 1 -->
+<section class="study">
+  <div class="study-head"><h2>Does distance change the winner?</h2><span class="lever">Sweeping: one-way distance</span></div>
+  <p class="intro">The first thing anyone assumes about a carrier comparison is that long hauls favour the denser cargo. Here is the whole realistic distance range, holding both vessels at their stated specs.</p>
+  <div class="panel">
+    <div class="panel-pad"><div class="eyebrow">Annual H₂-equivalent delivered per vessel, kg/y</div></div>
+    <div class="legend">
+      <span><i class="sw" style="background:var(--lh2)"></i>LH₂ carrier, 40,000 m³</span>
+      <span><i class="sw" style="background:var(--nh3)"></i>NH₃ carrier, 24,000 m³</span>
+      <span style="color:var(--ink-3)">Dashed verticals: the two Kakinada→Hamburg routings</span>
+    </div>
+    <div class="chart-scroll"><svg class="chart" id="c1" viewBox="0 0 880 350" role="img" aria-label="Annual hydrogen-equivalent delivered per vessel against one-way distance"></svg><div class="tip" id="t1"></div></div>
+    <div class="readout" id="r1"></div>
+  </div>
+</section>
+
+<!-- STUDY 2 -->
+<section class="study">
+  <div class="study-head"><h2>How much boil-off before ammonia wins?</h2><span class="lever">Sweeping: LH₂ voyage BOR</span></div>
+  <p class="intro">Kawasaki never disclosed a voyage boil-off rate for its carrier — only that the ship's fuel-gas consumption equals it. The 0.2 %/day sitting in every LH₂ model in this repo is a placeholder, and it is doing more work than any other number in the comparison.</p>
+  <div class="panel">
+    <div class="panel-pad"><div class="eyebrow">Annual H₂-equivalent delivered per vessel, kg/y — at the current distance</div></div>
+    <div class="legend">
+      <span><i class="sw" style="background:var(--lh2)"></i>LH₂ carrier</span>
+      <span><i class="sw" style="background:var(--nh3)"></i>NH₃ carrier (flat — its BOG is re-liquefied, no cargo lost)</span>
+    </div>
+    <div class="chart-scroll"><svg class="chart" id="c2" viewBox="0 0 880 350" role="img" aria-label="Annual delivery against LH2 voyage boil-off rate, showing the parity crossing"></svg><div class="tip" id="t2"></div></div>
+    <div class="readout" id="r2"></div>
+  </div>
+</section>
+
+<!-- STUDY 3 -->
+<section class="study">
+  <div class="study-head"><h2>Where exactly is the boundary?</h2><span class="lever">Mapping: distance × LH₂ BOR</span></div>
+  <p class="intro">The two levers above act together — a longer voyage gives boil-off more days to compound. This maps the winner across both at once. The white line is parity: everything above it belongs to ammonia.</p>
+  <div class="panel">
+    <div class="panel-pad"><div class="eyebrow">Winner by margin in annual H₂-equivalent per vessel</div></div>
+    <div class="legend" id="legend3"></div>
+    <div class="chart-scroll"><svg class="chart" id="c3" viewBox="0 0 880 400" role="img" aria-label="Heat map of which carrier wins across distance and LH2 boil-off rate"></svg><div class="tip" id="t3"></div></div>
+    <div class="readout" id="r3"></div>
+  </div>
+</section>
+
+<hr class="sect-rule">
+
+<!-- STUDY 4 -->
+<section class="study">
+  <div class="study-head"><h2>Why is the smaller ship competitive at all?</h2><span class="lever">Fixed: one voyage</span></div>
+  <p class="intro">A 24,000 m³ hull against a 40,000 m³ hull looks like a mismatch until you follow the mass. Liquid ammonia is roughly ten times denser than liquid hydrogen, and it takes 5.632 kg of it to carry 1 kg of H₂.</p>
+  <div class="panel">
+    <div class="panel-pad"><div class="eyebrow">Cargo per voyage — as loaded, and as hydrogen delivered</div></div>
+    <div class="chart-scroll"><svg class="chart" id="c4" viewBox="0 0 880 300" role="img" aria-label="Cargo carried per voyage by each vessel, in tonnes and in hydrogen-equivalent"></svg><div class="tip" id="t4"></div></div>
+    <div class="readout" id="r4"></div>
+  </div>
+</section>
+
+<!-- STUDY 5 -->
+<section class="study">
+  <div class="study-head"><h2>Which carrier pays more energy to move a kilogram?</h2><span class="lever">Sweeping: distance · two currencies</span></div>
+  <p class="intro">The two ships pay for boil-off in different currencies, and this study keeps them separate rather than adding them up. The LH₂ carrier burns its own cargo — hydrogen leaves as propulsion fuel. The ammonia carrier re-liquefies, spending electricity but losing no cargo.</p>
+  <div class="panel">
+    <div class="panel-pad"><div class="eyebrow">Shipping-leg energy penalty, kWh per kg H₂ delivered</div></div>
+    <div class="legend">
+      <span><i class="sw" style="background:var(--lh2)"></i>LH₂ — cargo hydrogen consumed (LHV 33.33 kWh/kg)</span>
+      <span><i class="sw" style="background:var(--nh3)"></i>NH₃ — re-liquefaction electricity</span>
+    </div>
+    <div class="chart-scroll"><svg class="chart" id="c5" viewBox="0 0 880 350" role="img" aria-label="Shipping energy penalty per kilogram of hydrogen delivered against distance"></svg><div class="tip" id="t5"></div></div>
+    <div class="readout" id="r5"></div>
+  </div>
+</section>
+
+<!-- STUDY 6 -->
+<section class="study">
+  <div class="study-head"><h2>What would make the ammonia ship win outright?</h2><span class="lever">Sweeping: NH₃ speed · NH₃ capacity</span></div>
+  <p class="intro">Holding the LH₂ carrier at its stated specs, these are the two things about the ammonia vessel that would close the gap — and neither needs to move very far.</p>
+  <div class="two-up">
+    <div class="panel">
+      <div class="panel-pad"><div class="eyebrow">Lever 1 · service speed</div></div>
+      <div class="chart-scroll"><svg class="chart" id="c6a" viewBox="0 0 430 290" style="min-width:340px" role="img" aria-label="Annual delivery against ammonia carrier service speed"></svg><div class="tip" id="t6a"></div></div>
+      <div class="readout" id="r6a"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-pad"><div class="eyebrow">Lever 2 · cargo capacity</div></div>
+      <div class="chart-scroll"><svg class="chart" id="c6b" viewBox="0 0 430 290" style="min-width:340px" role="img" aria-label="Annual delivery against ammonia carrier cargo capacity"></svg><div class="tip" id="t6b"></div></div>
+      <div class="readout" id="r6b"></div>
+    </div>
+  </div>
+</section>
+
+<hr class="sect-rule">
+
+<!-- FLEET TABLE -->
+<section class="study">
+  <div class="study-head"><h2>Fleet and voyage ledger</h2><span class="lever">At current inputs</span></div>
+  <p class="intro">Every figure below recomputes from the inputs at the top of the page. It mirrors <code style="font-family:var(--mono);font-size:12.5px">scripts/run_shipping_comparison.py</code> in the repository, line for line.</p>
+  <div class="panel"><div class="tbl-scroll"><table id="ledger"></table></div></div>
+</section>
+
+<section class="gaps">
+  <h3>What is not sourced here</h3>
+  <ol>
+    <li><b>LH₂ voyage boil-off rate.</b> KHI disclosed none. 0.2 %/day is a placeholder; the nearest public figure for a comparable vessel class (RSER, 2026) is ~3.44 %/day and is itself that paper's synthesis of a third-party study. Studies 2 and 3 exist because of this gap.</li>
+    <li><b>Every ammonia vessel figure.</b> Speed, capacity, port time, boil-off rate and re-liquefaction energy are user-stated or estimated, pending the internal Gentari NH₃ dataset (decision D4). None is vendor-confirmed.</li>
+    <li><b>Corridor distance.</b> Both routings are first-principles great-circle waypoint sums, not AIS or route-planner output — sea-distance services are unreachable from this environment. Cross-checked to within 2 % against a public Karachi→Hamburg figure.</li>
+    <li><b>Propulsion energy is not modelled for either ship.</b> LH₂ boil-off burned as fuel displaces marine gas oil the vessel would otherwise consume, so Study 5's LH₂ line is a gross cargo-energy figure, not a net penalty. Reading it as "wasted" overstates the case against LH₂.</li>
+    <li><b>No cost.</b> Vessel CapEx, day-rates and OpEx are logged for neither carrier, so nothing here is a $/kg answer.</li>
+    <li><b>Ammonia density and LHV</b> are standard published values with no primary citation in the repository's reference registry yet.</li>
+  </ol>
+</section>
+
+<footer>
+  <b style="color:var(--ink-2)">Sources.</b> LH₂ vessel capacity, speed, port time, and BOG-as-fuel disposition: Kawasaki Heavy Industries questionnaire replies Q23 / Q27 / Q29 / Q33 and cost-basis supplemental (<code>kawasaki-2026-questionnaire</code>, <code>kawasaki-2026-supplemental</code>). LH₂ density and H₂ LHV: <code>data/properties/lh2-properties.csv</code>, pending NIST citation approval. Stoichiometric ratio 5.632 kg NH₃ per kg H₂: first-principles from standard molar masses. Ammonia vessel specs: user-supplied, 7 Sep 2026, recorded in <code>data/vessels/nh3-carriers.csv</code>. Corridor: <code>data/routes/kakinada-hamburg.csv</code>. Model and tests: <code>scripts/run_shipping_comparison.py</code>, <code>src/lh2/shipping.py</code>, <code>tests/test_shipping_comparison.py</code>. Full write-up: <code>docs/comparison/02-shipping-lh2-vs-nh3.md</code>.
+</footer>
+
+</div>
+
+<script>
+"use strict";
+/* ---------- model: mirrors scripts/run_shipping_comparison.py ---------- */
+const RATIO = 5.632;      // kg NH3 per kg H2, first-principles stoichiometry
+const LHV   = 33.333;     // kWh/kg H2, LHV (120 MJ/kg)
+const KN    = 1.852;      // km per nautical mile per hour
+
+const DEFAULTS = {dist:21200, lh2bor:0.2, nh3speed:13, nh3cap:24000, nh3sec:0.25, demand:100,
+  lh2cap:40000, lh2speed:29.6, lh2port:1.25, lh2rho:70.8, nh3port:1.5, nh3rho:682, nh3bor:0.15,
+  fill:98, avail:90};
+const V = {};
+const $ = id => document.getElementById(id);
+
+function readInputs(){
+  for (const k of Object.keys(DEFAULTS)) { const el = $("i-"+k); V[k] = el ? parseFloat(el.value) : DEFAULTS[k]; if (!isFinite(V[k])) V[k] = DEFAULTS[k]; }
+}
+
+/* one carrier on one voyage. o = overrides */
+function evaluate(isNH3, dist, o){
+  o = o || {};
+  const cap   = o.cap   !== undefined ? o.cap   : (isNH3 ? V.nh3cap : V.lh2cap);
+  const rho   = o.rho   !== undefined ? o.rho   : (isNH3 ? V.nh3rho : V.lh2rho);
+  const speed = o.speed !== undefined ? o.speed : (isNH3 ? V.nh3speed*KN : V.lh2speed);
+  const port  = o.port  !== undefined ? o.port  : (isNH3 ? V.nh3port : V.lh2port);
+  const bor   = o.bor   !== undefined ? o.bor   : (isNH3 ? V.nh3bor : V.lh2bor);
+  const fill  = V.fill/100, avail = V.avail/100;
+
+  const oneWay = dist / speed / 24;
+  const rtd    = 2*oneWay + 2*port;
+  const cargo  = cap * rho * fill;
+  const bogFrac = 1 - Math.pow(1 - bor/100, oneWay);        // compounding over the laden leg
+  /* LH2 burns BOG as propulsion fuel -> cargo mass leaves the chain.
+     NH3 re-liquefies on board -> mass conserved, energy spent instead. */
+  const lossFrac  = isNH3 ? 0 : bogFrac;
+  const delivered = cargo * (1 - lossFrac);
+  const trips     = 365 / rtd * avail;
+  const annualCargo = delivered * trips;
+  const annualH2e   = isNH3 ? annualCargo / RATIO : annualCargo;
+  /* energy penalty per kg H2 delivered — two different currencies, never summed */
+  const energy = isNH3 ? RATIO * bogFrac * V.nh3sec : lossFrac/(1-lossFrac) * LHV;
+  return {oneWay, rtd, cargo, bogFrac, lossFrac, delivered, trips, annualCargo, annualH2e, energy,
+          fleet: Math.ceil(V.demand*1e6 / annualH2e)};
+}
+
+function bisect(f, lo, hi, n){ n = n||60; for (let i=0;i<n;i++){ const m=(lo+hi)/2; if (f(lo)*f(m) <= 0) hi=m; else lo=m; } return (lo+hi)/2; }
+function breakevenBOR(dist){
+  const nh3 = evaluate(true, dist).annualH2e;
+  const f = b => evaluate(false, dist, {bor:b}).annualH2e - nh3;
+  if (f(0) < 0) return 0;              // NH3 already ahead even with zero boil-off
+  if (f(20) > 0) return null;
+  return bisect(f, 0, 20);
+}
+function breakevenSpeedKn(dist){
+  const lh2 = evaluate(false, dist).annualH2e;
+  const f = s => lh2 - evaluate(true, dist, {speed:s*KN}).annualH2e;
+  if (f(6) < 0) return null; if (f(30) > 0) return null;
+  return bisect(f, 6, 30);
+}
+function breakevenCap(dist){
+  const lh2 = evaluate(false, dist).annualH2e;
+  const f = c => lh2 - evaluate(true, dist, {cap:c}).annualH2e;
+  if (f(2000) < 0) return null; if (f(300000) > 0) return null;
+  return bisect(f, 2000, 300000);
+}
+function breakevenSEC(dist){
+  const lh2E = evaluate(false, dist).energy;
+  const nh3 = evaluate(true, dist);
+  const per = RATIO * nh3.bogFrac;      // kg NH3 re-liquefied per kg H2 delivered
+  return per > 0 ? lh2E / per : null;
+}
+
+/* ---------- formatting ---------- */
+const nf = (v,d) => v.toLocaleString("en-US",{minimumFractionDigits:d===undefined?0:d, maximumFractionDigits:d===undefined?0:d});
+const mkg = v => nf(v/1e6, 2) + " M kg";
+const kt  = v => nf(v/1e6, 1) + " kt";
+const num = (v,d) => '<span class="num">'+nf(v,d)+'</span>';
+
+/* ---------- generic SVG line chart ---------- */
+const SVGNS = "http://www.w3.org/2000/svg";
+function el(tag, attrs, parent){ const n = document.createElementNS(SVGNS, tag); for (const k in attrs) n.setAttribute(k, attrs[k]); if (parent) parent.appendChild(n); return n; }
+function niceTicks(min, max, count){
+  const span = max - min; if (span <= 0) return [min];
+  const raw = span / count, mag = Math.pow(10, Math.floor(Math.log10(raw))), norm = raw/mag;
+  const step = (norm >= 5 ? 10 : norm >= 2 ? 5 : norm >= 1 ? 2 : 1) * mag;
+  const out = []; for (let t = Math.ceil(min/step)*step; t <= max + step*1e-6; t += step) out.push(+t.toFixed(10));
+  return out;
+}
+
+function lineChart(svgId, tipId, cfg){
+  const svg = $(svgId); svg.innerHTML = "";
+  const vb = svg.getAttribute("viewBox").split(" ").map(Number), W = vb[2], H = vb[3];
+  const m = cfg.margin || {l:66, r:20, t:14, b:44};
+  const pw = W - m.l - m.r, ph = H - m.t - m.b;
+  const xs = cfg.x, small = cfg.small;
+  let ymin = 0, ymax = 0;
+  cfg.series.forEach(s => s.y.forEach(v => { if (isFinite(v)) ymax = Math.max(ymax, v); }));
+  if (cfg.yMinZero === false){ ymin = Infinity; cfg.series.forEach(s => s.y.forEach(v => { if (isFinite(v)) ymin = Math.min(ymin, v); })); ymin = Math.max(0, ymin*0.9); }
+  ymax = ymax * 1.08 || 1;
+  const xmin = xs[0], xmax = xs[xs.length-1];
+  const X = v => m.l + (v - xmin)/(xmax - xmin)*pw;
+  const Y = v => m.t + ph - (v - ymin)/(ymax - ymin)*ph;
+  const fs = small ? 10 : 11.5;
+
+  // grid + y axis
+  niceTicks(ymin, ymax, small?4:5).forEach(t => {
+    if (t < ymin) return;
+    el("line",{x1:m.l,x2:m.l+pw,y1:Y(t),y2:Y(t),stroke:"var(--rule)","stroke-width":1},svg);
+    el("text",{x:m.l-9,y:Y(t)+4,"text-anchor":"end","font-size":fs,fill:"var(--ink-3)","font-family":"var(--mono)"},svg).textContent = cfg.fmtY(t);
+  });
+  // x axis
+  el("line",{x1:m.l,x2:m.l+pw,y1:m.t+ph,y2:m.t+ph,stroke:"var(--rule-2)","stroke-width":1},svg);
+  niceTicks(xmin, xmax, small?4:7).forEach(t => {
+    if (t < xmin || t > xmax) return;
+    el("line",{x1:X(t),x2:X(t),y1:m.t+ph,y2:m.t+ph+4,stroke:"var(--rule-2)","stroke-width":1},svg);
+    el("text",{x:X(t),y:m.t+ph+18,"text-anchor":"middle","font-size":fs,fill:"var(--ink-3)","font-family":"var(--mono)"},svg).textContent = cfg.fmtX(t);
+  });
+  el("text",{x:m.l+pw/2,y:H-6,"text-anchor":"middle","font-size":fs,fill:"var(--ink-2)"},svg).textContent = cfg.xLabel;
+
+  // vertical reference lines
+  (cfg.vlines||[]).forEach(v => {
+    if (v.x < xmin || v.x > xmax) return;
+    el("line",{x1:X(v.x),x2:X(v.x),y1:m.t,y2:m.t+ph,stroke:v.color||"var(--ink-3)","stroke-width":1.5,"stroke-dasharray":"4 4","opacity":.85},svg);
+    const tx = X(v.x) > m.l+pw-80 ? X(v.x)-7 : X(v.x)+7;
+    const anc = X(v.x) > m.l+pw-80 ? "end" : "start";
+    const t = el("text",{x:tx,y:m.t+(v.row?12+13*v.row:12),"text-anchor":anc,"font-size":small?9.5:10.5,fill:v.color||"var(--ink-3)","font-family":"var(--mono)"},svg);
+    t.textContent = v.label;
+  });
+
+  // series
+  cfg.series.forEach(s => {
+    let d = "";
+    s.y.forEach((v,i) => { if (!isFinite(v)) return; d += (d?"L":"M") + X(xs[i]).toFixed(2) + " " + Y(v).toFixed(2) + " "; });
+    el("path",{d, fill:"none", stroke:s.color, "stroke-width":2, "stroke-linejoin":"round","stroke-linecap":"round"},svg);
+  });
+
+  // direct end labels (identity never by colour alone), pushed apart if they collide
+  if (!cfg.noEndLabels) {
+    const lab = [];
+    cfg.series.forEach(s => {
+      let li = -1; for (let i=s.y.length-1;i>=0;i--) if (isFinite(s.y[i])) { li = i; break; }
+      if (li < 0) return;
+      lab.push({s, li, y:Y(s.y[li])});
+    });
+    lab.sort((a,b)=>a.y-b.y);
+    for (let i=1;i<lab.length;i++) if (lab[i].y - lab[i-1].y < 15) lab[i].y = lab[i-1].y + 15;
+    lab.forEach(L => {
+      const cy = Y(L.s.y[L.li]);
+      el("circle",{cx:X(xs[L.li]),cy,r:3.5,fill:L.s.color,stroke:"var(--chart-surface)","stroke-width":2},svg);
+      const t = el("text",{x:X(xs[L.li])-8,y:L.y - 9,"text-anchor":"end","font-size":small?10:11,fill:L.s.color,"font-weight":600},svg);
+      t.textContent = L.s.label;
+    });
+  }
+  // optional value callouts at one x (keeps a near-axis series legible)
+  if (cfg.valueAt !== undefined){
+    let ci = 0, best = Infinity;
+    xs.forEach((v,i)=>{ const d=Math.abs(v-cfg.valueAt); if (d<best){best=d;ci=i;} });
+    cfg.series.forEach(s => {
+      const v = s.y[ci]; if (!isFinite(v)) return;
+      el("circle",{cx:X(xs[ci]),cy:Y(v),r:4,fill:s.color,stroke:"var(--chart-surface)","stroke-width":2},svg);
+      const t = el("text",{x:X(xs[ci])+9,y:Y(v)+(v < (ymax*0.25) ? -9 : 4),"font-size":small?10:11,
+                           fill:s.color,"font-weight":600,"font-family":"var(--mono)"},svg);
+      t.textContent = cfg.fmtCallout ? cfg.fmtCallout(v) : cfg.fmtTip(v);
+    });
+  }
+
+  // crosshair + hover
+  const cross = el("line",{x1:0,x2:0,y1:m.t,y2:m.t+ph,stroke:"var(--ink-3)","stroke-width":1,"stroke-dasharray":"3 3",opacity:0},svg);
+  const dots = cfg.series.map(s => el("circle",{r:4.5,fill:s.color,stroke:"var(--chart-surface)","stroke-width":2,opacity:0},svg));
+  const hit = el("rect",{x:m.l,y:m.t,width:pw,height:ph,fill:"transparent"},svg);
+  const tip = $(tipId), host = svg.parentElement;
+  function move(ev){
+    const r = svg.getBoundingClientRect(), sx = (ev.clientX - r.left) / r.width * W;
+    let i = Math.round((sx - m.l)/pw*(xs.length-1)); i = Math.max(0, Math.min(xs.length-1, i));
+    cross.setAttribute("x1", X(xs[i])); cross.setAttribute("x2", X(xs[i])); cross.setAttribute("opacity", 1);
+    let rows = "";
+    cfg.series.forEach((s,k) => {
+      const v = s.y[i];
+      if (isFinite(v)) { dots[k].setAttribute("cx", X(xs[i])); dots[k].setAttribute("cy", Y(v)); dots[k].setAttribute("opacity", 1); }
+      else dots[k].setAttribute("opacity", 0);
+      rows += '<div class="tr"><span><i class="dot" style="background:'+s.color+'"></i>'+s.label+'</span><span class="n">'+(isFinite(v)?cfg.fmtTip(v):"—")+'</span></div>';
+    });
+    tip.innerHTML = '<div class="th">'+cfg.fmtXTip(xs[i])+'</div>'+rows;
+    tip.style.opacity = 1;
+    const px = X(xs[i]) / W * r.width, hostR = host.getBoundingClientRect();
+    const tw = tip.offsetWidth, left = Math.max(4, Math.min(hostR.width - tw - 4, px - tw/2));
+    tip.style.left = left + "px";
+    tip.style.top  = Math.max(2, (ev.clientY - hostR.top) - tip.offsetHeight - 14) + "px";
+  }
+  function leave(){ cross.setAttribute("opacity",0); dots.forEach(d=>d.setAttribute("opacity",0)); tip.style.opacity = 0; }
+  hit.addEventListener("pointermove", move); hit.addEventListener("pointerleave", leave);
+}
+
+/* ---------- render ---------- */
+const C = {lh2:"var(--lh2)", nh3:"var(--nh3)"};
+const km = v => v>=1000 ? (v/1000)+"k" : ""+v;
+
+function render(){
+  readInputs();
+  const D = V.dist;
+  const lh2 = evaluate(false, D), nh3 = evaluate(true, D);
+  const lead = lh2.annualH2e >= nh3.annualH2e;
+  const ratio = Math.max(lh2.annualH2e,nh3.annualH2e) / Math.min(lh2.annualH2e,nh3.annualH2e);
+  const beBOR = breakevenBOR(D), beSpd = breakevenSpeedKn(D), beCap = breakevenCap(D), beSEC = breakevenSEC(D);
+
+  /* verdict tiles */
+  $("verdict").innerHTML =
+    '<div class="tile '+(lead?"win-lh2":"win-nh3")+'"><div class="k">Winner at these inputs</div><div class="v '+(lead?"lh2":"nh3")+'">'+(lead?"LH₂":"NH₃")+'</div><div class="s">delivers '+nf(ratio,2)+'× more H₂-equivalent per vessel-year</div></div>'+
+    '<div class="tile"><div class="k">Per vessel, per year</div><div class="v">'+nf(Math.max(lh2.annualH2e,nh3.annualH2e)/1e6,1)+'<span style="font-size:.5em;font-weight:500"> M kg H₂-eq</span></div><div class="s">vs '+mkg(Math.min(lh2.annualH2e,nh3.annualH2e))+' for the other</div></div>'+
+    '<div class="tile"><div class="k">Fleet for '+nf(V.demand)+' ktpa</div><div class="v"><span class="lh2">'+lh2.fleet+'</span> <span style="color:var(--ink-3);font-size:.6em">vs</span> <span class="nh3">'+nh3.fleet+'</span></div><div class="s">LH₂ ships vs NH₃ ships</div></div>'+
+    '<div class="tile"><div class="k">Flips at LH₂ boil-off</div><div class="v">'+(beBOR===null?"—":nf(beBOR,2)+'<span style="font-size:.45em;font-weight:500"> %/day</span>')+'</div><div class="s">'+(beBOR===null?"no flip in range":"currently assuming "+nf(V.lh2bor,2)+" %/day")+'</div></div>';
+
+  /* --- study 1: distance sweep --- */
+  const xs1 = []; for (let d=1000; d<=26000; d+=250) xs1.push(d);
+  lineChart("c1","t1",{
+    x:xs1, xLabel:"One-way distance, km",
+    series:[{label:"LH₂", color:C.lh2, y:xs1.map(d=>evaluate(false,d).annualH2e)},
+            {label:"NH₃", color:C.nh3, y:xs1.map(d=>evaluate(true ,d).annualH2e)}],
+    vlines:[{x:10260,label:"Suez 10,260"},{x:21200,label:"Cape 21,200",row:1}],
+    fmtX:v=>km(v), fmtY:v=>nf(v/1e6,0)+"M", fmtTip:v=>mkg(v), fmtXTip:v=>nf(v)+" km one-way"
+  });
+  const l1a = evaluate(false,4000).annualH2e/evaluate(true,4000).annualH2e;
+  const l1b = evaluate(false,25000).annualH2e/evaluate(true,25000).annualH2e;
+  $("r1").innerHTML = "<b>Distance alone does not flip it.</b> Both curves fall as the round trip lengthens, and they never cross inside the realistic range — at 4,000 km the LH₂ carrier leads by "+num(l1a,2)+"×, at 25,000 km by "+num(l1b,2)+"×. "+
+    (l1b < l1a ? "The gap <b>narrows</b> with distance because LH₂'s boil-off compounds over a longer laden leg while the ammonia carrier loses no cargo at all — extend that trend far enough and it does cross, which is what the next study finds."
+               : "The gap <b>widens</b> with distance, driven by the LH₂ carrier's faster turnaround.");
+
+  /* --- study 2: LH2 BOR sweep --- */
+  const xs2 = []; for (let b=0; b<=4.001; b+=0.05) xs2.push(+b.toFixed(2));
+  const nh3flat = evaluate(true, D).annualH2e;
+  const vl2 = [{x:V.lh2bor, label:"assumed "+nf(V.lh2bor,2)}];
+  if (beBOR !== null && beBOR <= 4) vl2.push({x:beBOR, label:"parity "+nf(beBOR,2)+" %/d", row:1, color:"var(--ink-2)"});
+  vl2.push({x:3.44, label:"RSER 3.44", row:2, color:"var(--warn)"});
+  lineChart("c2","t2",{
+    x:xs2, xLabel:"LH₂ voyage boil-off rate, %/day",
+    series:[{label:"LH₂", color:C.lh2, y:xs2.map(b=>evaluate(false,D,{bor:b}).annualH2e)},
+            {label:"NH₃", color:C.nh3, y:xs2.map(()=>nh3flat)}],
+    vlines:vl2, fmtX:v=>nf(v,1), fmtY:v=>nf(v/1e6,0)+"M", fmtTip:v=>mkg(v), fmtXTip:v=>nf(v,2)+" %/day LH₂ boil-off"
+  });
+  const atRSER = evaluate(false, D, {bor:3.44}).annualH2e;
+  $("r2").innerHTML = beBOR===null
+    ? "<b>No parity crossing in range.</b> At this distance the ammonia carrier stays ahead of the LH₂ carrier even at zero boil-off — the gap is structural, not a boil-off effect."
+    : "<b>Parity at "+num(beBOR,2)+" %/day.</b> Below that the LH₂ carrier wins; above it the ammonia carrier does. The working assumption is "+num(V.lh2bor,2)+" %/day — a placeholder Kawasaki never confirmed — while the nearest published figure for a comparable vessel is <b>3.44 %/day</b>, which would put LH₂ at "+num(atRSER/1e6,1)+" M kg against ammonia's "+num(nh3flat/1e6,1)+" M kg, a "+num(nh3flat/atRSER,1)+"× ammonia win. <b>The entire result turns on a number nobody has measured.</b>";
+
+  /* --- study 3: winner map --- */
+  (function(){
+    const svg = $("c3"); svg.innerHTML = "";
+    const W=880,H=400,m={l:66,r:20,t:14,b:52}, pw=W-m.l-m.r, ph=H-m.t-m.b;
+    const NX=34, NY=22, dLo=2000, dHi=26000, bLo=0, bHi=3.6;
+    const X = d => m.l + (d-dLo)/(dHi-dLo)*pw, Yb = b => m.t + ph - (b-bLo)/(bHi-bLo)*ph;
+    const ramp = f => {           // f = relative margin, + = LH2 ahead
+      const a = Math.min(1, Math.abs(f)/0.45), s = a<0.08?0:a<0.22?1:a<0.40?2:a<0.65?3:4;
+      if (s===0) return "var(--div-0)";
+      return f>0 ? "var(--div-a"+s+")" : "var(--div-b"+s+")";
+    };
+    const cw = pw/NX, ch = ph/NY, cells=[];
+    for (let i=0;i<NX;i++){
+      const d = dLo + (i+0.5)/NX*(dHi-dLo);
+      for (let j=0;j<NY;j++){
+        const b = bLo + (j+0.5)/NY*(bHi-bLo);
+        const a = evaluate(false,d,{bor:b}).annualH2e, c = evaluate(true,d).annualH2e;
+        const f = (a-c)/c;
+        cells.push({d,b,f,a,c});
+        el("rect",{x:m.l+i*cw+0.5, y:m.t+ph-(j+1)*ch+0.5, width:cw-1, height:ch-1, fill:ramp(f)},svg);
+      }
+    }
+    // parity contour
+    let dPath="";
+    for (let i=0;i<=NX;i++){
+      const d = dLo + i/NX*(dHi-dLo), be = breakevenBOR(d);
+      if (be===null || be>bHi || be<bLo) continue;
+      dPath += (dPath?"L":"M") + X(d).toFixed(1) + " " + Yb(be).toFixed(1) + " ";
+    }
+    if (dPath){
+      el("path",{d:dPath,fill:"none",stroke:"var(--chart-surface)","stroke-width":4,"stroke-linecap":"round"},svg);
+      el("path",{d:dPath,fill:"none",stroke:"var(--ink)","stroke-width":1.75,"stroke-dasharray":"6 4","stroke-linecap":"round"},svg);
+    }
+    // current operating point
+    if (V.lh2bor<=bHi && V.dist>=dLo && V.dist<=dHi){
+      el("circle",{cx:X(V.dist),cy:Yb(V.lh2bor),r:7,fill:"none",stroke:"var(--chart-surface)","stroke-width":4},svg);
+      el("circle",{cx:X(V.dist),cy:Yb(V.lh2bor),r:7,fill:"none",stroke:"var(--ink)","stroke-width":2},svg);
+      el("circle",{cx:X(V.dist),cy:Yb(V.lh2bor),r:2,fill:"var(--ink)"},svg);
+      const rightSide = X(V.dist) > m.l+pw*0.68;
+      el("text",{x:X(V.dist)+(rightSide?-13:13), y:Yb(V.lh2bor)+4, "text-anchor":rightSide?"end":"start",
+                 "font-size":11,"font-family":"var(--mono)",fill:"var(--ink)","font-weight":500},svg).textContent = "you are here";
+    }
+    // axes
+    niceTicks(bLo,bHi,6).forEach(t=>{ if(t<bLo||t>bHi) return;
+      el("text",{x:m.l-9,y:Yb(t)+4,"text-anchor":"end","font-size":11.5,fill:"var(--ink-3)","font-family":"var(--mono)"},svg).textContent = nf(t,1); });
+    niceTicks(dLo,dHi,7).forEach(t=>{ if(t<dLo||t>dHi) return;
+      el("text",{x:X(t),y:m.t+ph+19,"text-anchor":"middle","font-size":11.5,fill:"var(--ink-3)","font-family":"var(--mono)"},svg).textContent = km(t); });
+    el("text",{x:m.l+pw/2,y:H-8,"text-anchor":"middle","font-size":11.5,fill:"var(--ink-2)"},svg).textContent = "One-way distance, km";
+    el("text",{x:16,y:m.t+ph/2,"text-anchor":"middle","font-size":11.5,fill:"var(--ink-2)",transform:"rotate(-90 16 "+(m.t+ph/2)+")"},svg).textContent = "LH₂ voyage boil-off, %/day";
+    // region labels
+    el("text",{x:m.l+14,y:m.t+ph-12,"font-size":12,fill:"var(--lh2)","font-weight":600},svg).textContent = "LH₂ ahead";
+    el("text",{x:m.l+14,y:m.t+18,"font-size":12,fill:"var(--nh3)","font-weight":600},svg).textContent = "NH₃ ahead";
+    // hover
+    const tip=$("t3"), host=svg.parentElement;
+    const hit = el("rect",{x:m.l,y:m.t,width:pw,height:ph,fill:"transparent"},svg);
+    hit.addEventListener("pointermove", ev=>{
+      const r=svg.getBoundingClientRect(), sx=(ev.clientX-r.left)/r.width*W, sy=(ev.clientY-r.top)/r.height*H;
+      const i=Math.max(0,Math.min(NX-1,Math.floor((sx-m.l)/cw))), j=Math.max(0,Math.min(NY-1,Math.floor((m.t+ph-sy)/ch)));
+      const c=cells[i*NY+j]; if(!c) return;
+      tip.innerHTML='<div class="th">'+nf(c.d)+' km · '+nf(c.b,2)+' %/day</div>'+
+        '<div class="tr"><span><i class="dot" style="background:var(--lh2)"></i>LH₂</span><span class="n">'+mkg(c.a)+'</span></div>'+
+        '<div class="tr"><span><i class="dot" style="background:var(--nh3)"></i>NH₃</span><span class="n">'+mkg(c.c)+'</span></div>'+
+        '<div class="tr" style="border-top:1px solid var(--rule);margin-top:4px;padding-top:4px"><span>'+(c.f>0?"LH₂ ahead":"NH₃ ahead")+'</span><span class="n">'+nf(Math.abs(c.f)*100,1)+'%</span></div>';
+      tip.style.opacity=1;
+      const hostR=host.getBoundingClientRect(), tw=tip.offsetWidth;
+      tip.style.left=Math.max(4,Math.min(hostR.width-tw-4,(ev.clientX-hostR.left)-tw/2))+"px";
+      tip.style.top =Math.max(2,(ev.clientY-hostR.top)-tip.offsetHeight-14)+"px";
+    });
+    hit.addEventListener("pointerleave", ()=>{ $("t3").style.opacity=0; });
+    $("legend3").innerHTML =
+      '<span><i class="sq" style="background:var(--div-a5)"></i>LH₂ ahead by 45 %+</span>'+
+      '<span><i class="sq" style="background:var(--div-a3)"></i>LH₂ ahead ~20 %</span>'+
+      '<span><i class="sq" style="background:var(--div-0)"></i>parity ±4 %</span>'+
+      '<span><i class="sq" style="background:var(--div-b3)"></i>NH₃ ahead ~20 %</span>'+
+      '<span><i class="sq" style="background:var(--div-b5)"></i>NH₃ ahead by 45 %+</span>';
+    const beShort = breakevenBOR(6000), beLong = breakevenBOR(24000);
+    $("r3").innerHTML = "<b>The parity line slopes down.</b> On a short 6,000 km run the LH₂ carrier can tolerate "+
+      (beShort===null?"any boil-off in range":num(beShort,2)+" %/day")+" before losing; on a 24,000 km run only "+
+      (beLong===null?"— ":num(beLong,2)+" %/day")+". Distance does not decide the winner by itself — it decides <b>how much boil-off the LH₂ carrier can afford</b>. Long haul plus leaky tanks is the one combination that clearly belongs to ammonia.";
+  })();
+
+  /* --- study 4: cargo per voyage --- */
+  (function(){
+    const svg=$("c4"); svg.innerHTML="";
+    const W=880,H=300,m={l:150,r:150,t:26,b:46},pw=W-m.l-m.r;
+    const bars=[
+      {label:"LH₂ · 40,000 m³", sub:"liquid hydrogen loaded", v:lh2.cargo, h2:lh2.delivered, color:C.lh2, note:nf(V.lh2rho,1)+" kg/m³"},
+      {label:"NH₃ · "+nf(V.nh3cap)+" m³", sub:"liquid ammonia loaded", v:nh3.cargo, h2:nh3.delivered/RATIO, color:C.nh3, note:nf(V.nh3rho)+" kg/m³"}
+    ];
+    const maxV=Math.max(bars[0].v,bars[1].v), maxH2=Math.max(bars[0].h2,bars[1].h2);
+    const rowH=(H-m.t-m.b)/2, bh=30;
+    el("text",{x:m.l,y:16,"font-size":11,"font-family":"var(--mono)",fill:"var(--ink-3)"},svg).textContent="CARGO AS LOADED (tonnes)";
+    el("text",{x:W-m.r+10,y:16,"font-size":11,"font-family":"var(--mono)",fill:"var(--ink-3)","text-anchor":"start"},svg).textContent="AS H₂ DELIVERED";
+    bars.forEach((b,i)=>{
+      const y=m.t+i*rowH+rowH/2-bh/2;
+      el("text",{x:m.l-14,y:y+13,"text-anchor":"end","font-size":13,fill:"var(--ink)","font-weight":600},svg).textContent=b.label;
+      el("text",{x:m.l-14,y:y+29,"text-anchor":"end","font-size":11,fill:"var(--ink-3)"},svg).textContent=b.sub+" · "+b.note;
+      const w=b.v/maxV*pw;
+      const r=el("rect",{x:m.l,y,width:Math.max(2,w),height:bh,fill:b.color,rx:4},svg);
+      const inside = w > 78;
+      el("text",{x:m.l+w+(inside?-10:9), y:y+20, "text-anchor":inside?"end":"start", "font-size":12.5,
+                 fill:inside?"#fff":b.color, "font-family":"var(--mono)","font-weight":inside?500:600},svg
+        ).textContent=nf(b.v/1000)+" t";
+      // H2-equivalent mini bar on the right
+      const hw=b.h2/maxH2*120;
+      el("rect",{x:W-m.r+10,y:y+4,width:Math.max(2,hw),height:bh-8,fill:b.color,opacity:.32,rx:3},svg);
+      el("rect",{x:W-m.r+10,y:y+4,width:Math.max(2,hw),height:bh-8,fill:"none",stroke:b.color,"stroke-width":1.5,rx:3},svg);
+      el("text",{x:W-m.r+10,y:y+bh+14,"font-size":11.5,fill:b.color,"font-family":"var(--mono)","font-weight":500},svg).textContent=nf(b.h2/1e6,2)+" M kg H₂";
+      r.addEventListener("pointerenter",ev=>{
+        const tip=$("t4"),host=svg.parentElement,hostR=host.getBoundingClientRect();
+        tip.innerHTML='<div class="th">'+b.label+'</div><div class="tr"><span>Loaded</span><span class="n">'+nf(b.v/1000)+' t</span></div>'+
+          '<div class="tr"><span>H₂-equivalent</span><span class="n">'+nf(b.h2/1e6,3)+' M kg</span></div>';
+        tip.style.opacity=1; tip.style.left=Math.max(4,(ev.clientX-hostR.left)-70)+"px"; tip.style.top=Math.max(2,(ev.clientY-hostR.top)-tip.offsetHeight-12)+"px";
+      });
+      r.addEventListener("pointerleave",()=>{$("t4").style.opacity=0;});
+    });
+    const capRatio=V.lh2cap/V.nh3cap, h2Ratio=(nh3.delivered/RATIO)/lh2.delivered;
+    $("r4").innerHTML="<b>The hulls differ by "+num(capRatio,2)+"×; the hydrogen they land differs by "+num(h2Ratio,2)+"×.</b> The ammonia carrier loads "+
+      num(nh3.cargo/1000,0)+" t against the LH₂ carrier's "+num(lh2.cargo/1000,0)+" t, and even after paying the 5.632:1 stoichiometric tax it arrives with "+
+      (h2Ratio>=1?"<b>more</b>":"slightly less")+" hydrogen per voyage — "+num((nh3.delivered/RATIO)/1e6,2)+" M kg against "+num(lh2.delivered/1e6,2)+
+      " M kg. Volume is not where this comparison is won. It is won on how often each ship can repeat the trip.";
+  })();
+
+  /* --- study 5: energy --- */
+  const xs5=[]; for(let d=1000; d<=26000; d+=250) xs5.push(d);
+  lineChart("c5","t5",{
+    x:xs5, xLabel:"One-way distance, km",
+    series:[{label:"LH₂", color:C.lh2, y:xs5.map(d=>evaluate(false,d).energy)},
+            {label:"NH₃", color:C.nh3, y:xs5.map(d=>evaluate(true ,d).energy)}],
+    vlines:[{x:V.dist,label:"current "+km(V.dist)}], valueAt:V.dist,
+    fmtX:v=>km(v), fmtY:v=>nf(v,1), fmtTip:v=>nf(v,3)+" kWh/kg", fmtXTip:v=>nf(v)+" km one-way",
+    fmtCallout:v=>nf(v,v<1?3:2)+" kWh/kg"
+  });
+  $("r5").innerHTML="<b>On energy the ammonia carrier is far ahead — and it is not close.</b> At "+num(V.dist)+" km the LH₂ carrier gives up "+
+    num(lh2.energy,2)+" kWh of cargo hydrogen per kg delivered ("+num(lh2.lossFrac*100,2)+" % of the load), while re-liquefying the ammonia carrier's boil-off costs "+
+    num(nh3.energy,3)+" kWh per kg H₂ delivered at "+num(V.nh3sec,2)+" kWh/kg. Ammonia's re-liquefaction energy would have to reach <b>"+
+    num(beSEC,2)+" kWh per kg of boil-off</b> — around "+num(beSEC/V.nh3sec,0)+"× the assumed figure, and well into hydrogen-liquefaction territory — before the two penalties met. "+
+    "<b>Read this one carefully:</b> the LH₂ line is gross cargo energy. That hydrogen is burned in the ship's dual-fuel engine, displacing marine gas oil, so the net penalty is smaller than shown — but neither vessel's propulsion demand is modelled here, so the credit cannot be quantified from this study.";
+
+  /* --- study 6: NH3 levers --- */
+  const xs6a=[]; for(let s=8;s<=20.01;s+=0.25) xs6a.push(+s.toFixed(2));
+  const lh2flat=lh2.annualH2e;
+  lineChart("c6a","t6a",{
+    small:true, margin:{l:56,r:16,t:14,b:44},
+    x:xs6a, xLabel:"NH₃ service speed, knots",
+    series:[{label:"NH₃", color:C.nh3, y:xs6a.map(s=>evaluate(true,D,{speed:s*KN}).annualH2e)},
+            {label:"LH₂", color:C.lh2, y:xs6a.map(()=>lh2flat)}],
+    vlines:(beSpd?[{x:beSpd,label:nf(beSpd,1)+" kn"}]:[]).concat([{x:V.nh3speed,label:"now "+nf(V.nh3speed,1),row:1,color:"var(--ink-3)"}]),
+    fmtX:v=>nf(v,0), fmtY:v=>nf(v/1e6,0)+"M", fmtTip:v=>mkg(v), fmtXTip:v=>nf(v,2)+" knots"
+  });
+  $("r6a").innerHTML = beSpd===null ? "No speed in the 8–20 kn range reaches parity at these settings."
+    : "Parity at <b>"+nf(beSpd,2)+" knots</b> — "+num(beSpd-V.nh3speed,1)+" kn above the stated "+num(V.nh3speed,1)+
+      " kn, and inside the normal service range for refrigerated gas carriers of this size. If 13 kn is a conservative placeholder rather than a charter-party figure, this study is already decided.";
+
+  const xs6b=[]; for(let c=12000;c<=48000;c+=500) xs6b.push(c);
+  lineChart("c6b","t6b",{
+    small:true, margin:{l:56,r:16,t:14,b:44},
+    x:xs6b, xLabel:"NH₃ cargo capacity, m³",
+    series:[{label:"NH₃", color:C.nh3, y:xs6b.map(c=>evaluate(true,D,{cap:c}).annualH2e)},
+            {label:"LH₂", color:C.lh2, y:xs6b.map(()=>lh2flat)}],
+    vlines:(beCap&&beCap<=48000?[{x:beCap,label:nf(beCap/1000,1)+"k m³"}]:[]).concat([{x:V.nh3cap,label:"now "+nf(V.nh3cap/1000,0)+"k",row:1,color:"var(--ink-3)"}]),
+    fmtX:v=>km(v), fmtY:v=>nf(v/1e6,0)+"M", fmtTip:v=>mkg(v), fmtXTip:v=>nf(v)+" m³"
+  });
+  $("r6b").innerHTML = beCap===null ? "No capacity in range reaches parity at these settings."
+    : "Parity at <b>"+nf(beCap/1000,1)+"k m³</b> — "+num((beCap/V.nh3cap-1)*100,0)+" % more volume than the stated "+num(V.nh3cap/1000,0)+
+      "k m³. Because the cargo is dense, ammonia buys throughput with modest extra steel; matching it on the LH₂ side would take a far larger hull.";
+
+  /* --- ledger --- */
+  const rows=[
+    ["One-way transit", nf(lh2.oneWay,2)+" d", nf(nh3.oneWay,2)+" d"],
+    ["Round-trip cycle", nf(lh2.rtd,2)+" d", nf(nh3.rtd,2)+" d"],
+    ["Voyages per vessel-year", nf(lh2.trips,2), nf(nh3.trips,2)],
+    ["Cargo loaded per voyage", nf(lh2.cargo/1000,0)+" t LH₂", nf(nh3.cargo/1000,0)+" t NH₃"],
+    ["Voyage boil-off", nf(lh2.lossFrac*100,2)+" % — burned as fuel, cargo lost", nf(nh3.bogFrac*100,2)+" % — re-liquefied, cargo kept"],
+    ["Delivered per voyage, H₂-eq", nf(lh2.delivered/1e6,3)+" M kg", nf(nh3.delivered/RATIO/1e6,3)+" M kg"],
+    ["Annual per vessel, H₂-eq", "<b>"+mkg(lh2.annualH2e)+"</b>", "<b>"+mkg(nh3.annualH2e)+"</b>"],
+    ["Shipping energy penalty", nf(lh2.energy,3)+" kWh/kg H₂ (cargo)", nf(nh3.energy,3)+" kWh/kg H₂ (electric)"],
+    ["Fleet for "+nf(V.demand)+" ktpa H₂-eq", "<b>"+lh2.fleet+" vessels</b>", "<b>"+nh3.fleet+" vessels</b>"],
+    ["Annual cargo loaded by that fleet", nf(V.demand/(1-lh2.lossFrac),1)+" kt LH₂", nf(V.demand*RATIO,0)+" kt NH₃"]
+  ];
+  $("ledger").innerHTML = '<thead><tr><th>Metric</th><th>LH₂ carrier · '+nf(V.lh2cap)+' m³</th><th>NH₃ carrier · '+nf(V.nh3cap)+' m³</th></tr></thead><tbody>'+
+    rows.map(r=>'<tr><td>'+r[0]+'</td><td class="n">'+r[1]+'</td><td class="n">'+r[2]+'</td></tr>').join('')+'</tbody>';
+}
+
+/* ---------- wiring ---------- */
+function syncPair(numId, rangeId){
+  const n=$(numId), r=$(rangeId); if(!n||!r) return;
+  n.addEventListener("input",()=>{ r.value=n.value; render(); });
+  r.addEventListener("input",()=>{ n.value=r.value; render(); });
+}
+Object.keys(DEFAULTS).forEach(k=>{ const e=$("i-"+k); if(e) e.addEventListener("input", render); });
+syncPair("i-lh2bor","r-lh2bor"); syncPair("i-nh3speed","r-nh3speed");
+function setPressed(id){ ["p-cape","p-suez"].forEach(x=>$(x).setAttribute("aria-pressed", String(x===id))); }
+$("p-cape").addEventListener("click",()=>{ $("i-dist").value=21200; setPressed("p-cape"); render(); });
+$("p-suez").addEventListener("click",()=>{ $("i-dist").value=10260; setPressed("p-suez"); render(); });
+$("p-reset").addEventListener("click",()=>{
+  Object.keys(DEFAULTS).forEach(k=>{ const e=$("i-"+k); if(e) e.value=DEFAULTS[k]; });
+  $("r-lh2bor").value=DEFAULTS.lh2bor; $("r-nh3speed").value=DEFAULTS.nh3speed;
+  setPressed("p-cape"); render();
+});
+render();
+window.addEventListener("resize", ()=>{ /* SVG scales via viewBox; tooltips recompute on hover */ });
+</script>
