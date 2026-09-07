@@ -25,6 +25,7 @@ TABLES = [
     "properties/terminals.csv",
     "properties/regas.csv",
     "properties/lh2-properties.csv",
+    "properties/regulatory-compliance.csv",
     "vessels/lh2-carriers.csv",
     "costs/lh2-cost-stack.csv",
     "carriers/chain-energy-defaults.csv",

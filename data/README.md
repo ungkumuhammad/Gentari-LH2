@@ -15,6 +15,7 @@
 | `vessels/lh2-carriers.csv` | Shipping | Carrier capacity/speed/fleet, BOG-as-fuel, no reliquefaction, load/unload, yard | `kawasaki-2026-supplemental`, `-questionnaire`, `kawasaki-hydrogen-activities` |
 | `properties/regas.csv` | Regasification | BOR, tank size/count, vaporiser type, heat duty | `kawasaki-2026-questionnaire`, `-supplemental` |
 | `properties/lh2-properties.csv` | Physical properties | NBP, density, LHV/HHV, gas density | `docs/conventions.md` (pending NIST/CODATA) |
+| `properties/regulatory-compliance.csv` | Regulatory / permitting | Permitting approach, safety separation distance, carbon-intensity disclosure requirement; IMO tank-type classification, applicable codes/standards (liquefaction, shipping, terminal), classification-society approval, carbon-border exposure — **mostly `needs-source` gaps**, see Known caveats | `kawasaki-2026-questionnaire` (2 rows only); everything else unsourced |
 | `costs/lh2-cost-stack.csv` | Cost | IAE per-component supply-cost stack (LH2 Base/Large/Tech) + disclosed gaps | `kawasaki-2026-supplemental` → `iae-2019-gigaton` |
 
 `lh2-database.xlsx` is a one-workbook mirror of all CSVs (one sheet each, plus a
@@ -64,3 +65,12 @@ unsourced numbers — the cardinal rule of `CLAUDE.md` §4.
 - **Physical properties.** `lh2-properties.csv` values come from
   `docs/conventions.md` and are tagged `needs-source` pending the user's approval
   to add a standard external reference (NIST/CODATA/ISO).
+- **Regulatory compliance is a genuine database gap (2026-09-07).** No dedicated
+  regulatory/permitting coverage existed anywhere in this repo before
+  `regulatory-compliance.csv` was added. Only 2 of its 9 rows are cited (KHI's
+  qualitative permitting answer, Q12, and its safety-separation-distance
+  answer, Q36) — the other 7 (IMO tank-type classification, IGC/IGF Code or
+  equivalent, classification-society approval, plant/terminal design codes,
+  carbon-border exposure) are `needs-source` placeholders with no value filled
+  in. This needs dedicated external research (a Zane dispatch, per
+  `CLAUDE.md`) before it supports any go/no-go or permitting-timeline claim.
