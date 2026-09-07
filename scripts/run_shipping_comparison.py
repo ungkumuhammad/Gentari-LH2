@@ -385,15 +385,19 @@ def format_result(r: VoyageResult) -> str:
 
 
 def main() -> None:
+    """Run the comparison. Pass ``--vessel 40k`` for the vessel under
+    construction; the default is the 160,000 m3 commercial-scale target."""
+    vessel = LH2_40K if "40k" in sys.argv else LH2_160K
+    globals()["LH2_STUDY_VESSEL"] = vessel
     print("=" * 78)
-    print("LH2 (40,000 m3) vs NH3 (24,000 m3) -- SHIPPING SEGMENT COMPARISON")
+    print(f"{vessel.name} vs NH3 (24,000 m3) -- SHIPPING SEGMENT COMPARISON")
     print("Corridor: Kakinada, India -> Hamburg, Germany")
     print("=" * 78)
 
     for label, distance in [("SUEZ route (reference)", DISTANCE_SUEZ_KM),
                              ("CAPE OF GOOD HOPE route (PRIMARY)", DISTANCE_CAPE_KM)]:
         print(f"\n--- {label}: {distance:,.0f} km one-way [ESTIMATE, first-principles] ---\n")
-        lh2 = evaluate(LH2_160K, distance, is_nh3=False)
+        lh2 = evaluate(vessel, distance, is_nh3=False)
         nh3 = evaluate(NH3_24K, distance, is_nh3=True)
         print(format_result(lh2))
         print(format_result(nh3))

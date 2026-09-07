@@ -305,3 +305,35 @@ per-day toggle (it was previously per laden leg, unlabelled); and the
 throughput study is reframed from "what would make the ammonia ship win" —
 which was unreadable against a 4.5× gap — to "how many ammonia ships equal one
 LH2 carrier", sweeping ammonia capacity at three service speeds.
+
+
+## 8. Fourth pass (2026-09-07): vessel scenario and H2-landed basis
+
+**8.1 Both LH2 hulls are now selectable.** The 40,000 m³ vessel under
+construction and the 160,000 m³ commercial-scale target are both KHI-cited,
+and they tell materially different stories, so the choice is a first-class
+control in the artifact (`--vessel 40k` on the CLI) rather than a buried input:
+
+| At Cape, 0.2 %/day, 25 t/day duty | LH2 40,000 m³ | LH2 160,000 m³ |
+|---|---:|---:|
+| Boil-off vs propulsion demand | **64 %** — buys 266 t VLSFO | **258 %** — 394 t H₂/leg wasted |
+| Fuel cover point | 0.316 %/day | 0.076 %/day |
+| Boil-off cost per kg H₂ | USD 0.198 | USD 0.265 |
+| Breakeven H₂ value | **USD 1.94/kg** | **USD 0.84/kg** |
+| Annual per vessel | 13.8 ktpa | 55.2 ktpa |
+| Ammonia ships per LH2 ship | 1.1 | 4.5 |
+
+**8.2 Units.** Per-voyage masses are now kt, annual rates ktpa (1 M kg = 1 kt),
+replacing "M kg" throughout — matching how the OKR's 100 ktpa basis is stated.
+
+**8.3 What "H₂ landed" assumes — asked directly, so stated directly.**
+For LH2 it is the cargo loaded less the laden-leg boil-off (that hydrogen is
+burned as fuel and does not arrive). For ammonia it is the delivered ammonia
+divided by the **pure stoichiometric ratio 5.632** — the hydrogen *chemically
+contained* in the cargo landed, **assuming a cracker that recovers all of it**.
+No cracking is modelled in this study, which stops at the discharge arm. A real
+cracker returns less: the repository's whole-chain model
+(`src/lh2/chain_energy.py`, node F2) carries a 3 % purification slip plus a
+natural-gas-fired reaction duty of 4.22 kWh per kg H₂. **The ammonia figures in
+this study are therefore an upper bound on hydrogen actually available at the
+far end**, and joining this study to the cracker node is the obvious next step.

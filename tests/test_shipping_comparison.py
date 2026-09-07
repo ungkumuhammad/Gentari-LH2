@@ -276,3 +276,23 @@ def test_cost_per_kg_splits_into_cargo_and_fuel():
     c = m.voyage_cost_per_kg(fb, 5.0, 600.0, mode="full")
     assert math.isclose(c["cargo_per_kg"] + c["fuel_per_kg"], c["per_kg"], rel_tol=1e-9)
     assert c["cargo_per_kg"] > c["fuel_per_kg"]   # hydrogen is the premium term
+
+
+def test_both_vessel_scenarios_are_available_and_differ():
+    """The study supports two KHI-cited LH2 hulls and they tell different
+    stories: the 40,000 m3 ship is short of fuel at the working boil-off rate,
+    the 160,000 m3 ship is in surplus."""
+    small = m.fuel_balance(m.LH2_40K, m.DISTANCE_CAPE_KM, False)
+    big = m.fuel_balance(m.LH2_160K, m.DISTANCE_CAPE_KM, False)
+    assert small.covered_fraction < 1.0 < big.covered_fraction
+    assert small.topup_fuel_t > 0 and big.topup_fuel_t == 0
+    assert small.bog_surplus_kg == 0 and big.bog_surplus_kg > 0
+
+
+def test_breakeven_price_differs_by_vessel_scenario():
+    """Switching hull changes the economics, which is why the scenario is a
+    first-class control rather than a buried input."""
+    D = m.DISTANCE_CAPE_KM
+    small = m.breakeven_h2_price(D, 600, vessel=m.LH2_40K)
+    big = m.breakeven_h2_price(D, 600, vessel=m.LH2_160K)
+    assert small > big > 0

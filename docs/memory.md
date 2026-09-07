@@ -888,3 +888,28 @@ Tests: 167 passing (was 162). New coverage for hull-size scaling of the cover
 point, the surplus-is-an-artifact-of-the-duty caveat, the displacement credit
 making boil-off a net saving at zero H2 value, mode separation, and that speed
 alone cannot close a 4.5× gap.
+
+### Vessel scenario selector + ktpa units + H2-landed basis stated (2026-09-07, same session)
+
+| # | Change | Detail |
+|---|--------|--------|
+| S19 | **LH2 vessel is a scenario, not a fixed input** | Segmented control in the artifact's primary panel for 40,000 m³ (under construction) vs 160,000 m³ (commercial target) — both KHI-cited. `scripts/run_shipping_comparison.py --vessel 40k` mirrors it. All copy that hardcoded "160,000 m³" now reads from the input |
+| S20 | **Units: kt / ktpa** | Per-voyage masses in kt, annual rates in ktpa (1 M kg = 1 kt), replacing "M kg" — matches the OKR's 100 ktpa basis |
+| S21 | **"H₂ landed" assumption stated on the page** | User asked what the number assumes. LH2: cargo less laden-leg boil-off. NH3: delivered ammonia ÷ 5.632 stoichiometric — i.e. hydrogen *chemically contained*, **assuming a cracker that recovers all of it**. No cracking is modelled (study stops at the discharge arm), so the ammonia figures are an **upper bound**; the whole-chain model's F2 node carries a 3 % slip + 4.22 kWh/kg NG reaction duty. Study 6 retitled "How much hydrogen does each hull actually land?" since "why is the smaller ship competitive" only made sense against the 40k hull |
+
+**The scenario genuinely changes the story** (Cape, 0.2 %/day, 25 t/day):
+
+| | 40,000 m³ | 160,000 m³ |
+|---|---:|---:|
+| Boil-off vs fuel demand | 64 % (buys 266 t) | 258 % (394 t H₂ wasted) |
+| Fuel cover point | 0.316 %/day | 0.076 %/day |
+| Breakeven H₂ value | USD 1.94/kg | USD 0.84/kg |
+| Annual per vessel | 13.8 ktpa | 55.2 ktpa |
+| Ammonia ships per LH₂ ship | 1.1 | 4.5 |
+
+Tests: 169 passing (was 167). Verified both scenarios render correctly and all
+scenario-dependent copy updates; no console errors.
+
+**➡️ Obvious next step surfaced by S21:** join this shipping study to the
+cracker node (F2) so the ammonia side reports hydrogen actually recovered
+rather than hydrogen contained.
