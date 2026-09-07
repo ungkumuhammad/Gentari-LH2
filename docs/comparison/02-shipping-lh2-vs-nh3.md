@@ -337,3 +337,41 @@ cracker returns less: the repository's whole-chain model
 natural-gas-fired reaction duty of 4.22 kWh per kg H₂. **The ammonia figures in
 this study are therefore an upper bound on hydrogen actually available at the
 far end**, and joining this study to the cracker node is the obvious next step.
+
+
+## 9. Decision map: hydrogen price × vessel size (2026-09-07, fifth pass)
+
+The question this whole workstream was heading towards: **at what hydrogen
+price and what vessel size does LH2 beat ammonia?** Mapped on the boil-off
+cost basis (§7.3), at the Cape route and VLSFO USD 600/t.
+
+**Parity hydrogen value (USD/kg) by hull, under three duty-scaling rules:**
+
+| LH2 hull | Duty fixed at 25 t/day | Duty ∝ size^⅔ (default) | Duty ∝ cargo |
+|---:|---:|---:|---:|
+| 20,000 m³ | 1.94 | 1.54 | 0.84 |
+| **40,000 m³** | **1.94** | **1.25** | **0.84** |
+| 80,000 m³ | 1.54 | 1.02 | 0.84 |
+| **160,000 m³** | **0.84** | **0.84** | **0.84** |
+| 200,000 m³ | 0.70 | 0.79 | 0.84 |
+
+Below the parity value the hydrogen carrier is the cheaper way to move
+hydrogen; above it, ammonia is.
+
+**Finding — on boil-off cost, bigger is worse.** Boil-off scales with the
+cargo, but the engine that can usefully burn it does not. Past the point where
+boil-off covers the propulsion duty, the surplus is wasted and the
+fuel-displacement credit *per kilogram delivered* thins out, so the parity
+price falls as the hull grows. The exception is the `∝ cargo` rule, where
+coverage is constant by construction and hull size drops out entirely — the
+parity line goes vertical. The duty-scaling rule is `[ASSUMPTION]`: no power
+curve is held for either vessel, and 2/3 (resistance ≈ wetted area) is the
+physically-motivated default, anchored on the selected scenario's own
+capacity/duty pair.
+
+**Practical conclusion.** Both KHI hulls sit at parity values under USD 2/kg,
+and the 160,000 m³ ship under USD 1/kg. No green-hydrogen project books
+hydrogen at those values, so **on shipping boil-off cost the whole map belongs
+to ammonia**. LH2's case has to be made on what this study deliberately
+excludes: throughput per vessel (where the 160k ship wins 4.5:1), terminal and
+conversion CapEx, and not needing a cracker at the far end.

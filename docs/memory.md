@@ -913,3 +913,62 @@ scenario-dependent copy updates; no console errors.
 **➡️ Obvious next step surfaced by S21:** join this shipping study to the
 cracker node (F2) so the ammonia side reports hydrogen actually recovered
 rather than hydrogen contained.
+
+### Decision map (H2 price × hull size), then merged to main (2026-09-07, session close)
+
+Final study of the shipping workstream, answering the question the whole
+sequence was heading towards: **at what hydrogen price and vessel size does
+LH2 beat ammonia?** Mapped on the boil-off cost basis, Cape route, VLSFO
+USD 600/t. New `scaled_duty()` in the script + a three-way duty-scaling control
+on the study (`0` fixed / `2/3` resistance, default / `1` ∝ cargo), anchored on
+the selected scenario's own capacity–duty pair.
+
+**Parity hydrogen value (USD/kg):**
+
+| LH2 hull | Duty fixed | Duty ∝ size^⅔ | Duty ∝ cargo |
+|---:|---:|---:|---:|
+| 40,000 m³ | 1.94 | 1.25 | 0.84 |
+| 160,000 m³ | 0.84 | 0.84 | 0.84 |
+| 200,000 m³ | 0.70 | 0.79 | 0.84 |
+
+**Counterintuitive finding: on boil-off cost, bigger is worse.** Boil-off
+scales with cargo; the engine that can burn it does not. Past the cover point
+the surplus is wasted and the fuel-displacement credit per kg delivered thins,
+so the parity price *falls* as the hull grows. Under `∝ cargo` the effect
+vanishes (coverage constant, parity line vertical) — which is itself the test
+of whether the effect is real or an artifact of the duty assumption.
+
+**Practical conclusion:** both KHI hulls sit under USD 2/kg parity, the 160k
+under USD 1/kg. No green-H2 project books hydrogen that cheap, so **on shipping
+boil-off cost the map is ammonia's**. LH2's case must be made on what this
+study excludes — throughput per vessel (160k wins 4.5:1), terminal/conversion
+CapEx, and not needing a cracker.
+
+Tests: **173 passing**. Merged the whole shipping workstream to `main` and
+pushed, per user instruction.
+
+---
+
+## ➡️ NEXT SESSION: liquefaction (upstream)
+
+User is starting a new session on **liquefaction**. What is already in the repo
+for that segment:
+
+- `data/properties/liquefaction.csv` — KHI SEC 8–9 kWh/kg (cited), H2 Claude
+  cycle + N₂ precooling, Fe-based O–P catalyst, ~10,000 tpa minimum economical
+  scale, plus the derived theoretical-minimum rows (3.3 kWh/kg normal-H2,
+  3.9 para, both cited to `doe-2009-h2-liquefaction-energy`) and the
+  BOG-reliquefaction ideal work (1.71 kWh/kg).
+- `docs/methodology/02-liquefaction.md` — theoretical minimum vs KHI's SEC
+  (implies ~37–49 % second-law efficiency, flagged as an **upper bound** since
+  KHI never confirmed its feed-pressure basis), plus the layman exergy
+  explanation and worked derivation.
+- `src/lh2/liquefaction.py` — SEC, train sizing (115 t/d trains, ~0.78
+  utilization derived from KHI's own Base/Large train counts).
+- Open gaps carried forward: **no CapEx/OpEx from KHI** ("Feasibility Study
+  necessary"), the IAE cost stack's unlabelled axis (`JPY/Nm³ ~2019`,
+  `[needs source: primary]`), and the NIST/CODATA citation approval still
+  pending for the physical-property rows.
+- Standing data policy unchanged: Kawasaki data first; external sources need
+  explicit permission, except via Zane (who has standing consent but must cite
+  everything).

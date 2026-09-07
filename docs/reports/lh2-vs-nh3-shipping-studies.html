@@ -289,6 +289,24 @@ footer code{font-family:var(--mono);font-size:11.5px;color:var(--ink-2)}
   </div>
 </section>
 
+<section class="study">
+  <div class="study-head"><h2>At what hydrogen price and vessel size does LH₂ beat ammonia?</h2><span class="lever">Mapping: H₂ value × LH₂ hull size</span></div>
+  <p class="intro">The decision map. Hull size matters here for a reason that is not obvious: a bigger hydrogen carrier makes proportionally more boil-off, but the engine it has to feed does not grow as fast — so beyond a point the extra boil-off is wasted, and the fuel-displacement credit per kilogram delivered shrinks. <b>On boil-off cost, bigger is worse.</b> How much worse depends on how the propulsion duty scales with the hull, which is the control on the right.</p>
+  <div class="panel">
+    <div class="panel-pad" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+      <div class="eyebrow">Cheaper carrier, by margin in boil-off cost per kg H₂ delivered</div>
+      <div class="seg" role="group" aria-label="How propulsion duty scales with hull size">
+        <button id="e-0" aria-pressed="false">Duty fixed</button>
+        <button id="e-23" aria-pressed="true">Duty ∝ size^⅔</button>
+        <button id="e-1" aria-pressed="false">Duty ∝ cargo</button>
+      </div>
+    </div>
+    <div class="legend" id="legend8"></div>
+    <div class="chart-scroll"><svg class="chart" id="c8" viewBox="0 0 880 400" role="img" aria-label="Map of the cheaper carrier across hydrogen value and LH2 vessel capacity"></svg><div class="tip" id="t8"></div></div>
+    <div class="readout" id="r8"></div>
+  </div>
+</section>
+
 <hr class="sect-rule">
 
 <section class="study">
@@ -380,7 +398,8 @@ const DEFAULTS = {dist:21200, lh2bor:0.2, bunker:25, lh2bunker:25, h2price:5, vl
 const V = {};
 let VENT = true;
 let MODE = "boiloff";   // user's framing: boil-off management cost only
-let PERDAY = false;     // study 2 basis: per laden leg (default) or per day at sea
+let PERDAY = false;
+let EXPO = 2/3;         // how the LH2 propulsion duty scales with hull size in the decision map     // study 2 basis: per laden leg (default) or per day at sea
 const $ = id => document.getElementById(id);
 function readInputs(){
   for (const k of Object.keys(DEFAULTS)){ const e = $("i-"+k); V[k] = e ? parseFloat(e.value) : DEFAULTS[k]; if (!isFinite(V[k])) V[k] = DEFAULTS[k]; }
@@ -817,6 +836,114 @@ function render(){
       "For green hydrogen at any price a project would actually book, the top-left of this map — where ammonia wins — is where most of the plausible cases sit.";
   })();
 
+  /* --- 8. decision map: H2 price x hull size --- */
+  (function(){
+    const svg=$("c8"); svg.innerHTML="";
+    const W=880,H=400,m={l:74,r:20,t:14,b:52}, pw=W-m.l-m.r, ph=H-m.t-m.b;
+    const NX=34,NY=22, pLo=0,pHi=4, cLo=20000,cHi=200000;
+    const X=p=>m.l+(p-pLo)/(pHi-pLo)*pw, Yc=c=>m.t+ph-(c-cLo)/(cHi-cLo)*ph;
+    const ramp=f=>{ const a=Math.min(1,Math.abs(f)/0.6), st=a<0.08?0:a<0.22?1:a<0.40?2:a<0.65?3:4;
+      return st===0?"var(--div-0)":(f>0?"var(--div-a"+st+")":"var(--div-b"+st+")"); };
+    /* duty for a hull of capacity c, scaled off the scenario you have selected */
+    const dutyFor = c => V.lh2bunker * Math.pow(c/V.lh2cap, EXPO);
+    const lh2CostAt = (c,p) => {
+      const keep=V.lh2bunker; V.lh2bunker=dutyFor(c);
+      const fb=fuelBalance(false,D,{cap:c});
+      const out=costPerKg(fb,p,V.vlsfoprice,MODE).perKg;
+      V.lh2bunker=keep; return out;
+    };
+    const nh3Cost = costPerKg(fuelBalance(true,D),0,V.vlsfoprice,MODE).perKg;
+    const parityAt = c => {          // H2 value at which this hull matches ammonia
+      const keep=V.lh2bunker; V.lh2bunker=dutyFor(c);
+      const fb=fuelBalance(false,D,{cap:c});
+      const base=costPerKg(fb,0,V.vlsfoprice,MODE).perKg;
+      const slope=fb.cargoLostKg/fb.deliveredH2e;
+      V.lh2bunker=keep;
+      return slope>0 ? (nh3Cost-base)/slope : null;
+    };
+    const cw=pw/NX, ch=ph/NY, cells=[];
+    for(let i=0;i<NX;i++){
+      const p=pLo+(i+0.5)/NX*(pHi-pLo);
+      for(let j=0;j<NY;j++){
+        const c=cLo+(j+0.5)/NY*(cHi-cLo);
+        const a=lh2CostAt(c,p), f=(nh3Cost-a)/Math.max(Math.abs(nh3Cost),1e-9);
+        cells.push({p,c,f,a});
+        el("rect",{x:m.l+i*cw+0.5,y:m.t+ph-(j+1)*ch+0.5,width:cw-1,height:ch-1,fill:ramp(f)},svg);
+      }
+    }
+    let dPath="";
+    for(let j=0;j<=NY*2;j++){
+      const c=cLo+j/(NY*2)*(cHi-cLo), p=parityAt(c);
+      if(p===null||p<pLo||p>pHi) continue;
+      dPath+=(dPath?"L":"M")+X(p).toFixed(1)+" "+Yc(c).toFixed(1)+" ";
+    }
+    if(dPath){
+      el("path",{d:dPath,fill:"none",stroke:"var(--chart-surface)","stroke-width":4},svg);
+      el("path",{d:dPath,fill:"none",stroke:"var(--ink)","stroke-width":1.75,"stroke-dasharray":"6 4"},svg);
+    }
+    [{c:40000,t:"40k — under construction"},{c:160000,t:"160k — commercial target"}].forEach(h=>{
+      if(h.c<cLo||h.c>cHi) return;
+      el("line",{x1:m.l,x2:m.l+pw,y1:Yc(h.c),y2:Yc(h.c),stroke:"var(--chart-surface)","stroke-width":3.5},svg);
+      el("line",{x1:m.l,x2:m.l+pw,y1:Yc(h.c),y2:Yc(h.c),stroke:"var(--lh2)","stroke-width":1.5,"stroke-dasharray":"2 3"},svg);
+      el("text",{x:m.l+pw-6,y:Yc(h.c)-6,"text-anchor":"end","font-size":10.5,"font-family":"var(--mono)",
+                 fill:"var(--lh2)"},svg).textContent=h.t;
+    });
+    if(V.h2price<=pHi&&V.lh2cap>=cLo&&V.lh2cap<=cHi){
+      const cx=X(V.h2price), cy=Yc(V.lh2cap), right=cx>m.l+pw*0.7;
+      el("circle",{cx,cy,r:7,fill:"none",stroke:"var(--chart-surface)","stroke-width":4},svg);
+      el("circle",{cx,cy,r:7,fill:"none",stroke:"var(--ink)","stroke-width":2},svg);
+      el("circle",{cx,cy,r:2,fill:"var(--ink)"},svg);
+      el("text",{x:cx+(right?-13:13),y:cy+4,"text-anchor":right?"end":"start","font-size":11,
+                 "font-family":"var(--mono)",fill:"var(--ink)","font-weight":500},svg).textContent="you are here";
+    }
+    niceTicks(cLo,cHi,6).forEach(t=>{ if(t<cLo||t>cHi) return;
+      el("text",{x:m.l-9,y:Yc(t)+4,"text-anchor":"end","font-size":11.5,fill:"var(--ink-3)","font-family":"var(--mono)"},svg).textContent=km(t); });
+    niceTicks(pLo,pHi,8).forEach(t=>{ if(t<pLo||t>pHi) return;
+      el("text",{x:X(t),y:m.t+ph+19,"text-anchor":"middle","font-size":11.5,fill:"var(--ink-3)","font-family":"var(--mono)"},svg).textContent="$"+nf(t,t%1?1:0); });
+    el("text",{x:m.l+pw/2,y:H-8,"text-anchor":"middle","font-size":11.5,fill:"var(--ink-2)"},svg).textContent="Value placed on delivered hydrogen, USD/kg";
+    el("text",{x:16,y:m.t+ph/2,"text-anchor":"middle","font-size":11.5,fill:"var(--ink-2)",transform:"rotate(-90 16 "+(m.t+ph/2)+")"},svg).textContent="LH₂ vessel capacity, m³";
+    el("text",{x:m.l+12,y:m.t+ph-12,"font-size":12,fill:"var(--lh2)","font-weight":600},svg).textContent="LH₂ cheaper";
+    el("text",{x:m.l+pw-12,y:m.t+18,"font-size":12,fill:"var(--nh3)","font-weight":600,"text-anchor":"end"},svg).textContent="NH₃ cheaper";
+    const tip=$("t8"), host=svg.parentElement;
+    const hit=el("rect",{x:m.l,y:m.t,width:pw,height:ph,fill:"transparent"},svg);
+    hit.addEventListener("pointermove",ev=>{
+      const r=svg.getBoundingClientRect(), sx=(ev.clientX-r.left)/r.width*W, sy=(ev.clientY-r.top)/r.height*H;
+      const i=Math.max(0,Math.min(NX-1,Math.floor((sx-m.l)/cw))), j=Math.max(0,Math.min(NY-1,Math.floor((m.t+ph-sy)/ch)));
+      const c=cells[i*NY+j]; if(!c) return;
+      tip.innerHTML='<div class="th">H₂ $'+nf(c.p,2)+'/kg · '+nf(c.c)+' m³ hull</div>'+
+        '<div class="tr"><span>Duty at this hull</span><span class="n">'+nf(dutyFor(c.c),0)+' t/day</span></div>'+
+        '<div class="tr"><span><i class="dot" style="background:var(--lh2)"></i>LH₂</span><span class="n">'+(c.a<0?"−$":"$")+nf(Math.abs(c.a),3)+'</span></div>'+
+        '<div class="tr"><span><i class="dot" style="background:var(--nh3)"></i>NH₃</span><span class="n">$'+nf(nh3Cost,3)+'</span></div>'+
+        '<div class="tr" style="border-top:1px solid var(--rule);margin-top:4px;padding-top:4px"><span>'+(c.f>0?"LH₂ cheaper":"NH₃ cheaper")+'</span><span class="n">'+nf(Math.abs(c.f)*100,0)+'%</span></div>';
+      tip.style.opacity=1;
+      const hostR=host.getBoundingClientRect(), tw=tip.offsetWidth;
+      tip.style.left=Math.max(4,Math.min(hostR.width-tw-4,(ev.clientX-hostR.left)-tw/2))+"px";
+      tip.style.top=Math.max(2,(ev.clientY-hostR.top)-tip.offsetHeight-14)+"px";
+    });
+    hit.addEventListener("pointerleave",()=>{ $("t8").style.opacity=0; });
+    $("legend8").innerHTML='<span><i class="sq" style="background:var(--div-a5)"></i>LH₂ cheaper by 60 %+</span>'+
+      '<span><i class="sq" style="background:var(--div-a3)"></i>LH₂ cheaper ~25 %</span>'+
+      '<span><i class="sq" style="background:var(--div-0)"></i>parity ±5 %</span>'+
+      '<span><i class="sq" style="background:var(--div-b3)"></i>NH₃ cheaper ~25 %</span>'+
+      '<span><i class="sq" style="background:var(--div-b5)"></i>NH₃ cheaper by 60 %+</span>'+
+      '<span class="axes">X · value placed on delivered hydrogen (USD/kg)<br>Y · LH₂ vessel capacity (m³)</span>';
+    const p40=parityAt(40000), p160=parityAt(160000), p200=parityAt(200000);
+    $("r8").innerHTML = (EXPO===1
+        ? "<b>LH₂ only wins where hydrogen is cheap — and on this setting hull size does not change that.</b> "
+        : "<b>LH₂ only wins where hydrogen is cheap — and the bigger the ship, the cheaper it has to be.</b> ")+
+      "At "+nf(V.lh2cap)+" m³ the parity value is "+(parityAt(V.lh2cap)===null?"—":usd(parityAt(V.lh2cap)))+
+      "/kg: below it the hydrogen carrier is the cheaper way to move hydrogen, above it ammonia is. "+
+      "Across the two KHI hulls that is "+(p40===null?"—":usd(p40))+"/kg at 40,000 m³ against "+
+      (p160===null?"—":usd(p160))+"/kg at 160,000 m³"+(p200!==null?", and "+usd(p200)+"/kg at 200,000 m³":"")+". "+
+      "<b>Why bigger is worse here:</b> boil-off scales with the cargo, but the engine that can usefully burn it does not — "+
+      (EXPO===0 ? "and on this setting the duty does not grow at all, so every extra cubic metre of hull adds boil-off with nowhere to go."
+       : EXPO===1 ? "on this setting the duty grows in step with the cargo, so coverage is constant and hull size drops out of the answer entirely — the parity line is vertical."
+       : "on this setting the duty grows as size^⅔ (resistance scaling), so coverage still climbs with hull size and the credit per kilogram thins out.")+
+      " <b>The practical read: for any hydrogen a project would actually book — green hydrogen is nowhere near "+
+      (p160===null?"this":usd(p160))+"/kg — the whole map is ammonia's on boil-off cost.</b> LH₂'s case has to be made on the things this study excludes: "+
+      "throughput per vessel, terminal and conversion cost, and not needing a cracker at the far end.";
+  })();
+
   /* --- 5. distance --- */
   const xd=[]; for(let d=1000;d<=26000;d+=250) xd.push(d);
   lineChart("c5","t5",{
@@ -956,6 +1083,7 @@ $("p-reset").addEventListener("click",()=>{
   VENT=true; $("d-vent").setAttribute("aria-pressed","true"); $("d-gcu").setAttribute("aria-pressed","false");
   MODE="boiloff"; $("m-boiloff").setAttribute("aria-pressed","true"); $("m-full").setAttribute("aria-pressed","false");
   PERDAY=false; $("b-leg").setAttribute("aria-pressed","true"); $("b-day").setAttribute("aria-pressed","false");
+  EXPO=2/3; ["e-0","e-23","e-1"].forEach(x=>$(x).setAttribute("aria-pressed",String(x==="e-23")));
   setPressed("p-cape"); render(); });
 function segPair(aId,bId,onA,onB){
   $(aId).addEventListener("click",()=>{ $(aId).setAttribute("aria-pressed","true"); $(bId).setAttribute("aria-pressed","false"); onA(); render(); });
@@ -969,6 +1097,10 @@ function setVesselButtons(){
 }
 $("v-40").addEventListener("click",()=>{ $("i-lh2cap").value=40000; render(); });
 $("v-160").addEventListener("click",()=>{ $("i-lh2cap").value=160000; render(); });
+function setExpo(v,id){ EXPO=v; ["e-0","e-23","e-1"].forEach(x=>$(x).setAttribute("aria-pressed",String(x===id))); render(); }
+$("e-0").addEventListener("click",()=>setExpo(0,"e-0"));
+$("e-23").addEventListener("click",()=>setExpo(2/3,"e-23"));
+$("e-1").addEventListener("click",()=>setExpo(1,"e-1"));
 segPair("b-leg","b-day",()=>{PERDAY=false;},()=>{PERDAY=true;});
 segPair("m-boiloff","m-full",()=>{MODE="boiloff";},()=>{MODE="full";});
 $("d-vent").addEventListener("click",()=>{ VENT=true; $("d-vent").setAttribute("aria-pressed","true"); $("d-gcu").setAttribute("aria-pressed","false"); render(); });

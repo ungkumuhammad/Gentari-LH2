@@ -296,3 +296,47 @@ def test_breakeven_price_differs_by_vessel_scenario():
     small = m.breakeven_h2_price(D, 600, vessel=m.LH2_40K)
     big = m.breakeven_h2_price(D, 600, vessel=m.LH2_160K)
     assert small > big > 0
+
+
+# --- decision map: H2 price x hull size ------------------------------------
+
+def test_scaled_duty_exponents_behave():
+    """0 = duty independent of hull, 1 = duty proportional to cargo, 2/3 in
+    between. The anchor pair always reproduces itself."""
+    assert math.isclose(m.scaled_duty(40_000, 160_000, 25.0, 0.0), 25.0)
+    assert math.isclose(m.scaled_duty(40_000, 160_000, 25.0, 1.0), 6.25)
+    mid = m.scaled_duty(40_000, 160_000, 25.0, 2.0 / 3.0)
+    assert 6.25 < mid < 25.0
+    assert math.isclose(m.scaled_duty(160_000, 160_000, 25.0, 2.0 / 3.0), 25.0)
+
+
+def test_bigger_hull_needs_cheaper_hydrogen_at_fixed_duty():
+    """The decision map's central finding: with the engine's demand fixed, a
+    bigger hull makes boil-off it cannot burn, the fuel-displacement credit per
+    kg delivered thins out, and the parity hydrogen value falls."""
+    D, VP = m.DISTANCE_CAPE_KM, 600.0
+    prices = []
+    for cap in (60_000, 100_000, 160_000, 200_000):
+        v = m.VesselCase(**{**m.LH2_160K.__dict__, "capacity_m3": float(cap)})
+        prices.append(m.breakeven_h2_price(D, VP, vessel=v, bunker_t_per_day=25.0))
+    assert prices == sorted(prices, reverse=True)
+
+
+def test_duty_proportional_to_cargo_removes_the_size_effect():
+    """If the duty grows in step with the cargo, coverage is constant and hull
+    size drops out of the answer entirely -- the parity line goes vertical."""
+    D, VP = m.DISTANCE_CAPE_KM, 600.0
+    out = []
+    for cap in (40_000, 160_000):
+        v = m.VesselCase(**{**m.LH2_160K.__dict__, "capacity_m3": float(cap)})
+        duty = m.scaled_duty(cap, 160_000.0, 25.0, 1.0)
+        out.append(m.breakeven_h2_price(D, VP, vessel=v, bunker_t_per_day=duty))
+    assert math.isclose(out[0], out[1], rel_tol=1e-6)
+
+
+def test_parity_price_is_below_any_plausible_green_hydrogen_value():
+    """Both KHI hulls sit far under any price a project would book, which is
+    the study's practical conclusion: on boil-off cost the map is ammonia's."""
+    D, VP = m.DISTANCE_CAPE_KM, 600.0
+    for vessel in (m.LH2_40K, m.LH2_160K):
+        assert m.breakeven_h2_price(D, VP, vessel=vessel) < 2.0

@@ -353,15 +353,37 @@ def breakeven_bor_fuel_cover(distance_km: float,
     return _bisect(diff, 0.0, 20.0, want_low_when_true=False)
 
 
+def scaled_duty(capacity_m3: float, anchor_capacity_m3: float,
+                anchor_duty_t_per_day: float, exponent: float = 2.0 / 3.0) -> float:
+    """Propulsion duty for a hull of ``capacity_m3``, scaled off a known pair.
+
+    ``exponent`` is [ASSUMPTION] and the choice matters:
+
+    * ``0``   — duty is independent of hull size (what a single stated t/day
+      figure implies if applied to every vessel).
+    * ``2/3`` — default. Resistance, and so propulsion power at constant speed,
+      scales roughly with wetted area, i.e. displacement to the two-thirds.
+    * ``1``   — duty proportional to cargo, i.e. constant fuel per tonne-mile.
+
+    No power curve is held for either vessel, so this is a scaling rule rather
+    than a specification. It is used only where hull size is swept.
+    """
+    if anchor_capacity_m3 <= 0:
+        return anchor_duty_t_per_day
+    return anchor_duty_t_per_day * (capacity_m3 / anchor_capacity_m3) ** exponent
+
+
 def breakeven_h2_price(distance_km: float, vlsfo_price_usd_per_t: float,
                        vessel: VesselCase = None,
-                       mode: str = "boiloff") -> float | None:
+                       mode: str = "boiloff",
+                       bunker_t_per_day: float | None = None) -> float | None:
     """Delivered-H2 value at which the two carriers' boil-off + bunker cost per
     kg H2 delivered is equal. Below it the LH2 carrier is cheaper on this
     metric; above it the ammonia carrier is."""
     nh3_fb = fuel_balance(NH3_24K, distance_km, True)
     nh3_pk = voyage_cost_per_kg(nh3_fb, 0.0, vlsfo_price_usd_per_t, mode)["per_kg"]
-    lh2_fb = fuel_balance(vessel if vessel is not None else LH2_160K, distance_km, False)
+    lh2_fb = fuel_balance(vessel if vessel is not None else LH2_160K, distance_km, False,
+                          bunker_t_per_day=bunker_t_per_day)
     base = voyage_cost_per_kg(lh2_fb, 0.0, vlsfo_price_usd_per_t, mode)["per_kg"]
     slope = lh2_fb.cargo_lost_kg / lh2_fb.delivered_h2e_kg
     if slope <= 0:
