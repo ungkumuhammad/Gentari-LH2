@@ -137,3 +137,89 @@ def test_fleet_size_grows_with_distance():
     near = m.evaluate(m.LH2_40K, 1000, is_nh3=False).fleet_size_for_demand
     far = m.evaluate(m.LH2_40K, m.DISTANCE_CAPE_KM, is_nh3=False).fleet_size_for_demand
     assert far >= near
+
+
+# --- bunker fuel / boil-off-as-fuel balance -------------------------------
+
+def test_bog_fuel_balance_conserves_energy():
+    b = shipping.bog_fuel_balance(bog_kg=100_000, demand_mj=5_000_000)
+    assert math.isclose(b["useful_mj"] + b["surplus_mj"], b["bog_energy_mj"], rel_tol=1e-9)
+    assert b["useful_mj"] <= b["bog_energy_mj"]
+
+
+def test_bog_fuel_balance_shortfall_and_surplus_are_exclusive():
+    """A voyage is either short of fuel or in surplus, never both."""
+    for bog in (10_000, 100_000, 1_000_000):
+        b = shipping.bog_fuel_balance(bog_kg=bog, demand_mj=5_000_000)
+        assert b["surplus_mj"] == 0 or b["shortfall_mj"] == 0
+
+
+def test_bog_fuel_balance_engine_ratio_scales_delivered_energy():
+    lo = shipping.bog_fuel_balance(50_000, 1e12, engine_efficiency_ratio=0.8)
+    hi = shipping.bog_fuel_balance(50_000, 1e12, engine_efficiency_ratio=1.0)
+    assert lo["bog_energy_mj"] < hi["bog_energy_mj"]
+
+
+def test_lh2_boil_off_does_not_cover_fuel_at_default_bor():
+    """At the 0.2 %/day placeholder the boil-off is NOT enough to run the ship
+    -- the carrier still buys bunker fuel and vents nothing. Documents the
+    headline finding of the fuel-balance study."""
+    fb = m.fuel_balance(m.LH2_40K, m.DISTANCE_CAPE_KM, False)
+    assert fb.covered_fraction < 1.0
+    assert fb.topup_fuel_t > 0
+    assert fb.bog_surplus_kg == 0
+
+
+def test_high_bor_produces_unusable_surplus():
+    """Above the cover point the extra boil-off cannot be burned for
+    propulsion -- it leaves the ship doing no useful work."""
+    v = m.VesselCase(**{**m.LH2_40K.__dict__, "voyage_bor_pct_per_day": 3.44})
+    fb = m.fuel_balance(v, m.DISTANCE_CAPE_KM, False)
+    assert fb.bog_surplus_kg > 0
+    assert fb.topup_fuel_t == 0
+    assert math.isclose(fb.bog_useful_kg + fb.bog_surplus_kg, fb.bog_kg, rel_tol=1e-9)
+
+
+def test_breakeven_bor_fuel_cover_actually_covers():
+    for dist in (m.DISTANCE_SUEZ_KM, m.DISTANCE_CAPE_KM):
+        bor = m.breakeven_bor_fuel_cover(dist)
+        v = m.VesselCase(**{**m.LH2_40K.__dict__, "voyage_bor_pct_per_day": bor})
+        fb = m.fuel_balance(v, dist, False)
+        assert math.isclose(fb.covered_fraction, 1.0, rel_tol=1e-4)
+
+
+def test_fuel_cover_bor_sits_above_the_working_assumption():
+    """The cover point is above 0.2 %/day but far below the RSER literature
+    figure -- i.e. the working assumption is in the 'buys fuel' regime and the
+    literature figure is deep in the 'vents surplus' regime."""
+    bor = m.breakeven_bor_fuel_cover(m.DISTANCE_CAPE_KM)
+    assert 0.2 < bor < 3.44
+
+
+def test_nh3_carrier_loses_no_cargo_but_burns_reliq_fuel():
+    fb = m.fuel_balance(m.NH3_24K, m.DISTANCE_CAPE_KM, True)
+    assert fb.cargo_lost_kg == 0
+    assert fb.reliq_fuel_t > 0
+    assert math.isclose(fb.total_fuel_t, fb.topup_fuel_t + fb.reliq_fuel_t, rel_tol=1e-9)
+
+
+def test_breakeven_h2_price_equalizes_cost_per_kg():
+    D, vlsfo = m.DISTANCE_CAPE_KM, 600.0
+    p = m.breakeven_h2_price(D, vlsfo)
+    lh2 = m.voyage_cost_per_kg(m.fuel_balance(m.LH2_40K, D, False), p, vlsfo)["per_kg"]
+    nh3 = m.voyage_cost_per_kg(m.fuel_balance(m.NH3_24K, D, True), p, vlsfo)["per_kg"]
+    assert math.isclose(lh2, nh3, rel_tol=1e-6)
+
+
+def test_breakeven_h2_price_rises_with_bunker_price():
+    """Dearer bunker fuel hurts the ammonia carrier more (it buys all of its
+    propulsion energy), so LH2 tolerates a higher hydrogen value."""
+    D = m.DISTANCE_CAPE_KM
+    assert m.breakeven_h2_price(D, 400) < m.breakeven_h2_price(D, 800)
+
+
+def test_cost_per_kg_splits_into_cargo_and_fuel():
+    fb = m.fuel_balance(m.LH2_40K, m.DISTANCE_CAPE_KM, False)
+    c = m.voyage_cost_per_kg(fb, 5.0, 600.0)
+    assert math.isclose(c["cargo_per_kg"] + c["fuel_per_kg"], c["per_kg"], rel_tol=1e-9)
+    assert c["cargo_per_kg"] > c["fuel_per_kg"]   # hydrogen is the premium term

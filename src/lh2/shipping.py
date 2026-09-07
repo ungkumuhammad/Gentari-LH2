@@ -197,6 +197,91 @@ def fleet_size(
     return math.ceil(annual_volume_kg / annual_capacity_per_ship)
 
 
+# --- Bunker fuel & boil-off-as-fuel balance -------------------------------
+# KHI's carrier burns cargo boil-off in a dual-fuel engine (reply Q23/Q33) and
+# states the fuel-gas consumption rate equals the BOR. That only closes if the
+# BOG happens to match the engine's demand. These helpers make the two sides
+# explicit so a shortfall (top-up bunker fuel needed) or a surplus (BOG that
+# cannot be burned for propulsion) is visible rather than assumed away.
+
+#: [ESTIMATE] Lower heating value of VLSFO, MJ/kg. 40.2 MJ/kg is the marine
+#: convention for heavy/very-low-sulphur fuel oil (the IMO MEPC EEDI/CII
+#: figure for HFO). No primary citation is logged in references.csv yet.
+VLSFO_LHV_MJ_PER_KG = 40.2
+
+#: H2 lower heating value, MJ/kg. Mirrors data/properties/lh2-properties.csv
+#: (tagged needs-source pending NIST/ISO citation approval).
+H2_LHV_MJ_PER_KG = 120.0
+
+
+def propulsion_demand_mj(fuel_tonnes_per_day: float, days: float,
+                         fuel_lhv_mj_per_kg: float = VLSFO_LHV_MJ_PER_KG) -> float:
+    """Propulsion energy demand over a voyage, MJ.
+
+    Expressed via a stated bunker-fuel burn rate so the two carriers can be put
+    on one basis: the ammonia carrier's disclosed burn rate sets the duty, and
+    the LH2 carrier is charged the same duty unless the caller says otherwise.
+
+    Args:
+        fuel_tonnes_per_day: Bunker fuel burn rate, t/day.
+        days: Voyage duration charged with propulsion fuel, days.
+        fuel_lhv_mj_per_kg: Bunker fuel LHV (default VLSFO, [ESTIMATE]).
+
+    Returns:
+        Energy demand over the voyage, MJ.
+    """
+    return fuel_tonnes_per_day * 1000.0 * days * fuel_lhv_mj_per_kg
+
+
+def bog_fuel_balance(bog_kg: float, demand_mj: float,
+                     bog_lhv_mj_per_kg: float = H2_LHV_MJ_PER_KG,
+                     engine_efficiency_ratio: float = 1.0,
+                     fuel_lhv_mj_per_kg: float = VLSFO_LHV_MJ_PER_KG) -> dict:
+    """Split cargo boil-off between propulsion fuel and unusable surplus.
+
+    The boil-off leaves the cargo either way — this only decides how much of it
+    does useful work. Below the engine's demand the ship must buy top-up bunker
+    fuel; above it the surplus cannot be burned for propulsion and is disposed
+    of (vented, or combusted in a gas combustion unit — KHI reply Q26 describes
+    a GCU burning excess BOG above MARVS). Neither disposition returns the
+    hydrogen to the cargo.
+
+    Args:
+        bog_kg: Boil-off mass generated over the voyage, kg.
+        demand_mj: Propulsion energy demand over the same voyage, MJ (see
+            ``propulsion_demand_mj``).
+        bog_lhv_mj_per_kg: Boil-off gas LHV (default H2).
+        engine_efficiency_ratio: [ASSUMPTION] thermal efficiency burning BOG
+            relative to burning the liquid bunker fuel. 1.0 = identical.
+        fuel_lhv_mj_per_kg: Bunker fuel LHV, used to express the shortfall as
+            a physical fuel tonnage.
+
+    Returns:
+        dict with ``bog_energy_mj`` (as delivered to the engine, after the
+        efficiency ratio), ``useful_mj`` (displacing bunker fuel),
+        ``surplus_mj`` and ``surplus_kg`` (BOG that cannot be used for
+        propulsion), ``shortfall_mj``, ``topup_fuel_t`` (bunker fuel that must
+        still be bought), ``fuel_displaced_t``, and ``covered_fraction``.
+    """
+    bog_energy = bog_kg * bog_lhv_mj_per_kg * engine_efficiency_ratio
+    useful = min(bog_energy, demand_mj)
+    surplus = max(0.0, bog_energy - demand_mj)
+    shortfall = max(0.0, demand_mj - bog_energy)
+    # surplus expressed back as BOG mass (undo the efficiency ratio)
+    per_kg = bog_lhv_mj_per_kg * engine_efficiency_ratio
+    return {
+        "bog_energy_mj": bog_energy,
+        "useful_mj": useful,
+        "surplus_mj": surplus,
+        "surplus_kg": surplus / per_kg if per_kg > 0 else 0.0,
+        "useful_kg": useful / per_kg if per_kg > 0 else 0.0,
+        "shortfall_mj": shortfall,
+        "topup_fuel_t": shortfall / fuel_lhv_mj_per_kg / 1000.0,
+        "fuel_displaced_t": useful / fuel_lhv_mj_per_kg / 1000.0,
+        "covered_fraction": (bog_energy / demand_mj) if demand_mj > 0 else float("inf"),
+    }
+
+
 __all__ = [
     "KHI_COMMERCIAL_CARGO_CAPACITY",
     "KHI_COMMERCIAL_SPEED",
@@ -206,6 +291,10 @@ __all__ = [
     "one_way_transit_days",
     "round_trip_days",
     "voyage_boil_off",
+    "VLSFO_LHV_MJ_PER_KG",
+    "H2_LHV_MJ_PER_KG",
+    "propulsion_demand_mj",
+    "bog_fuel_balance",
     "cargo_mass_per_voyage",
     "annual_capacity_per_vessel",
     "fleet_size",

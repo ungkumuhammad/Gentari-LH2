@@ -792,3 +792,64 @@ equalize the two carriers' annual H2-equivalent to within 0.1%).
 5. Confirm the Kakinada→Hamburg distance with a primary source if this
    corridor becomes decision-relevant — current figures are first-principles
    estimates, not AIS/route-planning-tool output.
+
+### Boil-off as bunker fuel: the fuel-balance reframe (2026-09-07, same session)
+
+User rejected the first artifact's energy study and supplied the real physics:
+the LH2 carrier's boil-off is **used as fuel**, the ammonia carrier burns
+**25 MT/day of VLSFO**. Check whether the LH2 boil-off covers that duty; if
+not, extra VLSFO is needed; if it exceeds the duty, the balance is **released
+to atmosphere**. Their point: since both ships then sit on the same propulsion
+baseline, the comparison reduces to **H2-lost-as-fuel vs ammonia
+re-liquefaction** — and H2 is a premium fuel, so burning it is a real cost.
+
+**Decisions taken:**
+
+| # | Decision | Choice |
+|---|----------|--------|
+| S10 | Propulsion duty | Both carriers charged the same 25 t/day VLSFO duty `[ASSUMPTION - user]`, so the LH2 boil-off is tested against a like-for-like demand. Flagged: the LH2 vessel is a larger hull at ~23% higher speed, so its real demand is probably higher — no power curve held for either vessel, so it is flagged rather than scaled |
+| S11 | Fuel-charging boundary | **Laden leg only**, both vessels symmetrically — that is where boil-off is generated. Ballast excluded, stated explicitly |
+| S12 | Surplus disposition | User says vented; **KHI reply Q26 says a GCU burns excess BOG above MARVS**. Both carried as a toggle — the H2 is lost from cargo either way, only the environmental line changes |
+| S13 | NH3 reliq energy booked as fuel | Re-liquefaction electricity converted to physical bunker fuel via a 45% genset efficiency `[ASSUMPTION]`, so both carriers' costs land in the same currency |
+| S14 | Prices | H2 value and VLSFO price are **live user inputs with no default asserted as correct**; the study reports the breakeven price instead. Logged in the data table as `needs-source` with value deliberately blank |
+
+**Findings (Cape route, 21,200 km, 0.2 %/day):**
+1. **Boil-off covers only 64 % of the fuel bill.** The carrier still buys 266 t
+   of VLSFO per laden leg and vents nothing. KHI's "fuel-gas consumption rate
+   equals the BOR" does not close on its own at this rate.
+2. **The regimes meet at 0.316 %/day** (Cape) / 0.308 %/day (Suez). Below it
+   the ship buys fuel; above it the engine cannot absorb the boil-off. At the
+   RSER 3.44 %/day figure the carrier makes **720 %** of what it can burn —
+   1,549 t H2 per leg, **86 % of the boil-off doing no work** (~17,969 t CO2e
+   if vented at GWP100 11.6).
+3. **Breakeven hydrogen value ≈ USD 2.29/kg** (Cape) / 2.39/kg (Suez) at VLSFO
+   USD 600/t; ~3.06/kg at USD 800/t bunker. Above it ammonia is the cheaper
+   carrier. At USD 5/kg H2, **83 % of the LH2 carrier's shipping cost is the
+   hydrogen it burns**, not the fuel it buys — the premium-fuel penalty.
+
+| File | Action | Purpose |
+|------|--------|---------|
+| `src/lh2/shipping.py` | Extended | `VLSFO_LHV_MJ_PER_KG` (40.2, ESTIMATE), `H2_LHV_MJ_PER_KG`, `propulsion_demand_mj()`, `bog_fuel_balance()` — splits boil-off into propulsion-useful vs unusable surplus and reports the top-up fuel tonnage |
+| `data/vessels/nh3-carriers.csv` | 8 rows added | Bunker rate/type, VLSFO LHV, BOG-vs-oil engine efficiency ratio, reliq genset efficiency, vented-H2 GWP100, and two deliberately-blank `needs-source` price rows |
+| `scripts/run_shipping_comparison.py` | Extended | `FuelBalance`, `fuel_balance()`, `voyage_cost_per_kg()`, `breakeven_bor_fuel_cover()`, `breakeven_h2_price()`; `VoyageResult` gained `bog_frac` |
+| `tests/test_shipping_comparison.py` | +11 tests (162 total) | Energy conservation in the split, shortfall/surplus exclusivity, "does not cover at 0.2 %/day" as a regression, the cover-BOR sits between 0.2 and 3.44, breakeven price actually equalizes and rises with bunker price, cargo term dominates the fuel term |
+| `docs/reports/lh2-vs-nh3-shipping-studies.html` | **Rebuilt** | Reordered to lead with the fuel balance: (1) does boil-off cover the fuel bill (% of demand, two shaded regimes), (2) where the hydrogen goes (stacked useful vs hatched surplus + VLSFO top-up line), (3) cost vs hydrogen value with the parity price, (4) sweet-spot map over H2 price × boil-off with both the cost-parity contour and the fuel-cover line, then the throughput studies. New inputs: bunker rate, H2 price, VLSFO price, VLSFO LHV, engine ratio, genset efficiency, vent/GCU toggle |
+| `docs/comparison/02-shipping-lh2-vs-nh3.md` | New §5a + gaps 7-9 | The fuel-balance method, results and breakevens |
+
+**Verified** against the Python CLI at the defaults: covers 64 %, 266 t top-up,
+cover point 0.32 %/day, breakeven H2 price $2.29/kg, cost $0.369 vs $0.202 per
+kg — all exact matches. No console errors, both themes checked.
+
+**Artifact watch could not be registered this session** (the artifact service
+refuses wake subscriptions here), so comments on the page will not wake this
+session — the user has to relay them.
+
+**➡️ Open items added by this pass:**
+1. A real LH2 voyage BOR remains the top gap — it now decides three separate
+   things (throughput, whether the ship buys or wastes fuel, and cost).
+2. The LH2 carrier's own propulsion demand — 25 t/day is the ammonia vessel's
+   figure borrowed for symmetry. A power curve or a design fuel rate for the
+   40k LH2 carrier would sharpen every fuel-balance number.
+3. Hydrogen and bunker price assumptions for the corridor, if the economics
+   are to be quoted rather than parameterised.
+4. Whether the ballast leg should be charged — currently excluded for both.

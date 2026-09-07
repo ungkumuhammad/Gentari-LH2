@@ -119,6 +119,73 @@ more sensitive to the LH2 voyage boil-off rate than to anything about the
 ammonia vessel** — that is where a real number would move this conclusion
 the most.
 
+
+## 5a. Boil-off as bunker fuel — the fuel balance (added 2026-09-07, 2nd pass)
+
+User direction: the ammonia carrier burns **25 t/day VLSFO**; the LH2 carrier
+burns its cargo boil-off instead. Test whether the boil-off actually covers
+that duty — if it falls short, the LH2 carrier still buys VLSFO; if it
+overshoots, the surplus leaves the ship having done no work. Then compare
+**hydrogen given up as fuel** against **ammonia's re-liquefaction energy**,
+pricing hydrogen as the premium fuel it is.
+
+**Basis.** Both carriers are charged the same 25 t/day propulsion duty
+`[ASSUMPTION — user-specified]`, over the **laden leg only** (ballast excluded
+symmetrically, since that is where boil-off is generated). VLSFO LHV
+40.2 MJ/kg `[ESTIMATE]`; H2 LHV 120 MJ/kg; BOG-vs-oil engine efficiency ratio
+1.0 `[ASSUMPTION]`; NH3 re-liquefaction electricity converted to fuel at a 45 %
+genset efficiency `[ASSUMPTION]`.
+
+**Result at the Cape route, 0.2 %/day boil-off:**
+
+| | LH2 carrier | NH3 carrier |
+|---|---|---|
+| Laden leg | 29.84 d | 36.69 d |
+| Propulsion demand | 746 t VLSFO-eq | 917 t VLSFO-eq |
+| Boil-off generated | 161.0 t H₂ (5.80 % of cargo) | 860 t NH₃ (re-liquefied, cargo kept) |
+| Covered by boil-off | **64 %** (480 t VLSFO displaced) | 0 % |
+| VLSFO still purchased | **266 t** | 917 t + 42.8 t re-liq = 960 t |
+| Surplus vented | **none** | — |
+
+**Finding 1 — at the working assumption, the boil-off does not cover the fuel
+bill.** It covers 64 %, and the carrier still buys 266 t of VLSFO per leg.
+Kawasaki's "fuel-gas consumption rate equals the BOR" does not close on its own
+at 0.2 %/day.
+
+**Finding 2 — the two regimes meet at 0.316 %/day** (Cape) / **0.308 %/day**
+(Suez). Below it the ship buys fuel; above it the engine cannot absorb the
+boil-off and the excess is disposed of. At the published RSER figure of
+**3.44 %/day** the carrier generates **720 %** of what it can burn — 1,549 t of
+hydrogen per leg, **86 % of the boil-off, doing no work at all**.
+
+**Finding 3 — the premium-fuel penalty decides the economics.** Cost of one
+laden leg per kg H₂ delivered, at VLSFO USD 600/t:
+
+| H₂ valued at | LH2 carrier | NH3 carrier | Cheaper |
+|---|---:|---:|---|
+| $1.00/kg | $0.123 | $0.202 | LH2 |
+| **$2.29/kg** | **$0.202** | **$0.202** | **parity** |
+| $5.00/kg | $0.369 | $0.202 | NH3 |
+
+**Breakeven hydrogen value ≈ USD 2.29/kg** (Cape) / **2.39/kg** (Suez) at
+VLSFO USD 600/t, rising to ~$3.06/kg if bunker fuel reaches USD 800/t. Above
+the breakeven the ammonia carrier is the cheaper way to move hydrogen: at
+$5/kg, **83 % of the LH2 carrier's shipping cost is the hydrogen it burns**,
+not the fuel it buys. The LH2 carrier runs on the most expensive thing it is
+carrying.
+
+**Prices are not sourced.** Neither the hydrogen value nor the bunker price is
+logged in `data/references.csv`; both are live inputs in the artifact and the
+study reports the breakeven rather than asserting a price.
+
+**Surplus disposal — a discrepancy worth noting.** The user's framing is that
+surplus boil-off is released to atmosphere. Kawasaki's reply Q26 instead
+describes a **gas combustion unit** burning excess BOG above MARVS, which
+oxidises it to water. The hydrogen is lost from the cargo either way and has no
+fuel value beyond the propulsion cap — only the environmental line changes
+(vented H₂ carries an indirect warming effect, ~11.6 kg CO₂e/kg on a 100-year
+basis `[ESTIMATE]`; combusted H₂ does not). The artifact carries a toggle.
+
 ## 6. Explicit gaps (per CLAUDE.md §4 — nothing here is fabricated)
 
 1. **LH2 voyage BOR (0.2%/day)** — KHI never disclosed a standalone figure.
@@ -141,6 +208,15 @@ the most.
 6. **Route choice (Cape vs Suez) is itself a live operational uncertainty**,
    not a fixed geographic fact, given the Red Sea security situation — both
    are carried in the data table for exactly this reason.
+7. **The 25 t/day propulsion duty** is a user figure for the ammonia carrier,
+   charged to the LH2 carrier as well so the two share one basis. The LH2
+   vessel is a larger hull at ~23 % higher speed, so its real demand is
+   probably higher — which would absorb more boil-off usefully *and* raise its
+   top-up fuel bill. No power curve is held for either vessel.
+8. **VLSFO LHV, genset efficiency, BOG-vs-oil engine efficiency, and the
+   vented-H₂ warming potential** are all estimates or assumptions with no
+   primary citation logged.
+9. **Ballast leg excluded** from the propulsion-fuel charge for both vessels.
 
 ## 7. Open items for the user
 

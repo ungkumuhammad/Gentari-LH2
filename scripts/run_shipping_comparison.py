@@ -34,6 +34,15 @@ FLEET_AVAILABILITY = 0.90                # [ASSUMPTION] src/lh2/shipping.py conv
 ANNUAL_H2_EQUIVALENT_DEMAND_KG = 100e6    # 100 ktpa, [ASSUMPTION] study basis (docs/memory.md, 2026-09-02)
 NH3_PER_H2_MASS_RATIO = 5.632             # [ASSUMPTION] first-principles stoichiometry (data/carriers/chain-energy-defaults.csv)
 
+# --- Bunker fuel basis (data/vessels/nh3-carriers.csv) ----------------------
+BUNKER_T_PER_DAY = 25.0            # [ASSUMPTION] user-specified NH3 carrier VLSFO burn; charged to BOTH carriers
+VLSFO_LHV_MJ_PER_KG = shipping.VLSFO_LHV_MJ_PER_KG   # [ESTIMATE] 40.2 MJ/kg
+H2_LHV_MJ_PER_KG = shipping.H2_LHV_MJ_PER_KG         # 120 MJ/kg, mirrors data/properties/lh2-properties.csv
+BOG_ENGINE_EFFICIENCY_RATIO = 1.0  # [ASSUMPTION] BOG vs liquid-fuel thermal efficiency in the same engine
+RELIQ_GENSET_EFFICIENCY = 0.45     # [ASSUMPTION] shipboard genset efficiency driving the NH3 reliquefaction plant
+NH3_RELIQ_SEC_KWH_PER_KG = 0.25    # [ESTIMATE] placeholder, no NH3 dataset yet (decision D4)
+H2_GWP100 = 11.6                   # [ESTIMATE] indirect GWP of VENTED H2 only; a GCU burns it to water instead
+
 
 @dataclass
 class VesselCase:
@@ -77,6 +86,7 @@ class VoyageResult:
     one_way_days: float
     round_trip_days: float
     cargo_per_voyage_kg: float
+    bog_frac: float
     voyage_loss_frac: float
     delivered_cargo_per_voyage_kg: float
     trips_per_year: float
@@ -99,6 +109,7 @@ def evaluate(vessel: VesselCase, distance_km: float,
     # Voyage boil-off is charged over the one-way LADEN leg only (matches
     # src/lh2/chain_energy.py's voyage_days() convention: BOG accrues while
     # carrying cargo, not on the ballast return leg).
+    bog_frac = 1.0 - (1.0 - vessel.voyage_bor_pct_per_day / 100.0) ** one_way
     if vessel.bog_is_mass_loss:
         loss_kg = shipping.voyage_boil_off(cargo, one_way, vessel.voyage_bor_pct_per_day)
         loss_frac = loss_kg.to("kg").magnitude / cargo
@@ -125,7 +136,7 @@ def evaluate(vessel: VesselCase, distance_km: float,
 
     return VoyageResult(
         vessel=vessel, distance_km=distance_km, one_way_days=one_way,
-        round_trip_days=rtd, cargo_per_voyage_kg=cargo, voyage_loss_frac=loss_frac,
+        round_trip_days=rtd, cargo_per_voyage_kg=cargo, bog_frac=bog_frac, voyage_loss_frac=loss_frac,
         delivered_cargo_per_voyage_kg=delivered_per_voyage, trips_per_year=trips_per_year,
         annual_delivered_cargo_kg=annual_delivered_cargo,
         annual_delivered_h2_equivalent_kg=annual_delivered_h2e,
@@ -202,6 +213,111 @@ def find_crossover_km(lo: float = 1.0, hi: float = 60_000.0, tol: float = 1.0) -
         else:
             lo = mid
     return (lo + hi) / 2
+
+
+@dataclass
+class FuelBalance:
+    """Bunker-fuel picture for one carrier over one laden leg.
+
+    Both carriers are charged the same propulsion duty (``BUNKER_T_PER_DAY``),
+    so the only difference is what covers it. The LH2 carrier burns cargo
+    boil-off first and buys the shortfall; anything above the engine's demand
+    cannot be used for propulsion and leaves the ship regardless. The NH3
+    carrier buys all of its propulsion fuel and additionally burns fuel in a
+    genset to drive the reliquefaction plant.
+    """
+    carrier: str
+    laden_days: float
+    demand_mj: float
+    bog_kg: float                 # cargo boiled off over the laden leg
+    bog_useful_kg: float          # of that, burned usefully for propulsion
+    bog_surplus_kg: float         # of that, not usable for propulsion (vented or GCU-burned)
+    covered_fraction: float       # BOG energy / propulsion demand
+    topup_fuel_t: float           # bunker fuel still required for propulsion
+    reliq_fuel_t: float           # bunker fuel burned in the genset for reliquefaction
+    total_fuel_t: float
+    cargo_lost_kg: float          # cargo mass that leaves the chain (H2 for LH2, 0 for NH3)
+    delivered_h2e_kg: float
+
+
+def fuel_balance(vessel: VesselCase, distance_km: float, is_nh3: bool,
+                 bunker_t_per_day: float = BUNKER_T_PER_DAY,
+                 reliq_sec: float = NH3_RELIQ_SEC_KWH_PER_KG,
+                 genset_eff: float = RELIQ_GENSET_EFFICIENCY,
+                 engine_ratio: float = BOG_ENGINE_EFFICIENCY_RATIO) -> FuelBalance:
+    r = evaluate(vessel, distance_km, is_nh3=is_nh3)
+    days = r.one_way_days
+    demand = shipping.propulsion_demand_mj(bunker_t_per_day, days, VLSFO_LHV_MJ_PER_KG)
+    bog_kg = r.cargo_per_voyage_kg * r.bog_frac
+
+    if is_nh3:
+        # BOG is re-liquefied: no cargo leaves, but the genset burns fuel for it.
+        reliq_kwh = bog_kg * reliq_sec
+        reliq_fuel_t = reliq_kwh * 3.6 / (VLSFO_LHV_MJ_PER_KG * genset_eff) / 1000.0
+        return FuelBalance(
+            carrier=vessel.name, laden_days=days, demand_mj=demand, bog_kg=bog_kg,
+            bog_useful_kg=0.0, bog_surplus_kg=0.0, covered_fraction=0.0,
+            topup_fuel_t=bunker_t_per_day * days, reliq_fuel_t=reliq_fuel_t,
+            total_fuel_t=bunker_t_per_day * days + reliq_fuel_t,
+            cargo_lost_kg=0.0,
+            delivered_h2e_kg=r.delivered_cargo_per_voyage_kg / NH3_PER_H2_MASS_RATIO,
+        )
+
+    bal = shipping.bog_fuel_balance(bog_kg, demand, H2_LHV_MJ_PER_KG, engine_ratio,
+                                    VLSFO_LHV_MJ_PER_KG)
+    return FuelBalance(
+        carrier=vessel.name, laden_days=days, demand_mj=demand, bog_kg=bog_kg,
+        bog_useful_kg=bal["useful_kg"], bog_surplus_kg=bal["surplus_kg"],
+        covered_fraction=bal["covered_fraction"], topup_fuel_t=bal["topup_fuel_t"],
+        reliq_fuel_t=0.0, total_fuel_t=bal["topup_fuel_t"],
+        cargo_lost_kg=bog_kg,
+        delivered_h2e_kg=r.delivered_cargo_per_voyage_kg,
+    )
+
+
+def voyage_cost_per_kg(fb: FuelBalance, h2_price_usd_per_kg: float,
+                       vlsfo_price_usd_per_t: float) -> dict:
+    """Boil-off + bunker cost of one laden leg, per kg H2-equivalent delivered.
+
+    Prices are caller-supplied: neither is logged in references.csv, and the
+    study reports a breakeven price rather than asserting one.
+    """
+    cargo_cost = fb.cargo_lost_kg * h2_price_usd_per_kg
+    fuel_cost = fb.total_fuel_t * vlsfo_price_usd_per_t
+    return {
+        "cargo_usd": cargo_cost, "fuel_usd": fuel_cost,
+        "total_usd": cargo_cost + fuel_cost,
+        "per_kg": (cargo_cost + fuel_cost) / fb.delivered_h2e_kg,
+        "cargo_per_kg": cargo_cost / fb.delivered_h2e_kg,
+        "fuel_per_kg": fuel_cost / fb.delivered_h2e_kg,
+    }
+
+
+def breakeven_bor_fuel_cover(distance_km: float,
+                             bunker_t_per_day: float = BUNKER_T_PER_DAY) -> float:
+    """LH2 voyage BOR (%/day) at which cargo boil-off exactly meets the engine's
+    propulsion demand. Below it the ship buys top-up bunker fuel; above it the
+    surplus boil-off cannot be used for propulsion."""
+    def diff(bor: float) -> float:
+        v = VesselCase(**{**LH2_40K.__dict__, "voyage_bor_pct_per_day": bor})
+        fb = fuel_balance(v, distance_km, False, bunker_t_per_day)
+        return fb.covered_fraction - 1.0
+    return _bisect(diff, 0.0, 20.0, want_low_when_true=False)
+
+
+def breakeven_h2_price(distance_km: float, vlsfo_price_usd_per_t: float,
+                       bunker_t_per_day: float = BUNKER_T_PER_DAY) -> float | None:
+    """Delivered-H2 value at which the two carriers' boil-off + bunker cost per
+    kg H2 delivered is equal. Below it the LH2 carrier is cheaper on this
+    metric; above it the ammonia carrier is."""
+    nh3_fb = fuel_balance(NH3_24K, distance_km, True, bunker_t_per_day)
+    nh3_pk = voyage_cost_per_kg(nh3_fb, 0.0, vlsfo_price_usd_per_t)["per_kg"]
+    lh2_fb = fuel_balance(LH2_40K, distance_km, False, bunker_t_per_day)
+    base = voyage_cost_per_kg(lh2_fb, 0.0, vlsfo_price_usd_per_t)["per_kg"]
+    slope = lh2_fb.cargo_lost_kg / lh2_fb.delivered_h2e_kg
+    if slope <= 0:
+        return None
+    return (nh3_pk - base) / slope
 
 
 def format_result(r: VoyageResult) -> str:
