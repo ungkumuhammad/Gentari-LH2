@@ -4,7 +4,7 @@
 > Updated every session. `CLAUDE.md` points here — read this at the start of
 > any session where the user references prior work or continuing a task.
 >
-> Last updated: 2026-09-02
+> Last updated: 2026-09-07
 
 ---
 
@@ -638,3 +638,69 @@ just `staging.csv` summaries) to verify every figure before citing it.
   LH2's safety record reflects *limited operational data*, not proven
   inherent safety — presented as two different kinds of claims, not
   reconciled into one.
+
+### Branch cleanup, regulatory-compliance table, and KHI parameter/challenges
+deliverables (2026-09-07)
+
+1. **Merged all outstanding branches to `main`** per explicit user instruction.
+   Found 9 non-main branches; 7 were already fully merged (no-op), 2 had real
+   unmerged work and were merged: `claude/lh2-ammonia-value-chain-4a1525`
+   (fast-forward — the energy-penalty ledger work above) and
+   `claude/zane-research-comparison-table-4ybs3d` (2-way conflict in
+   `docs/comparison/00-milestones.md` and `docs/memory.md`, resolved by
+   keeping both sessions' entries since they were independent parallel
+   additions, not real edits to the same content). 124 tests passed after
+   the merge; pushed to `origin/main`. **As of this entry, `main` is the only
+   branch with unmerged work relative to itself — i.e. everything is
+   consolidated.** The user's designated per-session branch
+   (`claude/merge-unmerged-branches-0mkmwc`) was never used for real commits;
+   all work this session landed directly on `main` per the user's explicit
+   "merge to main" instructions.
+
+2. **Built KHI technical-parameter tables** (liquefaction, shipping,
+   regasification terminal) as a reviewable chat table first, then as a
+   formatted `.docx` (`docx` npm library, US Letter, navy header tables).
+   Every disclosed figure traces to a KHI reply ID; undisclosed figures
+   (CapEx/OpEx, newbuild cost, voyage BOR) shaded amber and tagged rather
+   than invented.
+
+3. **Added `data/properties/regulatory-compliance.csv` to the database** —
+   this segment had **zero** prior coverage anywhere in the repo. 9 rows: 2
+   cited to KHI (Q12 permitting approach, Q36 safety separation distance),
+   7 explicit `needs-source` gaps (IMO tank-type classification, IGC/IGF
+   Code or equivalent, classification-society approval, liquefaction/
+   terminal design codes, carbon-border exposure). Wired into
+   `scripts/build_db_workbook.py` (new `regulatory_compliance` sheet),
+   `tests/test_data_tables.py` (33 tests passing), and `data/README.md`
+   with a new Known-caveats entry. Committed and pushed as `5bf5f6d`.
+   **Open item for the user:** this table needs a real research pass
+   (dispatch Zane, or a Gentari-legal input) before it supports any
+   permitting-timeline or go/no-go claim — right now it's mostly a
+   documented gap, not an answer.
+
+4. **Wrote a "Key Challenges in the LH2 Value Chain" report** (chat +
+   iterated `.docx` deliverables, not committed to the repo — these are
+   user-facing documents, not database content). Covers: (a) energy
+   intensity at a 100 ktpa H2 study scale — liquefaction alone ≈103 MW
+   continuous average, using KHI's 8–9 kWh/kg SEC; production energy
+   explicitly **excluded** at the user's request since it's managed outside
+   this report; (b) vessel boil-off gas — KHI's 0.1%/day at-rest figure is
+   solid, but the voyage/laden BOR is a confirmed KHI disclosure gap (only
+   "fuel-gas rate = BOR" was given); the repo's own 0.2%/day placeholder and
+   the unpromoted RSER-2026 literature figure (~3.4%/day, different vessel
+   scale) are both named as unvalidated, not used as fact; (c) other risks
+   (vessel scale-up/CapEx, undisclosed plant costs, regulatory uncertainty,
+   materials/safety, the still-placeholder NH3 comparison) as a simplified
+   two-column table per the user's final revision request.
+   **User's stated formatting preferences for this deliverable type** (worth
+   reusing without being asked again): Arial font throughout; **no dashes
+   ("-", "–", "—") anywhere in sentence text** — rephrase instead of using
+   them, including in compound words; plain/simple language over technical
+   phrasing; no visible source/tag/gap markup in the prose (attribution
+   folded into plain sentences like "has not been confirmed" instead of
+   `[needs-source]`); tabular content (case-study numbers, multi-item lists)
+   presented as a proper table rather than prose or bullet pull-quotes.
+   These files were sent directly to the user via SendUserFile, not saved
+   under `docs/` or `sources/` — if the user wants a persistent copy in the
+   repo, ask where it should live (`docs/reports/` seems the natural home,
+   matching `docs/reports/khi-lh2-solution-database.md` etc.).
