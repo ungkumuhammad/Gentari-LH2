@@ -1,4 +1,4 @@
-# LH2 (40,000 m³) vs Ammonia (24,000 m³) — Shipping Segment Comparison
+# LH2 (160,000 m³) vs Ammonia (24,000 m³) — Shipping Segment Comparison
 
 > **Status:** first pass, 2026-09-07. **Boundary:** shipping only (nodes D1/D2
 > of the six-node chain — see [`01-energy-penalty-method.md`](01-energy-penalty-method.md)
@@ -233,3 +233,75 @@ basis `[ESTIMATE]`; combusted H₂ does not). The artifact carries a toggle.
    that model still uses a generic 40k/40k pairing, not this 40k/24k one).
 5. Confirm the Kakinada→Hamburg distance with a primary source if this
    corridor becomes decision-relevant (§2, §6.4).
+
+
+---
+
+## 7. Third pass (2026-09-07): 160,000 m³ vessel and the boil-off cost basis
+
+Four changes on user direction.
+
+**7.1 The LH2 vessel is now the 160,000 m³ commercial-scale ship** (cited,
+`kawasaki-2026-supplemental`), replacing the 40,000 m³ vessel under
+construction. This is also more internally consistent: KHI's disclosed
+29.6 km/h service speed was given for *this* ship.
+
+| | LH2 160,000 m³ | NH3 24,000 m³ |
+|---|---:|---:|
+| Cargo loaded per voyage | 11,101 t LH2 | 16,041 t NH3 |
+| Delivered per voyage, H2-eq | 10.46 M kg | 2.85 M kg |
+| Annual per vessel, H2-eq | **55.2 M kg/y** | **12.2 M kg/y** |
+| Fleet for 100 ktpa H2-eq | **2 vessels** | **9 vessels** |
+
+One LH2 carrier does the work of **4.5** of the specified ammonia ships.
+Matching it with a *single* ammonia vessel would take ~108,000 m³ at 13 kn or
+~84,000 m³ at 17 kn — at or beyond the largest gas carriers in service
+(~87,000 m³ for ammonia, ~93,000 m³ for any gas carrier)
+`[ESTIMATE — vessel-class figures, not in this repository]`. The real choice
+is between **a fleet of ordinary mid-size gas carriers and a pair of
+purpose-built giants**, not between two ships.
+
+Throughput parity now needs a boil-off rate **above 4.9 %/day** — higher even
+than the RSER literature figure. On throughput the 160k ship wins decisively;
+on cost it does not. The two criteria now point in opposite directions, which
+is why both sets of studies are kept.
+
+**7.2 The propulsion duty is now per carrier, and it is the weakest number in
+the study.** 25 t/day is the ammonia vessel's figure. Carried across to a
+160,000 m³ hull it produces a dramatic result — boil-off covers **258 %** of
+demand, and 394 t of hydrogen per leg (61 % of the boil-off) has nowhere to
+go. But that overshoot is substantially an artifact of the duty: at ~100 t/day,
+roughly proportionate to the 4× cargo, coverage falls to **64 %** and the
+surplus disappears entirely. **A design fuel rate for the 160k vessel is now
+the highest-value missing input**, alongside the voyage BOR.
+
+**7.3 Cost basis corrected to boil-off management only.** The previous pass
+charged each carrier its whole leg fuel bill, which made the ammonia figure
+(USD 0.202/kg) 96 % propulsion fuel — not a boil-off comparison at all. The
+user's framing is right: with both ships on a common propulsion duty, the
+comparison is **hydrogen given up as fuel vs the VLSFO burned to re-liquefy
+ammonia BOG**. The default is now:
+
+- **LH2** = hydrogen burned × H2 price, **credited** with the VLSFO that
+  hydrogen displaced (746 t, USD 448k at USD 600/t). Without that credit the
+  LH2 carrier would be charged for its boil-off while being given no recognition
+  for the fuel it did not buy.
+- **NH3** = re-liquefaction fuel only (42.8 t VLSFO, via a 45 % genset
+  efficiency `[ASSUMPTION]`) = **USD 0.009/kg H2**.
+
+| Basis | LH2 | NH3 | Breakeven H2 value |
+|---|---:|---:|---:|
+| Boil-off only (default) | USD 0.265/kg | USD 0.009/kg | **USD 0.84/kg** |
+| Full leg fuel bill | USD 0.308/kg | USD 0.202/kg | USD 3.28/kg |
+
+Both framings are kept as a toggle, because the two laden legs differ in
+length (29.8 vs 36.7 d) so the propulsion term is **not** a clean common factor
+that simply cancels. Under the boil-off-only basis the ammonia carrier is
+cheaper at essentially any hydrogen value a project would book.
+
+**7.4 Presentation.** Every chart legend now names its x and y parameters;
+the boil-off fate chart states its basis explicitly and carries a per-leg /
+per-day toggle (it was previously per laden leg, unlabelled); and the
+throughput study is reframed from "what would make the ammonia ship win" —
+which was unreadable against a 4.5× gap — to "how many ammonia ships equal one
+LH2 carrier", sweeping ammonia capacity at three service speeds.

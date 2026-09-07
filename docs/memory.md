@@ -853,3 +853,38 @@ session — the user has to relay them.
 3. Hydrogen and bunker price assumptions for the corridor, if the economics
    are to be quoted rather than parameterised.
 4. Whether the ballast leg should be charged — currently excluded for both.
+
+### 160,000 m³ vessel + boil-off cost basis corrected (2026-09-07, same session)
+
+Four user corrections to the shipping studies.
+
+| # | Change | Detail |
+|---|--------|--------|
+| S15 | **LH2 vessel → 160,000 m³** | The KHI commercial-scale target (cited, `kawasaki-2026-supplemental`), replacing the 40,000 m³ ship. More internally consistent too: the disclosed 29.6 km/h speed was given for this vessel. `LH2_160K` added; `LH2_40K` kept for the legacy tests |
+| S16 | **Per-carrier propulsion duty** | `LH2_BUNKER_T_PER_DAY` split from the ammonia vessel's. Defaults to 25 t/day per the user's stated basis but flagged hard — see below |
+| S17 | **Cost basis → boil-off management only** | User was right: the previous NH3 figure (USD 0.202/kg) was 96 % propulsion fuel, not a boil-off comparison. `voyage_cost_per_kg(mode=...)`: `"boiloff"` (default) charges LH2 for hydrogen burned **credited with displaced VLSFO**, and NH3 for reliq fuel only; `"full"` kept as a toggle because the laden legs differ in length so propulsion does not cleanly cancel |
+| S18 | **Presentation** | Axis parameters named in every legend; boil-off fate chart got an explicit per-leg/per-day toggle (the user asked which it was — it was per laden leg, unlabelled); throughput study reframed to "how many ammonia ships equal one LH2 carrier" |
+
+**Results at the new default (Cape, 160k, 0.2 %/day, 25 t/day duty):**
+- Throughput: **55.2 vs 12.2 M kg H2-eq/vessel-y**, fleet **2 vs 9** — one LH2
+  carrier ≈ **4.5** ammonia ships. Single-ship match needs ~108k m³ at 13 kn
+  (~84k m³ at 17 kn), at/beyond the largest gas carriers afloat.
+- Fuel balance: boil-off covers **258 %** of demand; 394 t H2/leg (61 %) has
+  nowhere to go; cover point falls to **0.076 %/day**.
+- Cost (boil-off only): LH2 **USD 0.265/kg** vs NH3 **USD 0.009/kg**;
+  breakeven H2 value **USD 0.84/kg**. Full-leg basis: 0.308 vs 0.202,
+  breakeven USD 3.28/kg.
+- Throughput parity BOR now **>4.9 %/day** — above the RSER figure. Throughput
+  and cost point in opposite directions; both study sets kept for that reason.
+
+**⚠️ The single most important caveat now:** 25 t/day is the *ammonia* vessel's
+burn rate. Applied to a 160,000 m³ hull it manufactures the 258 % overshoot.
+At ~100 t/day (proportionate to the 4× cargo) coverage falls to 64 % and the
+surplus vanishes. A design fuel rate for the 160k vessel is now the
+highest-value missing input alongside the voyage BOR. Both the artifact
+readout and the gap list say this explicitly, and the duty is a live input.
+
+Tests: 167 passing (was 162). New coverage for hull-size scaling of the cover
+point, the surplus-is-an-artifact-of-the-duty caveat, the displacement credit
+making boil-off a net saving at zero H2 value, mode separation, and that speed
+alone cannot close a 4.5× gap.

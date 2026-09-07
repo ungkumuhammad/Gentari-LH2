@@ -87,50 +87,48 @@ def test_lh2_wins_at_default_parameters_both_routes():
 def test_breakeven_lh2_voyage_bor_actually_equalizes():
     distance = m.DISTANCE_CAPE_KM
     bor = m.breakeven_lh2_voyage_bor(distance)
-    v = m.VesselCase(**{**m.LH2_40K.__dict__, "voyage_bor_pct_per_day": bor})
+    v = m.VesselCase(**{**m.LH2_160K.__dict__, "voyage_bor_pct_per_day": bor})
     lh2 = m.evaluate(v, distance, is_nh3=False).annual_delivered_h2_equivalent_kg
     nh3 = m.evaluate(m.NH3_24K, distance, is_nh3=True).annual_delivered_h2_equivalent_kg
     assert math.isclose(lh2, nh3, rel_tol=1e-3)
 
 
-def test_breakeven_lh2_voyage_bor_within_plausible_range():
-    """Both routes' breakeven BOR should sit strictly between the current
-    0.2%/day placeholder and the unpromoted RSER literature figure of
-    ~3.44%/day -- i.e. the outcome genuinely depends on which one turns out
-    to be closer to reality (docs/comparison/khi-vs-literature-lh2-comparison.md)."""
+def test_throughput_parity_bor_exceeds_the_literature_figure():
+    """Against a 160,000 m3 hull the throughput lead is large enough that even
+    the RSER ~3.44 %/day literature boil-off rate does not cost the LH2 carrier
+    its lead -- unlike the 40,000 m3 pairing, where parity sat at 0.60 %/day.
+    Throughput and cost now point in opposite directions, which is the point of
+    keeping both sets of studies."""
     for distance in (m.DISTANCE_SUEZ_KM, m.DISTANCE_CAPE_KM):
         bor = m.breakeven_lh2_voyage_bor(distance)
-        assert 0.2 < bor < 3.44
+        assert bor > 3.44
 
 
-def test_breakeven_nh3_speed_actually_equalizes():
-    distance = m.DISTANCE_CAPE_KM
-    speed = m.breakeven_nh3_speed_km_per_h(distance)
-    v = m.VesselCase(**{**m.NH3_24K.__dict__, "speed_km_per_h": speed})
-    lh2 = m.evaluate(m.LH2_40K, distance, is_nh3=False).annual_delivered_h2_equivalent_kg
-    nh3 = m.evaluate(v, distance, is_nh3=True).annual_delivered_h2_equivalent_kg
-    assert math.isclose(lh2, nh3, rel_tol=1e-3)
-
-
-def test_breakeven_nh3_speed_faster_than_current():
-    """NH3 needs to sail faster than its current 13 kn default to match LH2
-    -- documents the direction of the finding."""
-    speed = m.breakeven_nh3_speed_km_per_h(m.DISTANCE_CAPE_KM)
-    assert speed > m.NH3_24K.speed_km_per_h
-
-
-def test_breakeven_nh3_capacity_actually_equalizes():
+def test_breakeven_nh3_capacity_actually_equalizes_against_160k():
     distance = m.DISTANCE_CAPE_KM
     capacity = m.breakeven_nh3_capacity_m3(distance)
     v = m.VesselCase(**{**m.NH3_24K.__dict__, "capacity_m3": capacity})
-    lh2 = m.evaluate(m.LH2_40K, distance, is_nh3=False).annual_delivered_h2_equivalent_kg
+    lh2 = m.evaluate(m.LH2_160K, distance, is_nh3=False).annual_delivered_h2_equivalent_kg
     nh3 = m.evaluate(v, distance, is_nh3=True).annual_delivered_h2_equivalent_kg
     assert math.isclose(lh2, nh3, rel_tol=1e-3)
 
 
-def test_breakeven_nh3_capacity_larger_than_current():
+def test_speed_alone_cannot_close_the_gap_against_the_160k_ship():
+    """Against the 160,000 m3 carrier, no service speed a gas carrier can hold
+    lets a 24,000 m3 ammonia vessel match it -- the gap is a cargo-volume gap,
+    not a speed gap. Documents why the throughput study is framed as 'how many
+    ships' rather than 'how much faster'."""
+    lh2 = m.evaluate(m.LH2_160K, m.DISTANCE_CAPE_KM, is_nh3=False).annual_delivered_h2_equivalent_kg
+    v = m.VesselCase(**{**m.NH3_24K.__dict__, "speed_km_per_h": 30.0 * 1.852})
+    nh3_at_30kn = m.evaluate(v, m.DISTANCE_CAPE_KM, is_nh3=True).annual_delivered_h2_equivalent_kg
+    assert nh3_at_30kn < lh2
+
+
+def test_nh3_capacity_to_match_160k_ship_is_vlgc_scale():
+    """Matching one 160,000 m3 LH2 carrier takes an ammonia vessel of roughly
+    100,000 m3 -- at or beyond the largest gas carriers in service."""
     capacity = m.breakeven_nh3_capacity_m3(m.DISTANCE_CAPE_KM)
-    assert capacity > m.NH3_24K.capacity_m3
+    assert capacity > 90_000
 
 
 def test_fleet_size_grows_with_distance():
@@ -183,17 +181,72 @@ def test_high_bor_produces_unusable_surplus():
 def test_breakeven_bor_fuel_cover_actually_covers():
     for dist in (m.DISTANCE_SUEZ_KM, m.DISTANCE_CAPE_KM):
         bor = m.breakeven_bor_fuel_cover(dist)
-        v = m.VesselCase(**{**m.LH2_40K.__dict__, "voyage_bor_pct_per_day": bor})
+        v = m.VesselCase(**{**m.LH2_160K.__dict__, "voyage_bor_pct_per_day": bor})
         fb = m.fuel_balance(v, dist, False)
         assert math.isclose(fb.covered_fraction, 1.0, rel_tol=1e-4)
 
 
-def test_fuel_cover_bor_sits_above_the_working_assumption():
-    """The cover point is above 0.2 %/day but far below the RSER literature
-    figure -- i.e. the working assumption is in the 'buys fuel' regime and the
-    literature figure is deep in the 'vents surplus' regime."""
-    bor = m.breakeven_bor_fuel_cover(m.DISTANCE_CAPE_KM)
-    assert 0.2 < bor < 3.44
+def test_fuel_cover_bor_scales_with_hull_size():
+    """The 160,000 m3 ship carries 4x the cargo of the 40,000 m3 one against
+    the same stated propulsion duty, so it reaches fuel self-sufficiency at a
+    far lower boil-off rate -- and therefore overshoots at any plausible one."""
+    big = m.breakeven_bor_fuel_cover(m.DISTANCE_CAPE_KM, m.LH2_160K)
+    small = m.breakeven_bor_fuel_cover(m.DISTANCE_CAPE_KM, m.LH2_40K)
+    assert big < small
+    assert big < 0.2 < small   # the 160k ship is already in surplus at the working assumption
+
+
+def test_160k_ship_overshoots_at_the_working_assumption():
+    """Documents the headline consequence of the 160,000 m3 switch: at the
+    stated 25 t/day duty the big hull generates far more boil-off than it can
+    burn. The finding is highly sensitive to that duty -- see the duty test."""
+    fb = m.fuel_balance(m.LH2_160K, m.DISTANCE_CAPE_KM, False)
+    assert fb.covered_fraction > 2.0
+    assert fb.bog_surplus_kg > 0
+    assert fb.topup_fuel_t == 0
+
+
+def test_surplus_finding_is_an_artifact_of_the_stated_duty():
+    """At a burn rate proportionate to the hull (~4x the ammonia vessel's, to
+    match the 4x cargo), the 160k ship lands back near the 40k ship's coverage
+    and stops wasting boil-off. Guards the caveat the artifact states."""
+    scaled = m.fuel_balance(m.LH2_160K, m.DISTANCE_CAPE_KM, False, bunker_t_per_day=100.0)
+    assert scaled.covered_fraction < 1.0
+    assert scaled.bog_surplus_kg == 0
+    assert scaled.topup_fuel_t > 0
+
+
+def test_boiloff_cost_mode_credits_displaced_fuel():
+    """In the 'boil-off management only' framing the LH2 carrier is credited
+    with the bunker fuel its boil-off displaced, so at zero hydrogen value its
+    boil-off is a net saving, not a cost."""
+    fb = m.fuel_balance(m.LH2_160K, m.DISTANCE_CAPE_KM, False)
+    c = m.voyage_cost_per_kg(fb, 0.0, 600.0, mode="boiloff")
+    assert c["per_kg"] < 0
+
+
+def test_boiloff_mode_excludes_the_propulsion_baseline():
+    """The ammonia carrier's boil-off cost is its reliquefaction fuel alone --
+    the propulsion duty it would burn regardless is not charged to boil-off."""
+    fb = m.fuel_balance(m.NH3_24K, m.DISTANCE_CAPE_KM, True)
+    boiloff = m.voyage_cost_per_kg(fb, 0.0, 600.0, mode="boiloff")["total_usd"]
+    full = m.voyage_cost_per_kg(fb, 0.0, 600.0, mode="full")["total_usd"]
+    assert math.isclose(boiloff, fb.reliq_fuel_t * 600.0, rel_tol=1e-9)
+    assert full > boiloff
+
+
+def test_cost_modes_give_different_breakeven_prices():
+    D = m.DISTANCE_CAPE_KM
+    assert m.breakeven_h2_price(D, 600, mode="boiloff") < m.breakeven_h2_price(D, 600, mode="full")
+
+
+def test_unknown_cost_mode_rejected():
+    fb = m.fuel_balance(m.NH3_24K, m.DISTANCE_CAPE_KM, True)
+    try:
+        m.voyage_cost_per_kg(fb, 1.0, 600.0, mode="nonsense")
+    except ValueError:
+        return
+    raise AssertionError("expected ValueError for an unknown cost mode")
 
 
 def test_nh3_carrier_loses_no_cargo_but_burns_reliq_fuel():
@@ -206,7 +259,7 @@ def test_nh3_carrier_loses_no_cargo_but_burns_reliq_fuel():
 def test_breakeven_h2_price_equalizes_cost_per_kg():
     D, vlsfo = m.DISTANCE_CAPE_KM, 600.0
     p = m.breakeven_h2_price(D, vlsfo)
-    lh2 = m.voyage_cost_per_kg(m.fuel_balance(m.LH2_40K, D, False), p, vlsfo)["per_kg"]
+    lh2 = m.voyage_cost_per_kg(m.fuel_balance(m.LH2_160K, D, False), p, vlsfo)["per_kg"]
     nh3 = m.voyage_cost_per_kg(m.fuel_balance(m.NH3_24K, D, True), p, vlsfo)["per_kg"]
     assert math.isclose(lh2, nh3, rel_tol=1e-6)
 
@@ -220,6 +273,6 @@ def test_breakeven_h2_price_rises_with_bunker_price():
 
 def test_cost_per_kg_splits_into_cargo_and_fuel():
     fb = m.fuel_balance(m.LH2_40K, m.DISTANCE_CAPE_KM, False)
-    c = m.voyage_cost_per_kg(fb, 5.0, 600.0)
+    c = m.voyage_cost_per_kg(fb, 5.0, 600.0, mode="full")
     assert math.isclose(c["cargo_per_kg"] + c["fuel_per_kg"], c["per_kg"], rel_tol=1e-9)
     assert c["cargo_per_kg"] > c["fuel_per_kg"]   # hydrogen is the premium term

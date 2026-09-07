@@ -93,6 +93,7 @@ details.adv .grid-in{margin-top:14px}
 .legend{display:flex;gap:16px;flex-wrap:wrap;align-items:center;padding:0 18px 10px;font-size:12.5px;color:var(--ink-2)}
 .legend .sw{display:inline-block;width:22px;height:3px;border-radius:2px;vertical-align:3px;margin-right:7px}
 .legend .sq{display:inline-block;width:11px;height:11px;border-radius:2px;vertical-align:-1px;margin-right:7px}
+.axes{font-family:var(--mono);font-size:11px;color:var(--ink-3);border-left:1px solid var(--rule-2);padding-left:12px;line-height:1.5}
 .legend .hatch{background-image:repeating-linear-gradient(45deg,var(--lh2) 0 2px,transparent 2px 4px);border:1px solid var(--lh2)}
 .chart-scroll{overflow-x:auto;position:relative;padding:0 6px 4px}
 svg.chart{display:block;width:100%;height:auto;min-width:600px}
@@ -129,11 +130,12 @@ footer code{font-family:var(--mono);font-size:11.5px;color:var(--ink-2)}
 <header class="masthead">
   <div class="eyebrow">Gentari · KR1.3 · Shipping segment (nodes D1 / D2)</div>
   <h1>LH<span style="font-size:.62em;vertical-align:-.08em">2</span> vs Ammonia at Sea</h1>
-  <p class="deck">Both ships have to move themselves as well as their cargo. The ammonia carrier burns <b>25 t/day of VLSFO</b> and re-liquefies its boil-off. The hydrogen carrier burns its own cargo instead — so the real question is whether that boil-off <b>covers the fuel bill, falls short of it, or overshoots it</b>, and what the hydrogen given up is worth.</p>
+  <p class="deck">Both ships have to move themselves as well as their cargo. The ammonia carrier burns <b>25 t/day of VLSFO</b> and re-liquefies its boil-off. The 160,000 m³ hydrogen carrier burns its own cargo instead — so the real question is whether that boil-off <b>covers the fuel bill, falls short of it, or overshoots it</b>, and what the hydrogen given up is worth.</p>
   <div class="spec">
     <span><b>Corridor</b> Kakinada → Hamburg</span>
     <span><b>Boundary</b> shipping only · propulsion fuel charged over the laden leg, both vessels alike</span>
-    <span><b>Duty basis</b> both carriers charged the same 25 t/day propulsion demand</span>
+    <span><b>Vessels</b> LH₂ 160,000 m³ (KHI commercial target) · NH₃ 24,000 m³ fully refrigerated</span>
+    <span><b>Duty basis</b> propulsion fuel set per carrier — see the caveat below</span>
     <span><b>Comparison</b> kg H₂-equivalent delivered (NH₃ ÷ 5.632)</span>
   </div>
 </header>
@@ -158,8 +160,13 @@ footer code{font-family:var(--mono);font-size:11.5px;color:var(--ink-2)}
       <input type="range" id="r-lh2bor" value="0.2" min="0" max="4" step="0.05" aria-label="LH2 voyage boil-off rate">
     </div>
     <div class="field">
-      <label for="i-bunker">Propulsion fuel, t/day VLSFO <span class="tag est">USER</span></label>
-      <input type="number" id="i-bunker" value="25" min="1" max="120" step="1">
+      <label for="i-bunker">NH₃ propulsion fuel, t/day <span class="tag est">USER</span></label>
+      <input type="number" id="i-bunker" value="25" min="1" max="300" step="1">
+    </div>
+    <div class="field">
+      <label for="i-lh2bunker">LH₂ propulsion fuel, t/day <span class="tag est">CHECK ME</span></label>
+      <input type="number" id="i-lh2bunker" value="25" min="1" max="300" step="1">
+      <input type="range" id="r-lh2bunker" value="25" min="10" max="200" step="5" aria-label="LH2 propulsion fuel rate">
     </div>
     <div class="field">
       <label for="i-h2price">Hydrogen value, USD/kg <span class="tag est">SET IT</span></label>
@@ -178,7 +185,7 @@ footer code{font-family:var(--mono);font-size:11.5px;color:var(--ink-2)}
   <details class="adv">
     <summary>Vessel, fuel and disposal detail — LH₂ vessel figures are KHI-disclosed, the ammonia ones are not</summary>
     <div class="grid-in">
-      <div class="field"><label for="i-lh2cap">LH₂ capacity, m³ <span class="tag cit">KHI</span></label><input type="number" id="i-lh2cap" value="40000" min="1000" max="200000" step="1000"></div>
+      <div class="field"><label for="i-lh2cap">LH₂ capacity, m³ <span class="tag cit">KHI</span></label><input type="number" id="i-lh2cap" value="160000" min="1000" max="300000" step="5000"></div>
       <div class="field"><label for="i-lh2speed">LH₂ speed, km/h <span class="tag cit">KHI</span></label><input type="number" id="i-lh2speed" value="29.6" min="10" max="45" step="0.4"></div>
       <div class="field"><label for="i-lh2port">LH₂ port days / call <span class="tag cit">KHI</span></label><input type="number" id="i-lh2port" value="1.25" min="0.25" max="6" step="0.25"></div>
       <div class="field"><label for="i-lh2rho">LH₂ density, kg/m³ <span class="tag est">NIST?</span></label><input type="number" id="i-lh2rho" value="70.8" min="60" max="80" step="0.1"></div>
@@ -214,6 +221,7 @@ footer code{font-family:var(--mono);font-size:11.5px;color:var(--ink-2)}
     <div class="legend">
       <span><i class="sw" style="background:var(--lh2)"></i>Boil-off generated</span>
       <span><i class="sw" style="background:var(--fossil)"></i>Propulsion demand = 100% — what the engine actually wants</span>
+      <span class="axes">X · LH₂ voyage boil-off rate (%/day)<br>Y · boil-off energy ÷ propulsion demand (%)</span>
     </div>
     <div class="chart-scroll"><svg class="chart" id="c1" viewBox="0 0 880 350" role="img" aria-label="Boil-off energy against propulsion fuel demand as the boil-off rate varies"></svg><div class="tip" id="t1"></div></div>
     <div class="readout" id="r1"></div>
@@ -224,11 +232,18 @@ footer code{font-family:var(--mono);font-size:11.5px;color:var(--ink-2)}
   <div class="study-head"><h2>Where does the boiled-off hydrogen actually go?</h2><span class="lever">Sweeping: LH₂ boil-off rate</span></div>
   <p class="intro">All of it leaves the cargo either way. What changes with the boil-off rate is how much does useful work displacing bunker fuel, and how much is simply disposed of.</p>
   <div class="panel">
-    <div class="panel-pad"><div class="eyebrow">Fate of the boil-off over one laden leg, tonnes of H₂</div></div>
+    <div class="panel-pad" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+      <div class="eyebrow" id="eb2">Fate of the boil-off — tonnes of H₂ per laden leg (whole one-way route)</div>
+      <div class="seg" role="group" aria-label="Basis">
+        <button id="b-leg" aria-pressed="true">Per laden leg</button>
+        <button id="b-day" aria-pressed="false">Per day</button>
+      </div>
+    </div>
     <div class="legend">
       <span><i class="sq" style="background:var(--lh2)"></i>Burned for propulsion — displaces VLSFO</span>
       <span><i class="sq hatch"></i><span id="lg2b">Surplus — vented, no work done</span></span>
-      <span><i class="sw" style="background:var(--fossil)"></i>VLSFO still bought, t (right-hand meaning, same axis scaled)</span>
+      <span><i class="sw" style="background:var(--fossil)"></i>VLSFO still bought (t)</span>
+      <span class="axes" id="ax2">X · LH₂ voyage boil-off rate (%/day)<br>Y · mass (t)</span>
     </div>
     <div class="chart-scroll"><svg class="chart" id="c2" viewBox="0 0 880 350" role="img" aria-label="Split of boil-off between propulsion fuel and disposed surplus"></svg><div class="tip" id="t2"></div></div>
     <div class="readout" id="r2"></div>
@@ -239,10 +254,17 @@ footer code{font-family:var(--mono);font-size:11.5px;color:var(--ink-2)}
   <div class="study-head"><h2>What does the boil-off cost, once hydrogen is priced as a premium fuel?</h2><span class="lever">Sweeping: hydrogen value</span></div>
   <p class="intro">This is the comparison that matters: <b>hydrogen given up as fuel</b> against <b>ammonia's re-liquefaction energy</b>. Both carriers burn the same propulsion duty, so that term largely cancels — what does not cancel is that one of them pays in hydrogen and the other in bunker fuel.</p>
   <div class="panel">
-    <div class="panel-pad"><div class="eyebrow">Boil-off + bunker cost of one laden leg, USD per kg H₂ delivered</div></div>
+    <div class="panel-pad" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+      <div class="eyebrow" id="eb3">Cost of managing boil-off, USD per kg H₂ delivered</div>
+      <div class="seg" role="group" aria-label="Cost basis">
+        <button id="m-boiloff" aria-pressed="true">Boil-off only</button>
+        <button id="m-full" aria-pressed="false">Full leg fuel bill</button>
+      </div>
+    </div>
     <div class="legend">
-      <span><i class="sw" style="background:var(--lh2)"></i>LH₂ — hydrogen lost + top-up VLSFO</span>
-      <span><i class="sw" style="background:var(--nh3)"></i>NH₃ — VLSFO + re-liquefaction fuel (flat: it loses no cargo)</span>
+      <span id="lg3l"><i class="sw" style="background:var(--lh2)"></i>LH₂ — hydrogen burned, less the VLSFO it displaced</span>
+      <span id="lg3n"><i class="sw" style="background:var(--nh3)"></i>NH₃ — re-liquefaction fuel only (flat: it loses no cargo)</span>
+      <span class="axes">X · value placed on delivered hydrogen (USD/kg)<br>Y · boil-off cost per kg H₂ delivered (USD/kg)</span>
     </div>
     <div class="chart-scroll"><svg class="chart" id="c3" viewBox="0 0 880 350" role="img" aria-label="Cost per kilogram delivered against the value placed on hydrogen"></svg><div class="tip" id="t3"></div></div>
     <div class="readout" id="r3"></div>
@@ -271,6 +293,7 @@ footer code{font-family:var(--mono);font-size:11.5px;color:var(--ink-2)}
       <span><i class="sw" style="background:var(--lh2)"></i>LH₂ carrier</span>
       <span><i class="sw" style="background:var(--nh3)"></i>NH₃ carrier</span>
       <span style="color:var(--ink-3)">Dashed verticals: the two Kakinada→Hamburg routings</span>
+      <span class="axes">X · one-way distance (km)<br>Y · annual H₂-equivalent delivered per vessel (kg/y)</span>
     </div>
     <div class="chart-scroll"><svg class="chart" id="c5" viewBox="0 0 880 350" role="img" aria-label="Annual hydrogen-equivalent delivered per vessel against distance"></svg><div class="tip" id="t5"></div></div>
     <div class="readout" id="r5"></div>
@@ -279,7 +302,7 @@ footer code{font-family:var(--mono);font-size:11.5px;color:var(--ink-2)}
 
 <section class="study">
   <div class="study-head"><h2>Why is the smaller ship competitive at all?</h2><span class="lever">Fixed: one voyage</span></div>
-  <p class="intro">A 24,000 m³ hull against a 40,000 m³ hull looks like a mismatch until you follow the mass.</p>
+  <p class="intro">A 24,000 m³ hull against a 160,000 m³ hull is plainly a mismatch — but the mass tells you how much of one, and it is less than the volumes suggest.</p>
   <div class="panel">
     <div class="panel-pad"><div class="eyebrow">Cargo per voyage — as loaded, and as hydrogen delivered</div></div>
     <div class="chart-scroll"><svg class="chart" id="c6" viewBox="0 0 880 300" role="img" aria-label="Cargo carried per voyage by each vessel"></svg><div class="tip" id="t6"></div></div>
@@ -288,19 +311,18 @@ footer code{font-family:var(--mono);font-size:11.5px;color:var(--ink-2)}
 </section>
 
 <section class="study">
-  <div class="study-head"><h2>What would make the ammonia ship win on throughput?</h2><span class="lever">Sweeping: NH₃ speed · capacity</span></div>
-  <p class="intro">Holding the LH₂ carrier at its stated specs, these are the two things about the ammonia vessel that close the throughput gap — and neither needs to move far.</p>
-  <div class="two-up">
-    <div class="panel">
-      <div class="panel-pad"><div class="eyebrow">Lever 1 · service speed</div></div>
-      <div class="chart-scroll"><svg class="chart" id="c7a" viewBox="0 0 430 290" style="min-width:340px" role="img" aria-label="Annual delivery against ammonia carrier speed"></svg><div class="tip" id="t7a"></div></div>
-      <div class="readout" id="r7a"></div>
+  <div class="study-head"><h2>How many ammonia ships equal one LH₂ carrier?</h2><span class="lever">Sweeping: NH₃ capacity, at three speeds</span></div>
+  <p class="intro">A 160,000 m³ hydrogen carrier is a much bigger ship than a 24,000 m³ ammonia carrier, so the fair question is not "can the ammonia vessel catch up" — it plainly cannot — but <b>how much ammonia tonnage it takes to match one hydrogen carrier</b>. The horizontal line is one LH₂ carrier's annual delivery. Each curve is what an ammonia carrier of a given size and speed delivers; where a curve crosses the line, one ammonia ship matches one hydrogen ship.</p>
+  <div class="panel">
+    <div class="panel-pad"><div class="eyebrow">Annual H₂-equivalent delivered per vessel — one ammonia ship vs one LH₂ carrier</div></div>
+    <div class="legend">
+      <span><i class="sw" style="background:var(--lh2)"></i>One LH₂ carrier (reference line)</span>
+      <span><i class="sw" style="background:var(--nh3)"></i>NH₃ at 13 kn (as specified)</span>
+      <span><i class="sw" style="background:var(--nh3);opacity:.55"></i>NH₃ at 15 kn · 17 kn (dashed, dotted)</span>
+      <span class="axes">X · NH₃ cargo capacity (m³)<br>Y · annual H₂-equivalent delivered per vessel (kg/y)</span>
     </div>
-    <div class="panel">
-      <div class="panel-pad"><div class="eyebrow">Lever 2 · cargo capacity</div></div>
-      <div class="chart-scroll"><svg class="chart" id="c7b" viewBox="0 0 430 290" style="min-width:340px" role="img" aria-label="Annual delivery against ammonia carrier capacity"></svg><div class="tip" id="t7b"></div></div>
-      <div class="readout" id="r7b"></div>
-    </div>
+    <div class="chart-scroll"><svg class="chart" id="c7" viewBox="0 0 880 350" role="img" aria-label="Annual hydrogen-equivalent delivered by one ammonia carrier against its capacity, versus one LH2 carrier"></svg><div class="tip" id="t7"></div></div>
+    <div class="readout" id="r7"></div>
   </div>
 </section>
 
@@ -316,7 +338,7 @@ footer code{font-family:var(--mono);font-size:11.5px;color:var(--ink-2)}
   <h3>What is not sourced here</h3>
   <ol>
     <li><b>LH₂ voyage boil-off rate.</b> Kawasaki disclosed none — only that fuel-gas consumption equals the boil-off rate. 0.2 %/day is a placeholder; the nearest public figure for a comparable vessel (RSER, 2026) is ~3.44 %/day. Everything on this page turns on it.</li>
-    <li><b>The 25 t/day propulsion duty</b> is your figure for the ammonia carrier, and it is charged to the LH₂ carrier as well so the two are on one basis. The LH₂ vessel is a larger hull at ~23 % higher speed, so its true demand is probably higher — which would absorb more boil-off usefully <em>and</em> raise its top-up fuel bill.</li>
+    <li><b>The LH₂ carrier's propulsion duty is the weakest number on this page.</b> 25 t/day is your figure for the 24,000 m³ ammonia vessel, carried across so both ships share one basis — but a 160,000 m³ hull at ~16 kn would realistically burn several times that. It is a live input for exactly this reason: at ~100 t/day (roughly proportionate to the 4× cargo) the boil-off covers about 64 % of demand and the surplus disappears entirely. <b>The venting finding below is largely an artifact of the 25 t/day figure</b> — set it to something real before quoting any of it.</li>
     <li><b>Hydrogen and bunker prices are yours to set.</b> Neither is logged in the repository, and no default is asserted as correct — the study reports the breakeven price instead.</li>
     <li><b>Every ammonia vessel figure</b> — speed, capacity, port time, boil-off, re-liquefaction energy, genset efficiency — is user-stated or estimated, pending the internal Gentari NH₃ dataset (decision D4).</li>
     <li><b>Surplus disposal.</b> The page defaults to venting, per your framing. Kawasaki's own reply Q26 describes a <em>gas combustion unit</em> burning excess boil-off above MARVS — in which case the hydrogen is oxidised to water and the warming figure does not apply. The hydrogen is lost from the cargo either way; only the environmental line changes. Toggle it in the detail panel.</li>
@@ -339,12 +361,14 @@ const H2_LHV = 120.0;     // MJ/kg
 const KN = 1.852;         // km/h per knot
 const GWP_H2 = 11.6;      // [ESTIMATE] CO2e per kg of VENTED H2, 100-yr
 
-const DEFAULTS = {dist:21200, lh2bor:0.2, bunker:25, h2price:5, vlsfoprice:600, nh3sec:0.25,
-  lh2cap:40000, lh2speed:29.6, lh2port:1.25, lh2rho:70.8,
+const DEFAULTS = {dist:21200, lh2bor:0.2, bunker:25, lh2bunker:25, h2price:5, vlsfoprice:600, nh3sec:0.25,
+  lh2cap:160000, lh2speed:29.6, lh2port:1.25, lh2rho:70.8,
   nh3cap:24000, nh3speed:13, nh3port:1.5, nh3rho:682, nh3bor:0.15,
   vlsfolhv:40.2, engratio:1, genset:45, fill:98, avail:90, demand:100};
 const V = {};
 let VENT = true;
+let MODE = "boiloff";   // user's framing: boil-off management cost only
+let PERDAY = false;     // study 2 basis: per laden leg (default) or per day at sea
 const $ = id => document.getElementById(id);
 function readInputs(){
   for (const k of Object.keys(DEFAULTS)){ const e = $("i-"+k); V[k] = e ? parseFloat(e.value) : DEFAULTS[k]; if (!isFinite(V[k])) V[k] = DEFAULTS[k]; }
@@ -377,13 +401,14 @@ function fuelBalance(isNH3, dist, o){
   o = o || {};
   const r = evaluate(isNH3, dist, o);
   const days = r.oneWay;
-  const demandMJ = V.bunker*1000*days*V.vlsfolhv;
+  const duty = isNH3 ? V.bunker : V.lh2bunker;
+  const demandMJ = duty*1000*days*V.vlsfolhv;
   const bogKg = r.cargo*r.bogFrac;
   if (isNH3){
     const reliqKwh = bogKg*V.nh3sec;
     const reliqT = reliqKwh*3.6/(V.vlsfolhv*(V.genset/100))/1000;
-    return {days, demandMJ, bogKg, usefulKg:0, surplusKg:0, covered:0, displacedT:0,
-            propT:V.bunker*days, reliqT, totalT:V.bunker*days + reliqT,
+    return {days, demandMJ, bogKg, usefulKg:0, surplusKg:0, covered:0,
+            propT:duty*days, reliqT, totalT:duty*days + reliqT, displacedT:0,
             cargoLostKg:0, deliveredH2e:r.delivered/RATIO};
   }
   const perKg = H2_LHV*V.engratio;
@@ -398,8 +423,16 @@ function fuelBalance(isNH3, dist, o){
           cargoLostKg:bogKg, deliveredH2e:r.delivered};
 }
 
-function costPerKg(fb, h2p, vp){
-  const cargo = fb.cargoLostKg*h2p, fuel = fb.totalT*vp;
+/* Two framings.
+   "boiloff" (default, and the one asked for): charge each carrier only what its
+   BOIL-OFF costs it. LH2 pays for the cargo hydrogen it burns, credited with the
+   bunker fuel that hydrogen displaced; NH3 pays for the bunker fuel its genset
+   burns to re-liquefy. The propulsion duty both ships burn regardless is excluded.
+   "full": the whole fuel bill of the leg. Kept because the two laden legs differ
+   in length, so the propulsion term is not a clean common factor that cancels. */
+function costPerKg(fb, h2p, vp, mode){
+  const cargo = fb.cargoLostKg*h2p;
+  const fuel = (mode==="full") ? fb.totalT*vp : (fb.reliqT - fb.displacedT)*vp;
   return {cargoPerKg:cargo/fb.deliveredH2e, fuelPerKg:fuel/fb.deliveredH2e,
           perKg:(cargo+fuel)/fb.deliveredH2e};
 }
@@ -412,9 +445,9 @@ function coverBOR(dist){
 /* Value of hydrogen at which the two carriers' boil-off + bunker cost per kg
    delivered is equal. Linear in the price, so solved directly. */
 function breakevenH2Price(dist, bor){
-  const nh3 = costPerKg(fuelBalance(true, dist), 0, V.vlsfoprice).perKg;
+  const nh3 = costPerKg(fuelBalance(true, dist), 0, V.vlsfoprice, MODE).perKg;
   const lfb = fuelBalance(false, dist, bor!==undefined?{bor:bor}:{});
-  const base = costPerKg(lfb, 0, V.vlsfoprice).perKg;
+  const base = costPerKg(lfb, 0, V.vlsfoprice, MODE).perKg;
   const slope = lfb.cargoLostKg/lfb.deliveredH2e;
   return slope > 0 ? (nh3-base)/slope : null;
 }
@@ -424,24 +457,11 @@ function breakevenThroughputBOR(dist){
   if (f(0) < 0 || f(20) > 0) return null;
   return bisect(f, 0, 20);
 }
-function breakevenSpeedKn(dist){
-  const lh2 = evaluate(false, dist).annualH2e;
-  const f = s => lh2 - evaluate(true, dist, {speed:s*KN}).annualH2e;
-  if (f(6) < 0 || f(30) > 0) return null;
-  return bisect(f, 6, 30);
-}
-function breakevenCap(dist){
-  const lh2 = evaluate(false, dist).annualH2e;
-  const f = c => lh2 - evaluate(true, dist, {cap:c}).annualH2e;
-  if (f(2000) < 0 || f(300000) > 0) return null;
-  return bisect(f, 2000, 300000);
-}
-
 /* ---------- formatting ---------- */
 const nf = (v,d) => (isFinite(v)?v:0).toLocaleString("en-US",{minimumFractionDigits:d===undefined?0:d,maximumFractionDigits:d===undefined?0:d});
 const mkg = v => nf(v/1e6,2)+" M kg";
 const num = (v,d) => '<span class="num">'+nf(v,d)+'</span>';
-const usd = (v,d) => '<span class="num">$'+nf(v,d===undefined?2:d)+'</span>';
+const usd = (v,d) => '<span class="num">'+(v<0?"−$":"$")+nf(Math.abs(v),d===undefined?2:d)+'</span>';
 const km  = v => v>=1000 ? (v/1000)+"k" : ""+v;
 
 /* ---------- chart primitives ---------- */
@@ -507,11 +527,13 @@ function lineChart(svgId,tipId,cfg){
   const vb=svg.getAttribute("viewBox").split(" ").map(Number), W=vb[2], H=vb[3];
   const m=cfg.margin||{l:66,r:20,t:14,b:44}, pw=W-m.l-m.r, ph=H-m.t-m.b;
   const xs=cfg.x, small=cfg.small, fs=small?10:11.5;
-  let ymax=0; cfg.series.forEach(s=>s.y.forEach(v=>{ if(isFinite(v)) ymax=Math.max(ymax,v); }));
-  ymax=ymax*1.10||1; const ymin=0;
+  let ymax=0, ylo=0;
+  cfg.series.forEach(s=>s.y.forEach(v=>{ if(isFinite(v)){ ymax=Math.max(ymax,v); ylo=Math.min(ylo,v); } }));
+  ymax=ymax*1.10||1; const ymin = ylo<0 ? ylo*1.10 : 0;
   const xmin=xs[0], xmax=xs[xs.length-1];
   const X=v=>m.l+(v-xmin)/(xmax-xmin)*pw, Y=v=>m.t+ph-(v-ymin)/(ymax-ymin)*ph;
   axes(svg,m,pw,ph,H,cfg,ymin,ymax,X,Y,fs,small);
+  if(ymin<0) el("line",{x1:m.l,x2:m.l+pw,y1:Y(0),y2:Y(0),stroke:"var(--rule-2)","stroke-width":1.5},svg);
   // shaded regions behind the marks
   (cfg.bands||[]).forEach(b=>{
     const x0=X(Math.max(xmin,b.from)), x1=X(Math.min(xmax,b.to));
@@ -581,7 +603,7 @@ function render(){
   readInputs();
   const D=V.dist;
   const lfb=fuelBalance(false,D), nfb=fuelBalance(true,D);
-  const lc=costPerKg(lfb,V.h2price,V.vlsfoprice), ncst=costPerKg(nfb,V.h2price,V.vlsfoprice);
+  const lc=costPerKg(lfb,V.h2price,V.vlsfoprice,MODE), ncst=costPerKg(nfb,V.h2price,V.vlsfoprice,MODE);
   const lh2=evaluate(false,D), nh3=evaluate(true,D);
   const cover=coverBOR(D), bePrice=breakevenH2Price(D), beThru=breakevenThroughputBOR(D);
   const cheaper = lc.perKg <= ncst.perKg ? "LH₂" : "NH₃";
@@ -593,7 +615,7 @@ function render(){
     '<div class="tile '+(lfb.covered>=1?"alert":"")+'"><div class="k">Boil-off covers</div><div class="v '+(lfb.covered>=1?"warn":"")+'">'+nf(lfb.covered*100,0)+'<span style="font-size:.45em;font-weight:500"> % of fuel</span></div><div class="s">'+
       (lfb.covered>=1 ? "surplus "+nf(lfb.surplusKg/1000,0)+" t H₂ has nowhere to go" : "still buys "+nf(shortfallT,0)+" t VLSFO per leg")+'</div></div>'+
     '<div class="tile '+(cheaper==="LH₂"?"win-lh2":"win-nh3")+'"><div class="k">Cheaper on boil-off + bunker</div><div class="v '+(cheaper==="LH₂"?"lh2":"nh3")+'">'+cheaper+'</div><div class="s">'+
-      '$'+nf(Math.min(lc.perKg,ncst.perKg),3)+' vs $'+nf(Math.max(lc.perKg,ncst.perKg),3)+' per kg H₂ at $'+nf(V.h2price,2)+'/kg H₂</div></div>'+
+      (Math.min(lc.perKg,ncst.perKg)<0?"−$":"$")+nf(Math.abs(Math.min(lc.perKg,ncst.perKg)),3)+' vs $'+nf(Math.max(lc.perKg,ncst.perKg),3)+' per kg H₂, at $'+nf(V.h2price,2)+'/kg H₂</div></div>'+
     '<div class="tile"><div class="k">Flips at H₂ value</div><div class="v">'+(bePrice===null||bePrice<0?"—":'$'+nf(bePrice,2))+'</div><div class="s">'+
       (bePrice===null||bePrice<0?"no crossing":"above this, ammonia is cheaper")+'</div></div>'+
     '<div class="tile"><div class="k">Boil-off meets demand at</div><div class="v">'+(cover===null?"—":nf(cover,2)+'<span style="font-size:.45em;font-weight:500"> %/day</span>')+'</div><div class="s">'+
@@ -602,40 +624,59 @@ function render(){
       (lh2.annualH2e>=nh3.annualH2e?"LH₂":"NH₃")+'</div><div class="s">'+mkg(Math.max(lh2.annualH2e,nh3.annualH2e))+' vs '+mkg(Math.min(lh2.annualH2e,nh3.annualH2e))+'</div></div>';
 
   /* --- 1. fuel balance --- */
-  const xb=[]; for(let b=0;b<=4.001;b+=0.04) xb.push(+b.toFixed(3));
+  // Scale the sweep to where the crossover actually sits. A 160,000 m3 hull
+  // overshoots so steeply that a fixed 0-4 %/day axis squashes the 100% demand
+  // line onto the baseline and hides the very comparison the chart is for.
+  const bMax = Math.max(0.4, 2.5*(cover||0.4), 1.6*V.lh2bor);
+  const xb=[]; for(let i=0;i<=100;i++) xb.push(+(i/100*bMax).toFixed(4));
   const coverPct = xb.map(b=>fuelBalance(false,D,{bor:b}).covered*100);
   lineChart("c1","t1",{
     x:xb, xLabel:"LH₂ voyage boil-off rate, %/day",
     bands: cover!==null ? [
       {from:0,to:cover,fill:"var(--fossil)",opacity:.07,label:"buys bunker fuel",color:"var(--ink-3)"},
-      {from:cover,to:4,fill:"var(--warn)",opacity:.07,label:"throws hydrogen away",color:"var(--warn)"}] : [],
+      {from:cover,to:bMax,fill:"var(--warn)",opacity:.07,label:"throws hydrogen away",color:"var(--warn)"}] : [],
     series:[{label:"Boil-off",color:C.lh2,y:coverPct},
             {label:"Demand",color:C.fossil,y:xb.map(()=>100),dash:"6 4"}],
     vlines:[{x:V.lh2bor,label:"assumed "+nf(V.lh2bor,2)}].concat(
-      cover!==null&&cover<=4?[{x:cover,label:"meets demand "+nf(cover,2),row:1,color:"var(--ink-2)"}]:[]).concat(
-      [{x:3.44,label:"RSER 3.44",row:2,color:"var(--warn)"}]),
-    fmtX:v=>nf(v,1), fmtY:v=>nf(v,0)+"%", fmtTip:v=>nf(v,0)+"% of demand",
+      cover!==null&&cover<=bMax?[{x:cover,label:"meets demand "+nf(cover,2),row:1,color:"var(--ink-2)"}]:[]).concat(
+      3.44<=bMax?[{x:3.44,label:"RSER 3.44",row:2,color:"var(--warn)"}]:[]),
+    fmtX:v=>nf(v,2), fmtY:v=>nf(v,0)+"%", fmtTip:v=>nf(v,0)+"% of demand",
     fmtXTip:v=>nf(v,2)+" %/day boil-off"
   });
+  const at344 = fuelBalance(false,D,{bor:3.44});
+  const scaled = (function(){ const keep=V.lh2bunker; V.lh2bunker=keep*4; const f=fuelBalance(false,D); V.lh2bunker=keep; return f; })();
   $("r1").innerHTML = cover===null
     ? "<b>The boil-off never reaches the engine's demand</b> across this range — the carrier buys bunker fuel on every voyage."
-    : "<b>At the assumed "+num(V.lh2bor,2)+" %/day, boil-off covers only "+num(lfb.covered*100,0)+" % of the fuel bill.</b> The ship still buys "+
-      num(shortfallT,0)+" t of VLSFO for a "+num(lfb.days,1)+"-day laden leg, and vents nothing — Kawasaki's \"fuel-gas rate equals the boil-off rate\" does not close on its own at this rate. "+
-      "The two regimes meet at <b>"+num(cover,2)+" %/day</b>. Above that the engine cannot absorb the boil-off fast enough, and at the published "+
-      "<b>3.44 %/day</b> the carrier generates "+num(fuelBalance(false,D,{bor:3.44}).covered*100,0)+" % of what it can burn — seven times too much.";
+    : (lfb.covered >= 1
+      ? "<b>At "+num(V.lh2bor,2)+" %/day this hull makes "+num(lfb.covered*100,0)+" % of the fuel it can burn — it overshoots by "+
+        num(lfb.covered,1)+"×.</b> It buys no bunker fuel at all, and "+num(lfb.surplusKg/1000,0)+" t of hydrogen per leg — "+
+        num(lfb.surplusKg/lfb.bogKg*100,0)+" % of the boil-off — has nowhere to go. Supply and demand would only balance at a boil-off rate of "+
+        num(cover,3)+" %/day, far tighter than any tank achieves. "+
+        "<b>But read the caveat first:</b> 25 t/day is the <em>ammonia</em> vessel's burn rate, and this is a 160,000 m³ ship. At "+
+        num(V.lh2bunker*4,0)+" t/day — roughly proportionate to its 4× cargo — coverage falls to "+num(scaled.covered*100,0)+
+        " % and the surplus disappears entirely. <b>The overshoot is a property of the assumed duty as much as of the ship.</b>"
+      : "<b>At "+num(V.lh2bor,2)+" %/day, boil-off covers only "+num(lfb.covered*100,0)+" % of the fuel bill.</b> The ship still buys "+
+        num(lfb.propT,0)+" t of VLSFO for a "+num(lfb.days,1)+"-day laden leg, and wastes nothing — Kawasaki's \"fuel-gas rate equals the boil-off rate\" does not close on its own at this rate. "+
+        "Supply meets demand at <b>"+num(cover,3)+" %/day</b>; above that the engine cannot absorb the boil-off. At the published <b>3.44 %/day</b> this hull would make "+
+        num(at344.covered*100,0)+" % of what it can burn.");
 
   /* --- 2. fate of the boil-off --- */
   const fates = xb.map(b=>fuelBalance(false,D,{bor:b}));
+  const per = PERDAY ? (f=>f.days) : (()=>1);      // divide by laden days when showing a daily rate
+  const unit = PERDAY ? "t/day" : "t/leg";
+  $("eb2").textContent = PERDAY
+    ? "Fate of the boil-off — tonnes of H₂ per day at sea"
+    : "Fate of the boil-off — tonnes of H₂ per laden leg (the whole one-way route)";
+  $("ax2").innerHTML = "X · LH₂ voyage boil-off rate (%/day)<br>Y · mass ("+unit+")";
   stackChart("c2","t2",{
     x:xb, xLabel:"LH₂ voyage boil-off rate, %/day", hatchColor:"var(--lh2)",
-    stack:[{label:"Burned for propulsion",fill:"var(--lh2)",tipColor:"var(--lh2)",y:fates.map(f=>f.usefulKg/1000)},
-           {label:VENT?"Vented surplus":"GCU-burned surplus",fill:"url(#hatch-c2)",tipColor:"var(--lh2)",y:fates.map(f=>f.surplusKg/1000)}],
-    lines:[{label:"VLSFO still bought, t",color:C.fossil,dash:"6 4",y:fates.map(f=>f.propT)}],
-    vlines:[{x:V.lh2bor,label:"assumed "+nf(V.lh2bor,2)}].concat(cover!==null&&cover<=4?[{x:cover,label:"crossover",row:1,color:"var(--ink-2)"}]:[]),
-    fmtX:v=>nf(v,1), fmtY:v=>nf(v,0), fmtTip:v=>nf(v,1)+" t", fmtXTip:v=>nf(v,2)+" %/day boil-off"
+    stack:[{label:"Burned for propulsion",fill:"var(--lh2)",tipColor:"var(--lh2)",y:fates.map(f=>f.usefulKg/1000/per(f))},
+           {label:VENT?"Vented surplus":"GCU-burned surplus",fill:"url(#hatch-c2)",tipColor:"var(--lh2)",y:fates.map(f=>f.surplusKg/1000/per(f))}],
+    lines:[{label:"VLSFO bought",color:C.fossil,dash:"6 4",y:fates.map(f=>f.propT/per(f))}],
+    vlines:[{x:V.lh2bor,label:"assumed "+nf(V.lh2bor,2)}].concat(cover!==null&&cover<=bMax?[{x:cover,label:"crossover",row:1,color:"var(--ink-2)"}]:[]),
+    fmtX:v=>nf(v,2), fmtY:v=>nf(v,0), fmtTip:v=>nf(v,1)+" "+unit, fmtXTip:v=>nf(v,2)+" %/day boil-off"
   });
   $("lg2b").textContent = VENT ? "Surplus — vented, no work done" : "Surplus — burned in the GCU, no work done";
-  const at344 = fuelBalance(false,D,{bor:3.44});
   $("r2").innerHTML = "<b>Below the crossover every kilogram of boil-off earns its keep;</b> above it, almost none does. At "+num(V.lh2bor,2)+
     " %/day the carrier boils off "+num(lfb.bogKg/1000,0)+" t of hydrogen and burns all of it, displacing "+num(lfb.displacedT,0)+
     " t of VLSFO. At 3.44 %/day it boils off "+num(at344.bogKg/1000,0)+" t, can only use "+num(at344.usefulKg/1000,0)+" t of it, and disposes of "+
@@ -648,22 +689,36 @@ function render(){
   /* --- 3. cost vs H2 price --- */
   const xp=[]; for(let p=0;p<=12.001;p+=0.1) xp.push(+p.toFixed(2));
   const nh3Flat = ncst.perKg;   // independent of the H2 price: it loses no cargo
+  $("eb3").textContent = MODE==="boiloff"
+    ? "Cost of managing boil-off, USD per kg H₂ delivered"
+    : "Full fuel bill of one laden leg, USD per kg H₂ delivered";
+  $("lg3l").innerHTML = MODE==="boiloff"
+    ? '<i class="sw" style="background:var(--lh2)"></i>LH₂ — hydrogen burned, less the VLSFO it displaced'
+    : '<i class="sw" style="background:var(--lh2)"></i>LH₂ — hydrogen burned + all bunker fuel bought';
+  $("lg3n").innerHTML = MODE==="boiloff"
+    ? '<i class="sw" style="background:var(--nh3)"></i>NH₃ — re-liquefaction fuel only (flat: it loses no cargo)'
+    : '<i class="sw" style="background:var(--nh3)"></i>NH₃ — propulsion + re-liquefaction fuel (flat: it loses no cargo)';
   lineChart("c3","t3",{
     x:xp, xLabel:"Value placed on delivered hydrogen, USD/kg",
-    series:[{label:"LH₂",color:C.lh2,y:xp.map(p=>costPerKg(lfb,p,V.vlsfoprice).perKg)},
+    series:[{label:"LH₂",color:C.lh2,y:xp.map(p=>costPerKg(lfb,p,V.vlsfoprice,MODE).perKg)},
             {label:"NH₃",color:C.nh3,y:xp.map(()=>nh3Flat)}],
     vlines:[{x:V.h2price,label:"your $"+nf(V.h2price,2)}].concat(
       bePrice!==null&&bePrice>0&&bePrice<=12?[{x:bePrice,label:"parity $"+nf(bePrice,2),row:1,color:"var(--ink-2)"}]:[]),
     fmtX:v=>"$"+nf(v,0), fmtY:v=>"$"+nf(v,2), fmtTip:v=>"$"+nf(v,3)+"/kg",
     fmtXTip:v=>"H₂ valued at $"+nf(v,2)+"/kg"
   });
-  $("r3").innerHTML = (bePrice===null||bePrice<0)
-    ? "<b>No crossing.</b> The ammonia carrier is cheaper on this metric at any hydrogen value, because the LH₂ carrier's fuel saving never offsets the cargo it gives up."
-    : "<b>Parity at "+usd(bePrice)+" per kg of hydrogen.</b> Below that the LH₂ carrier is the cheaper way to move hydrogen — its boil-off is genuinely displacing "+
-      num(lfb.displacedT,0)+" t of bunker fuel, and cheap hydrogen makes that a good trade. Above it, the "+num(lfb.cargoLostKg/1000,0)+
-      " t of hydrogen consumed per leg is worth more than the fuel it saves. At your "+usd(V.h2price)+"/kg the split is "+
-      usd(lc.perKg,3)+" for LH₂ against "+usd(ncst.perKg,3)+" for ammonia — and "+num(lc.cargoPerKg/lc.perKg*100,0)+
-      " % of the LH₂ figure is the hydrogen itself, not the fuel. <b>This is the premium-fuel penalty: the LH₂ carrier runs on the most expensive thing it is carrying.</b>";
+  const modeNote = MODE==="boiloff"
+    ? "Only boil-off is charged here: the LH₂ carrier pays for the hydrogen it burns and is <b>credited "+usd(lfb.displacedT*V.vlsfoprice/1000,0)+"k</b> for the "+num(lfb.displacedT,0)+
+      " t of VLSFO that hydrogen displaced; the ammonia carrier pays only for the "+num(nfb.reliqT,1)+
+      " t of VLSFO its genset burns to re-liquefy "+num(nfb.bogKg/1000,0)+" t of BOG. The propulsion duty both ships burn regardless is excluded from both sides."
+    : "The whole leg is charged, propulsion included. Note the two laden legs differ in length ("+num(lfb.days,1)+" vs "+num(nfb.days,1)+
+      " d), so the propulsion term does not cleanly cancel — the ammonia carrier buys "+num(nfb.totalT,0)+" t against the LH₂ carrier's "+num(lfb.totalT,0)+" t.";
+  $("r3").innerHTML = modeNote + " " + ((bePrice===null||bePrice<0)
+    ? "<b>No crossing above zero:</b> ammonia is cheaper at any positive hydrogen value."
+    : "<b>Parity at "+usd(bePrice)+" per kg of hydrogen.</b> Below it the LH₂ carrier is the cheaper way to move hydrogen; above it the "+
+      num(lfb.cargoLostKg/1000,0)+" t of hydrogen it consumes per leg is worth more than the fuel that hydrogen saves. At your "+
+      usd(V.h2price)+"/kg the split is "+usd(lc.perKg,3)+" for LH₂ against "+usd(ncst.perKg,3)+
+      " for ammonia. <b>The LH₂ carrier runs on the most expensive thing it is carrying — that is the premium-fuel penalty.</b>");
 
   /* --- 4. sweet-spot map --- */
   (function(){
@@ -679,7 +734,7 @@ function render(){
       for(let j=0;j<NY;j++){
         const b=bLo+(j+0.5)/NY*(bHi-bLo);
         const lf=fuelBalance(false,D,{bor:b});
-        const a=costPerKg(lf,p,V.vlsfoprice).perKg, c=nh3Flat;
+        const a=costPerKg(lf,p,V.vlsfoprice,MODE).perKg, c=nh3Flat;
         const f=(c-a)/c;   // + => LH2 cheaper
         cells.push({p,b,f,a,c});
         el("rect",{x:m.l+i*cw+0.5,y:m.t+ph-(j+1)*ch+0.5,width:cw-1,height:ch-1,fill:ramp(f)},svg);
@@ -740,7 +795,7 @@ function render(){
       '<span><i class="sq" style="background:var(--div-a3)"></i>LH₂ cheaper ~25 %</span>'+
       '<span><i class="sq" style="background:var(--div-0)"></i>parity ±5 %</span>'+
       '<span><i class="sq" style="background:var(--div-b3)"></i>NH₃ cheaper ~25 %</span>'+
-      '<span><i class="sq" style="background:var(--div-b5)"></i>NH₃ cheaper by 60 %+</span>';
+      '<span><i class="sq" style="background:var(--div-b5)"></i>NH₃ cheaper by 60 %+</span>'+'<span class="axes">X · value placed on delivered hydrogen (USD/kg)<br>Y · LH₂ voyage boil-off rate (%/day)</span>';
     const pAt02=breakevenH2Price(D,0.2), pAt1=breakevenH2Price(D,1.0);
     $("r4").innerHTML="<b>The parity line leans left as boil-off rises.</b> At a tight 0.2 %/day the LH₂ carrier stays cheaper up to "+
       (pAt02===null?"—":usd(pAt02))+"/kg of hydrogen; at 1 %/day only up to "+(pAt1===null?"—":usd(pAt1))+
@@ -797,27 +852,38 @@ function render(){
       (h2Ratio>=1?"<b>more</b>":"slightly less")+" hydrogen per voyage. Volume is not where this comparison is won — it is won on trip frequency, and on what the boil-off costs.";
   })();
 
-  /* --- 7. NH3 levers --- */
-  const lh2flat=lh2.annualH2e;
-  const beSpd=breakevenSpeedKn(D), beCap=breakevenCap(D);
-  const xs7=[]; for(let s=8;s<=20.01;s+=0.25) xs7.push(+s.toFixed(2));
-  lineChart("c7a","t7a",{small:true,margin:{l:56,r:16,t:14,b:44},
-    x:xs7,xLabel:"NH₃ service speed, knots",
-    series:[{label:"NH₃",color:C.nh3,y:xs7.map(s=>evaluate(true,D,{speed:s*KN}).annualH2e)},
-            {label:"LH₂",color:C.lh2,y:xs7.map(()=>lh2flat)}],
-    vlines:(beSpd?[{x:beSpd,label:nf(beSpd,1)+" kn"}]:[]).concat([{x:V.nh3speed,label:"now "+nf(V.nh3speed,1),row:1,color:"var(--ink-3)"}]),
-    fmtX:v=>nf(v,0),fmtY:v=>nf(v/1e6,0)+"M",fmtTip:v=>mkg(v),fmtXTip:v=>nf(v,2)+" knots"});
-  $("r7a").innerHTML = beSpd===null ? "No speed in the 8–20 kn range reaches parity."
-    : "Parity at <b>"+nf(beSpd,2)+" knots</b> — "+num(beSpd-V.nh3speed,1)+" kn above the stated "+num(V.nh3speed,1)+" kn, and inside the normal service range for refrigerated gas carriers this size.";
-  const xs7b=[]; for(let c=12000;c<=48000;c+=500) xs7b.push(c);
-  lineChart("c7b","t7b",{small:true,margin:{l:56,r:16,t:14,b:44},
-    x:xs7b,xLabel:"NH₃ cargo capacity, m³",
-    series:[{label:"NH₃",color:C.nh3,y:xs7b.map(c=>evaluate(true,D,{cap:c}).annualH2e)},
-            {label:"LH₂",color:C.lh2,y:xs7b.map(()=>lh2flat)}],
-    vlines:(beCap&&beCap<=48000?[{x:beCap,label:nf(beCap/1000,1)+"k m³"}]:[]).concat([{x:V.nh3cap,label:"now "+nf(V.nh3cap/1000,0)+"k",row:1,color:"var(--ink-3)"}]),
-    fmtX:v=>km(v),fmtY:v=>nf(v/1e6,0)+"M",fmtTip:v=>mkg(v),fmtXTip:v=>nf(v)+" m³"});
-  $("r7b").innerHTML = beCap===null ? "No capacity in range reaches parity."
-    : "Parity at <b>"+nf(beCap/1000,1)+"k m³</b> — "+num((beCap/V.nh3cap-1)*100,0)+" % more volume than the stated "+num(V.nh3cap/1000,0)+"k m³. Dense cargo buys throughput with modest extra steel.";
+  /* --- 7. how many ammonia ships equal one LH2 carrier --- */
+  const lh2flat = lh2.annualH2e;
+  const xc=[]; for(let c=10000;c<=130000;c+=2000) xc.push(c);
+  const speeds=[{kn:V.nh3speed,dash:"none",lab:nf(V.nh3speed,0)+" kn"},
+                {kn:15,dash:"7 4",lab:"15 kn"},
+                {kn:17,dash:"2 4",lab:"17 kn"}];
+  const capAt = kn => {   // capacity at which one NH3 ship matches one LH2 ship
+    const f = c => lh2flat - evaluate(true,D,{cap:c,speed:kn*KN}).annualH2e;
+    if (f(10000)<0 || f(400000)>0) return null;
+    return bisect(f,10000,400000);
+  };
+  const capNow = capAt(V.nh3speed);
+  lineChart("c7","t7",{
+    x:xc, xLabel:"NH₃ cargo capacity, m³",
+    series: speeds.map((sp,i)=>({label:sp.lab,color:C.nh3,dash:sp.dash,
+        y:xc.map(c=>evaluate(true,D,{cap:c,speed:sp.kn*KN}).annualH2e)}))
+      .concat([{label:"1 LH₂ ship",color:C.lh2,dash:"6 4",y:xc.map(()=>lh2flat)}]),
+    vlines:[{x:V.nh3cap,label:"specified "+nf(V.nh3cap/1000,0)+"k m³"}].concat(
+      capNow&&capNow<=130000?[{x:capNow,label:"match at "+nf(capNow/1000,0)+"k m³",row:1,color:"var(--ink-2)"}]:[]),
+    fmtX:v=>km(v), fmtY:v=>nf(v/1e6,0)+"M", fmtTip:v=>mkg(v), fmtXTip:v=>nf(v)+" m³ ammonia carrier"
+  });
+  const ships = lh2flat/nh3.annualH2e;
+  const cap17 = capAt(17);
+  $("r7").innerHTML = "<b>One 160,000 m³ LH₂ carrier does the work of "+num(ships,1)+
+    " of the specified 24,000 m³ ammonia ships</b> on this route — "+mkg(lh2flat)+"/y against "+mkg(nh3.annualH2e)+
+    "/y each. To match it with a <em>single</em> ammonia vessel you would need roughly <b>"+
+    (capNow===null?"—":nf(capNow/1000,0)+"k m³")+" at "+num(V.nh3speed,0)+" kn"+
+    (cap17!==null?", or "+nf(cap17/1000,0)+"k m³ if it sailed at 17 kn":"")+
+    ". For scale, the largest ammonia carriers in service are around 87k m³ and the biggest gas carriers of any kind about 93k m³ <span style=\"color:var(--warn)\">[ESTIMATE — vessel-class figures, not from this repository]</span>, so a single-ship match is at or beyond the top of the existing fleet. "+
+    "<b>The practical reading: ammonia moves this hydrogen in a fleet of ordinary mid-size gas carriers, hydrogen moves it in a couple of purpose-built giants</b> — and the choice is really between those two fleet shapes, not between two ships. "+
+    "Speed helps but does not decide it: going from "+num(V.nh3speed,0)+" to 17 kn lifts one ammonia ship's delivery by "+
+    num((evaluate(true,D,{speed:17*KN}).annualH2e/nh3.annualH2e-1)*100,0)+" %, nowhere near the "+num(ships,1)+"× gap.";
 
   /* --- ledger --- */
   const rows=[
@@ -836,8 +902,10 @@ function render(){
     ["VLSFO purchased", nf(lfb.propT,0)+" t", nf(nfb.propT,0)+" t + "+nf(nfb.reliqT,1)+" t reliq = "+nf(nfb.totalT,0)+" t"],
     ["g","Cost of the leg, per kg H₂ delivered"],
     ["Hydrogen given up @ $"+nf(V.h2price,2)+"/kg", "$"+nf(lc.cargoPerKg,3), "$0.000"],
-    ["Bunker fuel @ $"+nf(V.vlsfoprice,0)+"/t", "$"+nf(lc.fuelPerKg,3), "$"+nf(ncst.fuelPerKg,3)],
-    ["Total", "<b>$"+nf(lc.perKg,3)+"</b>", "<b>$"+nf(ncst.perKg,3)+"</b>"],
+    [(MODE==="boiloff"?"Bunker fuel, net of displacement":"Bunker fuel")+" @ $"+nf(V.vlsfoprice,0)+"/t",
+     (lc.fuelPerKg<0?"−$":"$")+nf(Math.abs(lc.fuelPerKg),3), "$"+nf(ncst.fuelPerKg,3)],
+    ["Total "+(MODE==="boiloff"?"(boil-off only)":"(full leg)"),
+     "<b>"+(lc.perKg<0?"−$":"$")+nf(Math.abs(lc.perKg),3)+"</b>", "<b>$"+nf(ncst.perKg,3)+"</b>"],
     ["g","Throughput"],
     ["Delivered per voyage, H₂-eq", nf(lh2.delivered/1e6,3)+" M kg", nf(nh3.delivered/RATIO/1e6,3)+" M kg"],
     ["Annual per vessel, H₂-eq", "<b>"+mkg(lh2.annualH2e)+"</b>", "<b>"+mkg(nh3.annualH2e)+"</b>"],
@@ -853,15 +921,23 @@ function syncPair(n,r){ const a=$(n), b=$(r); if(!a||!b) return;
   a.addEventListener("input",()=>{b.value=a.value; render();});
   b.addEventListener("input",()=>{a.value=b.value; render();}); }
 Object.keys(DEFAULTS).forEach(k=>{ const e=$("i-"+k); if(e) e.addEventListener("input",render); });
-syncPair("i-lh2bor","r-lh2bor"); syncPair("i-h2price","r-h2price");
+syncPair("i-lh2bor","r-lh2bor"); syncPair("i-h2price","r-h2price"); syncPair("i-lh2bunker","r-lh2bunker");
 function setPressed(id){ ["p-cape","p-suez"].forEach(x=>$(x).setAttribute("aria-pressed",String(x===id))); }
 $("p-cape").addEventListener("click",()=>{ $("i-dist").value=21200; setPressed("p-cape"); render(); });
 $("p-suez").addEventListener("click",()=>{ $("i-dist").value=10260; setPressed("p-suez"); render(); });
 $("p-reset").addEventListener("click",()=>{
   Object.keys(DEFAULTS).forEach(k=>{ const e=$("i-"+k); if(e) e.value=DEFAULTS[k]; });
-  $("r-lh2bor").value=DEFAULTS.lh2bor; $("r-h2price").value=DEFAULTS.h2price;
+  $("r-lh2bor").value=DEFAULTS.lh2bor; $("r-h2price").value=DEFAULTS.h2price; $("r-lh2bunker").value=DEFAULTS.lh2bunker;
   VENT=true; $("d-vent").setAttribute("aria-pressed","true"); $("d-gcu").setAttribute("aria-pressed","false");
+  MODE="boiloff"; $("m-boiloff").setAttribute("aria-pressed","true"); $("m-full").setAttribute("aria-pressed","false");
+  PERDAY=false; $("b-leg").setAttribute("aria-pressed","true"); $("b-day").setAttribute("aria-pressed","false");
   setPressed("p-cape"); render(); });
+function segPair(aId,bId,onA,onB){
+  $(aId).addEventListener("click",()=>{ $(aId).setAttribute("aria-pressed","true"); $(bId).setAttribute("aria-pressed","false"); onA(); render(); });
+  $(bId).addEventListener("click",()=>{ $(bId).setAttribute("aria-pressed","true"); $(aId).setAttribute("aria-pressed","false"); onB(); render(); });
+}
+segPair("b-leg","b-day",()=>{PERDAY=false;},()=>{PERDAY=true;});
+segPair("m-boiloff","m-full",()=>{MODE="boiloff";},()=>{MODE="full";});
 $("d-vent").addEventListener("click",()=>{ VENT=true; $("d-vent").setAttribute("aria-pressed","true"); $("d-gcu").setAttribute("aria-pressed","false"); render(); });
 $("d-gcu").addEventListener("click",()=>{ VENT=false; $("d-gcu").setAttribute("aria-pressed","true"); $("d-vent").setAttribute("aria-pressed","false"); render(); });
 render();

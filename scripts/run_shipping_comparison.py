@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""LH2 (40,000 m3) vs NH3 (24,000 m3) shipping-segment comparison.
+"""LH2 (160,000 m3) vs NH3 (24,000 m3) shipping-segment comparison.
 
 Boundary: this is a SHIPPING-ONLY comparison (nodes D1/D2 in the wider
 LH2-vs-NH3 chain — see docs/comparison/01-energy-penalty-method.md for the
@@ -9,7 +9,7 @@ handed to the ships, not the quantity leaving the electrolyser. Use
 src/lh2/chain_energy.py to join this to the rest of the chain.
 
 Corridor: Kakinada, India -> Hamburg, Germany (data/routes/kakinada-hamburg.csv).
-Vessel specs: data/vessels/lh2-carriers.csv (40k row) and
+Vessel specs: data/vessels/lh2-carriers.csv (160k commercial row) and
 data/vessels/nh3-carriers.csv. Every figure is cited or tagged per CLAUDE.md S4.
 
 Run: python scripts/run_shipping_comparison.py
@@ -35,7 +35,11 @@ ANNUAL_H2_EQUIVALENT_DEMAND_KG = 100e6    # 100 ktpa, [ASSUMPTION] study basis (
 NH3_PER_H2_MASS_RATIO = 5.632             # [ASSUMPTION] first-principles stoichiometry (data/carriers/chain-energy-defaults.csv)
 
 # --- Bunker fuel basis (data/vessels/nh3-carriers.csv) ----------------------
-BUNKER_T_PER_DAY = 25.0            # [ASSUMPTION] user-specified NH3 carrier VLSFO burn; charged to BOTH carriers
+BUNKER_T_PER_DAY = 25.0            # [ASSUMPTION] user-specified NH3 carrier VLSFO burn
+LH2_BUNKER_T_PER_DAY = 25.0        # [ASSUMPTION] user's stated basis, applied to the LH2 carrier too.
+                                   # A 160,000 m3 hull at ~16 kn realistically burns several times
+                                   # this; no power curve is held for the vessel, so the figure is
+                                   # carried as the user's basis and flagged rather than invented.
 VLSFO_LHV_MJ_PER_KG = shipping.VLSFO_LHV_MJ_PER_KG   # [ESTIMATE] 40.2 MJ/kg
 H2_LHV_MJ_PER_KG = shipping.H2_LHV_MJ_PER_KG         # 120 MJ/kg, mirrors data/properties/lh2-properties.csv
 BOG_ENGINE_EFFICIENCY_RATIO = 1.0  # [ASSUMPTION] BOG vs liquid-fuel thermal efficiency in the same engine
@@ -59,6 +63,20 @@ class VesselCase:
 LH2_40K = VesselCase(
     name="LH2 carrier (40,000 m3)",
     capacity_m3=40_000.0,                 # data/vessels/lh2-carriers.csv, cited, kawasaki-2026-questionnaire Q29
+    density_kg_per_m3=70.8,               # data/properties/lh2-properties.csv, needs-source (NIST pending)
+    fill_fraction=0.98,                   # [ASSUMPTION]
+    speed_km_per_h=29.6,                  # cited, kawasaki-2026-supplemental (~16 kn)
+    port_days_per_call=1.25,              # cited midpoint, kawasaki-2026-questionnaire Q27 (1-1.5 d)
+    voyage_bor_pct_per_day=0.2,           # [ESTIMATE] KHI discloses no standalone voyage BOR
+    bog_is_mass_loss=True,                # KHI reply Q23/Q33: burned as DF engine fuel, no onboard reliq
+)
+
+#: The commercial-scale target vessel. KHI's disclosed 29.6 km/h service speed
+#: was given for this ship, so pairing the two is more internally consistent
+#: than borrowing that speed for the 40,000 m3 vessel under construction.
+LH2_160K = VesselCase(
+    name="LH2 carrier (160,000 m3)",
+    capacity_m3=160_000.0,                # cited, kawasaki-2026-supplemental ("160,000 m3/ship")
     density_kg_per_m3=70.8,               # data/properties/lh2-properties.csv, needs-source (NIST pending)
     fill_fraction=0.98,                   # [ASSUMPTION]
     speed_km_per_h=29.6,                  # cited, kawasaki-2026-supplemental (~16 kn)
@@ -162,7 +180,7 @@ def breakeven_lh2_voyage_bor(distance_km: float) -> float:
     nh3_annual = evaluate(NH3_24K, distance_km, is_nh3=True).annual_delivered_h2_equivalent_kg
 
     def diff(bor: float) -> float:
-        v = VesselCase(**{**LH2_40K.__dict__, "voyage_bor_pct_per_day": bor})
+        v = VesselCase(**{**LH2_160K.__dict__, "voyage_bor_pct_per_day": bor})
         return evaluate(v, distance_km, is_nh3=False).annual_delivered_h2_equivalent_kg - nh3_annual
 
     return _bisect(diff, 0.0, 20.0, want_low_when_true=True)
@@ -171,7 +189,7 @@ def breakeven_lh2_voyage_bor(distance_km: float) -> float:
 def breakeven_nh3_speed_km_per_h(distance_km: float) -> float:
     """NH3 service speed (km/h) at which NH3 matches LH2's default annual
     per-vessel delivery, holding NH3 capacity/BOR at their defaults."""
-    lh2_annual = evaluate(LH2_40K, distance_km, is_nh3=False).annual_delivered_h2_equivalent_kg
+    lh2_annual = evaluate(LH2_160K, distance_km, is_nh3=False).annual_delivered_h2_equivalent_kg
 
     def diff(speed: float) -> float:
         v = VesselCase(**{**NH3_24K.__dict__, "speed_km_per_h": speed})
@@ -183,13 +201,13 @@ def breakeven_nh3_speed_km_per_h(distance_km: float) -> float:
 def breakeven_nh3_capacity_m3(distance_km: float) -> float:
     """NH3 vessel capacity (m3, at 13 kn) at which NH3 matches LH2's default
     annual per-vessel delivery."""
-    lh2_annual = evaluate(LH2_40K, distance_km, is_nh3=False).annual_delivered_h2_equivalent_kg
+    lh2_annual = evaluate(LH2_160K, distance_km, is_nh3=False).annual_delivered_h2_equivalent_kg
 
     def diff(capacity: float) -> float:
         v = VesselCase(**{**NH3_24K.__dict__, "capacity_m3": capacity})
         return lh2_annual - evaluate(v, distance_km, is_nh3=True).annual_delivered_h2_equivalent_kg
 
-    return _bisect(diff, 10_000.0, 150_000.0, want_low_when_true=True)
+    return _bisect(diff, 10_000.0, 400_000.0, want_low_when_true=True)
 
 
 def find_crossover_km(lo: float = 1.0, hi: float = 60_000.0, tol: float = 1.0) -> float | None:
@@ -197,7 +215,7 @@ def find_crossover_km(lo: float = 1.0, hi: float = 60_000.0, tol: float = 1.0) -
     vessel. Returns None if no sign change in [lo, hi] (i.e. one carrier wins
     everywhere in range)."""
     def diff(d: float) -> float:
-        lh2 = evaluate(LH2_40K, d, is_nh3=False).annual_delivered_h2_equivalent_kg
+        lh2 = evaluate(LH2_160K, d, is_nh3=False).annual_delivered_h2_equivalent_kg
         nh3 = evaluate(NH3_24K, d, is_nh3=True).annual_delivered_h2_equivalent_kg
         return lh2 - nh3
 
@@ -234,6 +252,7 @@ class FuelBalance:
     bog_surplus_kg: float         # of that, not usable for propulsion (vented or GCU-burned)
     covered_fraction: float       # BOG energy / propulsion demand
     topup_fuel_t: float           # bunker fuel still required for propulsion
+    fuel_displaced_t: float       # bunker fuel the boil-off actually displaced
     reliq_fuel_t: float           # bunker fuel burned in the genset for reliquefaction
     total_fuel_t: float
     cargo_lost_kg: float          # cargo mass that leaves the chain (H2 for LH2, 0 for NH3)
@@ -241,10 +260,12 @@ class FuelBalance:
 
 
 def fuel_balance(vessel: VesselCase, distance_km: float, is_nh3: bool,
-                 bunker_t_per_day: float = BUNKER_T_PER_DAY,
+                 bunker_t_per_day: float | None = None,
                  reliq_sec: float = NH3_RELIQ_SEC_KWH_PER_KG,
                  genset_eff: float = RELIQ_GENSET_EFFICIENCY,
                  engine_ratio: float = BOG_ENGINE_EFFICIENCY_RATIO) -> FuelBalance:
+    if bunker_t_per_day is None:
+        bunker_t_per_day = BUNKER_T_PER_DAY if is_nh3 else LH2_BUNKER_T_PER_DAY
     r = evaluate(vessel, distance_km, is_nh3=is_nh3)
     days = r.one_way_days
     demand = shipping.propulsion_demand_mj(bunker_t_per_day, days, VLSFO_LHV_MJ_PER_KG)
@@ -257,7 +278,8 @@ def fuel_balance(vessel: VesselCase, distance_km: float, is_nh3: bool,
         return FuelBalance(
             carrier=vessel.name, laden_days=days, demand_mj=demand, bog_kg=bog_kg,
             bog_useful_kg=0.0, bog_surplus_kg=0.0, covered_fraction=0.0,
-            topup_fuel_t=bunker_t_per_day * days, reliq_fuel_t=reliq_fuel_t,
+            topup_fuel_t=bunker_t_per_day * days, fuel_displaced_t=0.0,
+            reliq_fuel_t=reliq_fuel_t,
             total_fuel_t=bunker_t_per_day * days + reliq_fuel_t,
             cargo_lost_kg=0.0,
             delivered_h2e_kg=r.delivered_cargo_per_voyage_kg / NH3_PER_H2_MASS_RATIO,
@@ -269,6 +291,7 @@ def fuel_balance(vessel: VesselCase, distance_km: float, is_nh3: bool,
         carrier=vessel.name, laden_days=days, demand_mj=demand, bog_kg=bog_kg,
         bog_useful_kg=bal["useful_kg"], bog_surplus_kg=bal["surplus_kg"],
         covered_fraction=bal["covered_fraction"], topup_fuel_t=bal["topup_fuel_t"],
+        fuel_displaced_t=bal["fuel_displaced_t"],
         reliq_fuel_t=0.0, total_fuel_t=bal["topup_fuel_t"],
         cargo_lost_kg=bog_kg,
         delivered_h2e_kg=r.delivered_cargo_per_voyage_kg,
@@ -276,14 +299,36 @@ def fuel_balance(vessel: VesselCase, distance_km: float, is_nh3: bool,
 
 
 def voyage_cost_per_kg(fb: FuelBalance, h2_price_usd_per_kg: float,
-                       vlsfo_price_usd_per_t: float) -> dict:
-    """Boil-off + bunker cost of one laden leg, per kg H2-equivalent delivered.
+                       vlsfo_price_usd_per_t: float,
+                       mode: str = "boiloff") -> dict:
+    """Cost of one laden leg, per kg H2-equivalent delivered.
+
+    Two framings, because they answer different questions:
+
+    ``mode="boiloff"`` (default) — **the cost of managing boil-off only**.
+    Each carrier is charged only what its boil-off costs it: the LH2 carrier
+    pays for the cargo hydrogen it consumes, credited with the bunker fuel that
+    hydrogen displaced; the ammonia carrier pays for the bunker fuel burned in
+    the genset to re-liquefy its BOG. The propulsion duty both ships would burn
+    regardless is excluded from both sides. This isolates the carrier-choice
+    question and is the framing the user asked for.
+
+    ``mode="full"`` — the whole fuel bill of the leg, including the propulsion
+    duty each ship buys. Kept because the two vessels do NOT burn the same
+    total: their laden legs differ in length, so the propulsion term is not a
+    clean common factor that simply cancels.
 
     Prices are caller-supplied: neither is logged in references.csv, and the
     study reports a breakeven price rather than asserting one.
     """
     cargo_cost = fb.cargo_lost_kg * h2_price_usd_per_kg
-    fuel_cost = fb.total_fuel_t * vlsfo_price_usd_per_t
+    if mode == "boiloff":
+        # credit the LH2 carrier with the fuel its boil-off actually displaced
+        fuel_cost = (fb.reliq_fuel_t - fb.fuel_displaced_t) * vlsfo_price_usd_per_t
+    elif mode == "full":
+        fuel_cost = fb.total_fuel_t * vlsfo_price_usd_per_t
+    else:
+        raise ValueError(f"unknown cost mode {mode!r}")
     return {
         "cargo_usd": cargo_cost, "fuel_usd": fuel_cost,
         "total_usd": cargo_cost + fuel_cost,
@@ -294,26 +339,30 @@ def voyage_cost_per_kg(fb: FuelBalance, h2_price_usd_per_kg: float,
 
 
 def breakeven_bor_fuel_cover(distance_km: float,
-                             bunker_t_per_day: float = BUNKER_T_PER_DAY) -> float:
+                             vessel: VesselCase = None,
+                             bunker_t_per_day: float = LH2_BUNKER_T_PER_DAY) -> float:
     """LH2 voyage BOR (%/day) at which cargo boil-off exactly meets the engine's
     propulsion demand. Below it the ship buys top-up bunker fuel; above it the
     surplus boil-off cannot be used for propulsion."""
+    base = vessel if vessel is not None else LH2_160K
+
     def diff(bor: float) -> float:
-        v = VesselCase(**{**LH2_40K.__dict__, "voyage_bor_pct_per_day": bor})
+        v = VesselCase(**{**base.__dict__, "voyage_bor_pct_per_day": bor})
         fb = fuel_balance(v, distance_km, False, bunker_t_per_day)
         return fb.covered_fraction - 1.0
     return _bisect(diff, 0.0, 20.0, want_low_when_true=False)
 
 
 def breakeven_h2_price(distance_km: float, vlsfo_price_usd_per_t: float,
-                       bunker_t_per_day: float = BUNKER_T_PER_DAY) -> float | None:
+                       vessel: VesselCase = None,
+                       mode: str = "boiloff") -> float | None:
     """Delivered-H2 value at which the two carriers' boil-off + bunker cost per
     kg H2 delivered is equal. Below it the LH2 carrier is cheaper on this
     metric; above it the ammonia carrier is."""
-    nh3_fb = fuel_balance(NH3_24K, distance_km, True, bunker_t_per_day)
-    nh3_pk = voyage_cost_per_kg(nh3_fb, 0.0, vlsfo_price_usd_per_t)["per_kg"]
-    lh2_fb = fuel_balance(LH2_40K, distance_km, False, bunker_t_per_day)
-    base = voyage_cost_per_kg(lh2_fb, 0.0, vlsfo_price_usd_per_t)["per_kg"]
+    nh3_fb = fuel_balance(NH3_24K, distance_km, True)
+    nh3_pk = voyage_cost_per_kg(nh3_fb, 0.0, vlsfo_price_usd_per_t, mode)["per_kg"]
+    lh2_fb = fuel_balance(vessel if vessel is not None else LH2_160K, distance_km, False)
+    base = voyage_cost_per_kg(lh2_fb, 0.0, vlsfo_price_usd_per_t, mode)["per_kg"]
     slope = lh2_fb.cargo_lost_kg / lh2_fb.delivered_h2e_kg
     if slope <= 0:
         return None
@@ -344,7 +393,7 @@ def main() -> None:
     for label, distance in [("SUEZ route (reference)", DISTANCE_SUEZ_KM),
                              ("CAPE OF GOOD HOPE route (PRIMARY)", DISTANCE_CAPE_KM)]:
         print(f"\n--- {label}: {distance:,.0f} km one-way [ESTIMATE, first-principles] ---\n")
-        lh2 = evaluate(LH2_40K, distance, is_nh3=False)
+        lh2 = evaluate(LH2_160K, distance, is_nh3=False)
         nh3 = evaluate(NH3_24K, distance, is_nh3=True)
         print(format_result(lh2))
         print(format_result(nh3))
@@ -364,7 +413,7 @@ def main() -> None:
     else:
         print(f"Crossover at ~{crossover:,.0f} km one-way.")
         below = evaluate(NH3_24K, crossover - 500, is_nh3=True)
-        below_lh2 = evaluate(LH2_40K, crossover - 500, is_nh3=False)
+        below_lh2 = evaluate(LH2_160K, crossover - 500, is_nh3=False)
         print(f"  Below ~{crossover:,.0f} km: {'NH3' if below.annual_delivered_h2_equivalent_kg > below_lh2.annual_delivered_h2_equivalent_kg else 'LH2'} wins on per-vessel annual throughput.")
         print(f"  Above ~{crossover:,.0f} km: {'LH2' if below.annual_delivered_h2_equivalent_kg > below_lh2.annual_delivered_h2_equivalent_kg else 'NH3'} wins on per-vessel annual throughput.")
 
@@ -386,7 +435,7 @@ def main() -> None:
     print("\nSensitivity sweep (annual delivered H2-equivalent per vessel, kg/y):")
     print(f"{'Distance (km)':>14} | {'LH2 (kg/y)':>16} | {'NH3 (kg/y)':>16} | {'Winner':>7}")
     for d in [1_000, 2_500, 5_000, 7_500, 10_260, 15_000, 21_200, 25_000, 30_000, 40_000]:
-        lh2_val = evaluate(LH2_40K, d, is_nh3=False).annual_delivered_h2_equivalent_kg
+        lh2_val = evaluate(LH2_160K, d, is_nh3=False).annual_delivered_h2_equivalent_kg
         nh3_val = evaluate(NH3_24K, d, is_nh3=True).annual_delivered_h2_equivalent_kg
         w = "LH2" if lh2_val > nh3_val else "NH3"
         print(f"{d:>14,.0f} | {lh2_val:>16,.0f} | {nh3_val:>16,.0f} | {w:>7}")

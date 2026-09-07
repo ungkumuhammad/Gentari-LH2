@@ -1,5 +1,5 @@
 segment,component,parameter,value,unit,low,high,basis,source_id,tag,notes
-shipping,commercial_carrier,cargo_capacity,160000,m3,,,"commercial-scale target vessel",kawasaki-2026-supplemental,cited,"160000 m3/ship on KHI cost-basis slide"
+shipping,commercial_carrier,cargo_capacity,160000,m3,,,"commercial-scale target vessel",kawasaki-2026-supplemental,cited,"160000 m3/ship on KHI cost-basis slide. STUDY DEFAULT for the shipping comparison since 2026-09-07 (user direction, replacing the 40000 m3 vessel): the disclosed 29.6 km/h service speed was given for THIS ship, so pairing them is more internally consistent"
 shipping,commercial_carrier,service_speed,29.6,km/h,,,"design velocity",kawasaki-2026-supplemental,cited,"approx 16 knots"
 shipping,commercial_carrier,fleet_count,2,ship,,,"Base 2.5B Nm3/y",kawasaki-2026-supplemental,cited,"2 ships at Base scale"
 shipping,commercial_carrier,fleet_count,8,ship,,,"Large 10B Nm3/y",kawasaki-2026-supplemental,cited,"8 ships at Large scale"
