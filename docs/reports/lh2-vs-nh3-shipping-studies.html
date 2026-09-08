@@ -1,4 +1,4 @@
-<title>LH2 vs Ammonia at Sea</title>
+<title>Two Ways to Move Hydrogen</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@500;600;700&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -125,9 +125,42 @@ tbody tr.group td{background:var(--surface-2);font-family:var(--mono);font-size:
 footer{margin-top:44px;border-top:1px solid var(--rule);padding-top:16px;font-size:12.5px;color:var(--ink-3);max-width:76ch}
 footer code{font-family:var(--mono);font-size:11.5px;color:var(--ink-2)}
 .sect-rule{border:0;border-top:1px solid var(--rule);margin:34px 0 26px}
+/* --- sheet tabs: the two chain segments this artifact covers, in chain order --- */
+.sheets{display:flex;gap:3px;align-items:flex-end;border-bottom:1px solid var(--rule-2);margin-bottom:0}
+.sheet-tab{display:flex;flex-direction:column;gap:1px;text-align:left;line-height:1.25;position:relative;top:1px;
+  background:var(--surface-2);border:1px solid var(--rule);border-bottom:1px solid var(--rule-2);
+  border-radius:4px 4px 0 0;padding:9px 16px 9px;transition:background .12s,color .12s}
+.sheet-tab .seq{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;color:var(--ink-3)}
+.sheet-tab .ttl{font-family:var(--display);font-size:16px;font-weight:700;color:var(--ink-2);letter-spacing:-.005em}
+.sheet-tab .sub{font-family:var(--mono);font-size:10px;letter-spacing:.05em;color:var(--ink-3)}
+.sheet-tab:hover .ttl{color:var(--lh2)}
+.sheet-tab[aria-selected="true"]{background:var(--surface);border-color:var(--rule-2);border-bottom-color:var(--surface);
+  box-shadow:inset 0 3px 0 var(--ink)}
+.sheet-tab[aria-selected="true"] .ttl{color:var(--ink)}
+.sheet-tab[aria-selected="true"] .seq{color:var(--ink-2)}
+.sheet>.masthead{margin-top:26px}
+@media(max-width:620px){.sheets{flex-direction:column;align-items:stretch;border-bottom:0}
+  .sheet-tab{border-radius:4px;border-bottom:1px solid var(--rule);top:0}}
+/* route note strip — states the reading of an ambiguous instruction on the page itself */
+.note{background:var(--lh2-soft);border:1px solid var(--rule);border-left:3px solid var(--lh2);border-radius:4px;
+  padding:13px 18px;margin-bottom:22px;font-size:13.5px;color:var(--ink-2);max-width:86ch}
+.note b{color:var(--ink)}
 </style>
 
 <div class="wrap">
+
+<nav class="sheets" role="tablist" aria-label="Value-chain segment">
+  <button class="sheet-tab" id="tab-up" role="tab" aria-selected="false" aria-controls="sh-up">
+    <span class="seq">SEGMENT 1</span><span class="ttl">Upstream</span>
+    <span class="sub">Liquefaction vs Haber&#8211;Bosch &#183; 100 ktpa</span>
+  </button>
+  <button class="sheet-tab" id="tab-ship" role="tab" aria-selected="true" aria-controls="sh-ship">
+    <span class="seq">SEGMENT 2</span><span class="ttl">Shipping</span>
+    <span class="sub">LH&#8322; vs NH&#8323; at sea</span>
+  </button>
+</nav>
+
+<div class="sheet" id="sh-ship" role="tabpanel" aria-labelledby="tab-ship">
 
 <header class="masthead">
   <div class="eyebrow">Gentari · KR1.3 · Shipping segment (nodes D1 / D2)</div>
@@ -397,6 +430,228 @@ footer code{font-family:var(--mono);font-size:11.5px;color:var(--ink-2)}
   <b style="color:var(--ink-2)">Sources.</b> LH₂ vessel capacity, speed, port time, BOG-as-fuel disposition and the gas combustion unit: Kawasaki Heavy Industries questionnaire replies Q23 / Q26 / Q27 / Q29 / Q33 and cost-basis supplemental (<code>kawasaki-2026-questionnaire</code>, <code>kawasaki-2026-supplemental</code>). LH₂ density and H₂ LHV (120 MJ/kg): <code>data/properties/lh2-properties.csv</code>, pending NIST citation approval. Stoichiometric ratio 5.632 kg NH₃ per kg H₂: first-principles from standard molar masses. Ammonia vessel specs, the 25 t/day VLSFO duty and the re-liquefaction disposition: user-supplied, 7 Sep 2026, recorded in <code>data/vessels/nh3-carriers.csv</code>. Corridor distances: <code>data/routes/kakinada-hamburg.csv</code>. Model, fuel-balance physics and tests: <code>scripts/run_shipping_comparison.py</code>, <code>src/lh2/shipping.py</code>, <code>tests/test_shipping_comparison.py</code>. Write-up: <code>docs/comparison/02-shipping-lh2-vs-nh3.md</code>.
 </footer>
 
+</div><!-- /sheet: shipping -->
+
+<div class="sheet" id="sh-up" role="tabpanel" aria-labelledby="tab-up" hidden>
+
+<header class="masthead">
+  <div class="eyebrow">Gentari · KR1.3 · Upstream segment (nodes B1 / B2 + C1 / C2)</div>
+  <h1>Liquefy It, or React It</h1>
+  <p class="deck">The same 100 ktpa of hydrogen arrives at the fence as a gas. One route chills it to 20 K; the other reacts it with nitrogen into ammonia. <b>Liquefaction only ever spends energy. Synthesis spends energy and gives some back</b> — the Haber–Bosch reaction is exothermic, and that heat can raise steam and turn a turbine. This sheet sizes both routes in megawatts, then puts the same 60,000 m³ tank behind each of them.</p>
+  <div class="spec">
+    <span><b>Basis</b> <span id="u-spec-basis">100 ktpa H₂ at the battery limit · 8,000 operating h/y</span></span>
+    <span><b>Boundary</b> H₂ in → carrier in the export tank · production excluded, it is common to both</span>
+    <span><b>Routes</b> LH₂ liquefier (KHI) vs Haber–Bosch synthesis, net of its steam-turbine credit</span>
+    <span><b>Terminal</b> <span id="u-spec-tank">one 60,000 m³ tank each</span></span>
+    <span><b>Comparison</b> MW at the fence · kWh per kg H₂ delivered into the tank</span>
+  </div>
+</header>
+
+<div class="note">
+  <b>How the 60,000 m³ instruction is read here.</b> Both terminals are given the <b>same tank volume</b>, so the comparison is per unit of installed storage — not the same days of cover, and not the same stored energy. That reading matters: at equal volume the ammonia tank holds more hydrogen and covers more days, so equalising volume is not a neutral choice. The second reading — <b>equal days of cover</b> — is a toggle in the controls, and it reverses which side needs the bigger tank. For scale, Kawasaki's own LH₂ export tank is <b>64,000 m³</b> (<code>kawasaki-2026-supplemental</code>), so 60,000 m³ is within a few percent of a real LH₂ design.
+</div>
+
+<section class="controls" aria-label="Upstream study inputs">
+  <div class="controls-head">
+    <div class="eyebrow">Study inputs — every chart below recomputes live</div>
+    <div class="presets">
+      <button class="preset" id="up-khihigh" aria-pressed="true">KHI 9 kWh/kg</button>
+      <button class="preset" id="up-khilow" aria-pressed="false">KHI 8 kWh/kg</button>
+      <button class="preset" id="up-floor" aria-pressed="false">Perfect liquefier 3.9</button>
+      <button class="preset" id="up-reset" aria-pressed="false">Reset all</button>
+    </div>
+  </div>
+  <div class="grid-in">
+    <div class="field">
+      <label for="iu-h2ktpa">H₂ at the battery limit, ktpa <span class="tag est">USER</span></label>
+      <input type="number" id="iu-h2ktpa" value="100" min="5" max="2000" step="5">
+    </div>
+    <div class="field">
+      <label for="iu-hours">Plant operating hours, h/y <span class="tag est">ASSUM</span></label>
+      <input type="number" id="iu-hours" value="8000" min="2000" max="8760" step="100">
+      <div class="hint" id="uh-hours"></div>
+    </div>
+    <div class="field">
+      <label for="iu-lsec">Liquefaction SEC, kWh/kg H₂ <span class="tag cit">KHI 8–9</span></label>
+      <input type="number" id="iu-lsec" value="9" min="2" max="20" step="0.1">
+      <input type="range" id="ru-lsec" value="9" min="3" max="15" step="0.1" aria-label="Liquefaction specific energy consumption">
+    </div>
+    <div class="field">
+      <label for="iu-hbsec">Haber–Bosch SEC, kWh/kg NH₃ <span class="tag est">EST</span></label>
+      <input type="number" id="iu-hbsec" value="0.6" min="0.05" max="4" step="0.05">
+      <input type="range" id="ru-hbsec" value="0.6" min="0.1" max="2" step="0.02" aria-label="Haber-Bosch specific energy consumption">
+      <div class="hint" id="uh-hbsec"></div>
+    </div>
+    <div class="field" style="grid-column:span 2;min-width:280px">
+      <label>Steam-turbine credit from the exothermic reaction <span class="tag est">ASSUM</span></label>
+      <div class="seg" role="group" aria-label="Steam credit" style="width:100%">
+        <button id="us-on" aria-pressed="true" style="flex:1">Counted</button>
+        <button id="us-off" aria-pressed="false" style="flex:1">Excluded</button>
+      </div>
+      <div class="hint" id="uh-credit"></div>
+    </div>
+    <div class="field">
+      <label for="iu-recov">Reaction heat raised as steam, % <span class="tag est">ASSUM</span></label>
+      <input type="number" id="iu-recov" value="75" min="0" max="100" step="1">
+      <input type="range" id="ru-recov" value="75" min="0" max="100" step="1" aria-label="Share of reaction heat recovered as steam">
+    </div>
+    <div class="field">
+      <label for="iu-turb">Steam cycle heat → power, % <span class="tag est">ASSUM</span></label>
+      <input type="number" id="iu-turb" value="30" min="0" max="45" step="1">
+      <input type="range" id="ru-turb" value="30" min="0" max="45" step="1" aria-label="Steam turbine efficiency">
+    </div>
+    <div class="field" style="grid-column:span 2;min-width:280px">
+      <label>Terminal tank basis <span class="tag est">CHOICE</span></label>
+      <div class="seg" role="group" aria-label="Tank basis" style="width:100%">
+        <button id="ut-fixed" aria-pressed="true" style="flex:1">Same volume, as specified</button>
+        <button id="ut-days" aria-pressed="false" style="flex:1">Same days of cover</button>
+      </div>
+      <div class="hint" id="uh-tank"></div>
+    </div>
+    <div class="field">
+      <label for="iu-tank">Tank volume, m³ each <span class="tag est">USER</span></label>
+      <input type="number" id="iu-tank" value="60000" min="5000" max="200000" step="1000">
+    </div>
+  </div>
+  <details class="adv">
+    <summary>Process, terminal and price detail — the liquefier and its tank are KHI-disclosed; every ammonia figure is an estimate</summary>
+    <div class="grid-in">
+      <div class="field"><label for="iu-loss">Synthesis H₂ loss, % <span class="tag est">EST</span></label><input type="number" id="iu-loss" value="2" min="0" max="15" step="0.5"></div>
+      <div class="field"><label for="iu-dh">Reaction enthalpy, kJ/mol NH₃ <span class="tag est">1ST PRINC</span></label><input type="number" id="iu-dh" value="45.9" min="30" max="60" step="0.1"></div>
+      <div class="field"><label for="iu-fill">Tank fill fraction, % <span class="tag est">ASSUM</span></label><input type="number" id="iu-fill" value="98" min="80" max="100" step="1"></div>
+      <div class="field"><label for="iu-days">Hold time, days <span class="tag est">ASSUM</span></label><input type="number" id="iu-days" value="5" min="1" max="60" step="0.5"></div>
+      <div class="field"><label for="iu-lrho">LH₂ density, kg/m³ <span class="tag est">NIST?</span></label><input type="number" id="iu-lrho" value="70.8" min="60" max="80" step="0.1"></div>
+      <div class="field"><label for="iu-nrho">NH₃ density, kg/m³ <span class="tag est">EST</span></label><input type="number" id="iu-nrho" value="682" min="600" max="720" step="1"></div>
+      <div class="field"><label for="iu-lbor">LH₂ tank BOR, %/day <span class="tag cit">KHI</span></label><input type="number" id="iu-lbor" value="0.1" min="0" max="3" step="0.01"></div>
+      <div class="field"><label for="iu-nbor">NH₃ tank BOR, %/day <span class="tag est">EST</span></label><input type="number" id="iu-nbor" value="0.04" min="0" max="3" step="0.01"></div>
+      <div class="field"><label for="iu-lreliq">LH₂ BOG re-liq., kWh/kg H₂ <span class="tag est">ASSUM</span></label><input type="number" id="iu-lreliq" value="3.94" min="0" max="12" step="0.05"></div>
+      <div class="field"><label for="iu-nreliq">NH₃ BOG re-liq., kWh/kg NH₃ <span class="tag est">EST</span></label><input type="number" id="iu-nreliq" value="0.25" min="0" max="3" step="0.05"></div>
+      <div class="field"><label for="iu-pwr">Electricity price, USD/MWh <span class="tag est">SET IT</span></label><input type="number" id="iu-pwr" value="50" min="0" max="400" step="5"></div>
+    </div>
+  </details>
+</section>
+
+<section class="verdict" id="u-verdict" aria-label="Headline upstream result at current inputs"></section>
+
+<section class="study">
+  <div class="study-head"><h2>Where does the power actually go?</h2><span class="lever">At current inputs</span></div>
+  <p class="intro">Everything above the zero line is electricity the route draws; everything below it is electricity the route returns. Only one route has anything below the line — and only because the reaction it runs gives off heat instead of demanding it.</p>
+  <div class="panel">
+    <div class="panel-pad"><div class="eyebrow" id="u-eb1">Power at the fence, MW — drawn above the line, returned below</div></div>
+    <div class="legend">
+      <span><i class="sq" style="background:var(--lh2)"></i>Liquefaction / synthesis electricity</span>
+      <span><i class="sq" style="background:var(--fossil)"></i>Terminal boil-off re-liquefaction</span>
+      <span><i class="sq" style="background:var(--nh3)"></i>Steam-turbine credit (returned)</span>
+      <span class="axes">Columns · the two routes<br>Y · power at the fence (MW)</span>
+    </div>
+    <div class="chart-scroll"><svg class="chart" id="uc1" viewBox="0 0 880 400" role="img" aria-label="Power drawn and returned by each upstream route"></svg><div class="tip" id="ut1"></div></div>
+    <div class="readout" id="ur1"></div>
+  </div>
+</section>
+
+<section class="study">
+  <div class="study-head"><h2>How much can the steam turbine claw back?</h2><span class="lever">Sweeping: heat → power recovery</span></div>
+  <p class="intro">The synthesis reaction releases a fixed amount of heat per kilogram of hydrogen it consumes. What varies is how much of that heat is raised as usable steam and how efficiently the steam cycle converts it. Their product is the only lever on this chart — and it has a hard ceiling, because no Rankine cycle turns heat into work at better than about a third.</p>
+  <div class="panel">
+    <div class="panel-pad"><div class="eyebrow">Net power at the fence, MW, against the combined heat-to-power efficiency</div></div>
+    <div class="legend">
+      <span><i class="sw" style="background:var(--nh3)"></i>NH₃ route, net of the credit</span>
+      <span><i class="sw" style="background:var(--lh2)"></i>LH₂ route (nothing to recover — flat)</span>
+      <span class="axes">X · reaction heat raised as steam × steam-cycle efficiency (%)<br>Y · net power at the fence (MW)</span>
+    </div>
+    <div class="chart-scroll"><svg class="chart" id="uc2" viewBox="0 0 880 350" role="img" aria-label="Net power of each route against the combined steam heat-to-power efficiency"></svg><div class="tip" id="ut2"></div></div>
+    <div class="readout" id="ur2"></div>
+  </div>
+</section>
+
+<section class="study">
+  <div class="study-head"><h2>How efficient would the liquefier have to be?</h2><span class="lever">Sweeping: liquefaction SEC</span></div>
+  <p class="intro">Turn the question around. Hold the ammonia route where it is, and ask what specific energy consumption a liquefier would need to match it. The answer runs into a wall that no engineering programme can move: the reversible work of liquefying hydrogen. The shaded region on the left is not hard — it is <b>thermodynamically unreachable</b>.</p>
+  <div class="panel">
+    <div class="panel-pad"><div class="eyebrow">Net power at the fence, MW, against liquefaction SEC</div></div>
+    <div class="legend">
+      <span><i class="sw" style="background:var(--lh2)"></i>LH₂ route</span>
+      <span><i class="sw" style="background:var(--nh3)"></i>NH₃ route, net of the steam credit</span>
+      <span><i class="sw" style="background:repeating-linear-gradient(90deg,var(--nh3) 0 7px,transparent 7px 12px)"></i>NH₃ route, gross — credit excluded</span>
+      <span class="axes">X · liquefaction specific energy consumption (kWh/kg H₂)<br>Y · net power at the fence (MW)</span>
+    </div>
+    <div class="chart-scroll"><svg class="chart" id="uc3" viewBox="0 0 880 350" role="img" aria-label="Net power of each route against the liquefaction specific energy consumption"></svg><div class="tip" id="ut3"></div></div>
+    <div class="readout" id="ur3"></div>
+  </div>
+</section>
+
+<section class="study">
+  <div class="study-head"><h2>What would have to be true for liquefaction to win?</h2><span class="lever">Mapping: HB energy × liquefaction SEC</span></div>
+  <p class="intro">Both specific energies in one picture. The horizontal band is what Kawasaki actually disclosed; the hatched strip along the bottom is below the reversible work of liquefaction and cannot be occupied by any machine. The dashed line is parity. <b>Read it as a question about the ammonia number</b>, because that is the one this repository does not have: how wrong would the 0.60 kWh/kg estimate have to be before the answer changes?</p>
+  <div class="panel">
+    <div class="panel-pad"><div class="eyebrow">Which route draws less power at the fence, by margin</div></div>
+    <div class="legend" id="u-legend4"></div>
+    <div class="chart-scroll"><svg class="chart" id="uc4" viewBox="0 0 880 420" role="img" aria-label="Map of which upstream route draws less power across Haber-Bosch and liquefaction specific energies"></svg><div class="tip" id="ut4"></div></div>
+    <div class="readout" id="ur4"></div>
+  </div>
+</section>
+
+<hr class="sect-rule">
+
+<section class="study">
+  <div class="study-head"><h2>One tank, two cargoes</h2><span class="lever">At current inputs</span></div>
+  <p class="intro">Same steel, same volume, two very different inventories. Liquid ammonia is nearly ten times denser than liquid hydrogen but carries only 17.75 % hydrogen by mass — those two factors do not cancel, and what is left over is the reason the ammonia tank covers more days.</p>
+  <div class="panel">
+    <div class="panel-pad"><div class="eyebrow" id="u-eb5">One 60,000 m³ export tank on each route</div></div>
+    <div class="legend">
+      <span><i class="sq" style="background:var(--lh2)"></i>LH₂ route</span>
+      <span><i class="sq" style="background:var(--nh3)"></i>NH₃ route</span>
+      <span class="axes">Each row is scaled to its own maximum — compare within a row, not across rows</span>
+    </div>
+    <div class="chart-scroll"><svg class="chart" id="uc5" viewBox="0 0 880 360" role="img" aria-label="What one export tank of each carrier holds, and what its boil-off costs"></svg><div class="tip" id="ut5"></div></div>
+    <div class="readout" id="ur5"></div>
+  </div>
+</section>
+
+<section class="study">
+  <div class="study-head"><h2>When does terminal boil-off start to matter?</h2><span class="lever">Sweeping: LH₂ tank boil-off rate</span></div>
+  <p class="intro">Boil-off dominates the shipping sheet. Onshore it does not, and it is worth showing why rather than asserting it: the tank holds days of production, not months, and the re-liquefier only ever sees what boils off — never the whole stream. Measured against the plant it sits next to, the terminal is a rounding error until the boil-off rate is many times what Kawasaki quotes.</p>
+  <div class="panel">
+    <div class="panel-pad"><div class="eyebrow">Terminal re-liquefaction power as a share of the route's own conversion power</div></div>
+    <div class="legend">
+      <span><i class="sw" style="background:var(--lh2)"></i>LH₂ terminal ÷ liquefier</span>
+      <span><i class="sw" style="background:var(--nh3)"></i>NH₃ terminal ÷ synthesis plant</span>
+      <span><i class="sw" style="background:var(--fossil)"></i>10 % reference — where a terminal stops being a rounding error</span>
+      <span class="axes">X · LH₂ tank boil-off rate at rest (%/day)<br>Y · terminal power ÷ conversion power (%)</span>
+    </div>
+    <div class="chart-scroll"><svg class="chart" id="uc6" viewBox="0 0 880 340" role="img" aria-label="Terminal re-liquefaction power as a share of conversion power against the LH2 boil-off rate"></svg><div class="tip" id="ut6"></div></div>
+    <div class="readout" id="ur6"></div>
+  </div>
+</section>
+
+<hr class="sect-rule">
+
+<section class="study">
+  <div class="study-head"><h2>Upstream power ledger</h2><span class="lever">At current inputs</span></div>
+  <p class="intro">One year, both routes, every figure recomputed from the inputs above. Mirrors <code style="font-family:var(--mono);font-size:12.5px">scripts/run_upstream_comparison.py</code> line for line.</p>
+  <div class="panel"><div class="tbl-scroll"><table id="u-ledger"></table></div></div>
+</section>
+
+<section class="gaps">
+  <h3>What is not sourced here</h3>
+  <ol>
+    <li><b>The Haber–Bosch electrical demand is the number that decides this sheet, and it is a placeholder.</b> 0.60 kWh/kg NH₃ (range 0.5–0.7) is an <code>[ESTIMATE]</code> in <code>data/carriers/chain-energy-defaults.csv</code>, pending the internal Gentari NH₃ dataset (decision D4). It is stated to cover the air-separation unit, syngas compression, the synthesis loop and loop refrigeration — but that boundary has never been confirmed. The parity map exists so the answer can be read against how wrong this figure might be.</li>
+    <li><b>The steam-turbine credit is an assumption stacked on a first-principles quantity.</b> The reaction heat itself is solid — 45.9 kJ/mol NH₃, the same enthalpy the repository already carries for the reverse (cracking) reaction, giving 4.22 kWh per kg of H₂ reacted. What is assumed is how much of it survives as usable steam (75 %) and what a steam cycle makes of that (30 %). Both are live inputs. <b>A double-counting risk sits here:</b> if the 0.60 kWh/kg figure is already a net number for a plant with steam drives, part of this credit is being taken twice — the repository row says it excludes any steam credit, which is why it is added separately, but that row is itself unsourced.</li>
+    <li><b>Product refrigeration to −33 °C is not modelled separately.</b> Ammonia leaves the synthesis loop warm and pressurised and must be let down to atmospheric refrigerated storage. The 0.60 kWh/kg row claims to include loop refrigeration; whether it covers the let-down to tank conditions is not stated. If it does not, the ammonia route's demand here is understated.</li>
+    <li><b>Every ammonia terminal figure</b> — density, boil-off rate, re-liquefaction energy — is an estimate pending the same internal dataset. The LH₂ side's 0.1 %/day and 64,000 m³ tank are Kawasaki-disclosed (<code>kawasaki-2026-supplemental</code>); the 3.94 kWh/kg BOG re-liquefaction energy is <em>derived</em>, not disclosed — it scales the main liquefier's SEC by the ratio of condensation-only ideal work to fresh-feed ideal work.</li>
+    <li><b>Neither CapEx nor OpEx appears anywhere on this sheet.</b> Kawasaki declined both ("Feasibility Study necessary", replies Q8/Q9), so a liquefaction cost per kg cannot be stated without fabricating it. <b>This sheet ranks the two routes on energy only.</b> A route that draws less power is not automatically the cheaper one — an ammonia chain still has to pay for a cracker at the far end, which this boundary excludes entirely.</li>
+    <li><b>Plant operating hours (8,000 h/y)</b> set the megawatt figures but not the energy ones. It is an assumption, not a Kawasaki figure; the terminal is charged over all 8,760 h because a tank boils off whether or not the plant runs.</li>
+    <li><b>The theoretical minimum liquefaction work</b> — 3.9 kWh/kg on the para-hydrogen basis, 3.3 kWh/kg without ortho–para conversion (<code>doe-2009-h2-liquefaction-energy</code>, cited) — assumes an ambient-pressure gaseous feed. A pressurised feed lowers it. The floor drawn on these charts is therefore an <em>upper</em> bound on the floor.</li>
+    <li><b>Hydrogen production is outside the boundary.</b> It is common to both routes and cancels. For scale only: at the repository's 60 kWh/kg electrolysis placeholder it would be roughly 750 MW — several times either conversion step, and the reason neither of these numbers is the whole story.</li>
+  </ol>
+</section>
+
+<footer>
+  <b style="color:var(--ink-2)">Sources.</b> Liquefaction SEC 8–9 kWh/kg H₂, no plant H₂ loss, H₂ Claude cycle with N₂ pre-cooling, terminal boil-off 0.1 %/day and the 64,000 m³ export tank: Kawasaki Heavy Industries questionnaire replies Q1 / Q3 / Q13 / Q15 and cost-basis supplemental (<code>kawasaki-2026-questionnaire</code>, <code>kawasaki-2026-supplemental</code>). Theoretical minimum liquefaction work, 3.3 kWh/kg normal-H₂ and 3.9 kWh/kg para-H₂: <code>doe-2009-h2-liquefaction-energy</code> via <code>data/properties/liquefaction.csv</code>. Reaction enthalpy 45.9 kJ/mol NH₃ and the stoichiometric ratio 5.632 kg NH₃ per kg H₂: first-principles, <code>data/carriers/chain-energy-defaults.csv</code>. Haber–Bosch electrical SEC, synthesis H₂ loss and every ammonia terminal figure: <code>[ESTIMATE]</code> placeholders in the same file, pending the internal Gentari NH₃ dataset (decision D4). H₂ LHV 120 MJ/kg and LH₂ density 70.8 kg/m³: <code>data/properties/lh2-properties.csv</code>, pending NIST citation approval. Model and tests: <code>scripts/run_upstream_comparison.py</code>, <code>src/lh2/liquefaction.py</code>, <code>tests/test_upstream_comparison.py</code>.
+</footer>
+
+</div><!-- /sheet: upstream -->
+
 </div>
 <script>
 "use strict";
@@ -586,8 +841,12 @@ function lineChart(svgId,tipId,cfg){
     const x0=X(Math.max(xmin,b.from)), x1=X(Math.min(xmax,b.to));
     if(x1<=x0) return;
     el("rect",{x:x0,y:m.t,width:x1-x0,height:ph,fill:b.fill,opacity:b.opacity||1},svg);
-    if(b.label) el("text",{x:(x0+x1)/2,y:m.t+ph-8,"text-anchor":"middle","font-size":small?10:11.5,
-                           fill:b.color||"var(--ink-3)","font-weight":600},svg).textContent=b.label;
+    if(b.label){
+      const anc=b.labelAnchor||"middle";
+      el("text",{x:anc==="start"?x0+6:anc==="end"?x1-6:(x0+x1)/2,y:m.t+ph-8,"text-anchor":anc,
+                 "font-size":small?10:11.5,fill:b.color||"var(--ink-3)","font-weight":600,
+                 stroke:"var(--chart-surface)","stroke-width":3.5,"paint-order":"stroke"},svg).textContent=b.label;
+    }
   });
   vlines(svg,m,ph,pw,X,cfg,small);
   cfg.series.forEach(s=>{
@@ -1158,5 +1417,554 @@ segPair("b-leg","b-day",()=>{PERDAY=false;},()=>{PERDAY=true;});
 segPair("m-boiloff","m-full",()=>{MODE="boiloff";},()=>{MODE="full";});
 $("d-vent").addEventListener("click",()=>{ VENT=true; $("d-vent").setAttribute("aria-pressed","true"); $("d-gcu").setAttribute("aria-pressed","false"); render(); });
 $("d-gcu").addEventListener("click",()=>{ VENT=false; $("d-gcu").setAttribute("aria-pressed","true"); $("d-vent").setAttribute("aria-pressed","false"); render(); });
+
+/* ======================================================================
+   SHEET 2 — UPSTREAM: liquefaction vs Haber-Bosch at 100 ktpa H2
+   Mirrors scripts/run_upstream_comparison.py.
+
+   Boundary: H2 at the battery limit -> carrier in the export tank.
+   Production is common to both chains and sits outside it.
+   ====================================================================== */
+const M_H2 = 0.002016;          // kg/mol, standard molar mass [needs-source: IUPAC]
+const H2_LHV_KWH = 33.333;      // kWh/kg = 120 MJ/kg / 3.6
+const MIN_PARA = 3.9;           // kWh/kg, reversible work, para-H2 basis (doe-2009)
+const MIN_NORMAL = 3.3;         // kWh/kg, reversible work, normal-H2 basis (doe-2009)
+
+const UDEF = {h2ktpa:100, hours:8000, lsec:9, hbsec:0.6, recov:75, turb:30, tank:60000,
+  loss:2, dh:45.9, fill:98, days:5, lrho:70.8, nrho:682, lbor:0.1, nbor:0.04,
+  lreliq:3.94, nreliq:0.25, pwr:50};
+const U = {};
+let UCREDIT = true;             // steam-turbine credit counted (default) or excluded
+let UBASIS = "fixed";           // "fixed" = same tank volume; "days" = same days of cover
+
+function readUpstream(){
+  for (const k of Object.keys(UDEF)){ const e=$("iu-"+k); U[k]= e?parseFloat(e.value):UDEF[k];
+    if(!isFinite(U[k])) U[k]=UDEF[k]; }
+}
+
+/* Exothermic Haber-Bosch heat, kWh per kg of H2 REACTED.
+   N2 + 3H2 -> 2NH3 releases dH per mol NH3, so 2/3 dH per mol H2. Same enthalpy
+   magnitude the repository already carries for the reverse (cracking) reaction. */
+function rxnHeat(dh){ return (dh===undefined?U.dh:dh)*(2/3)/M_H2/3600; }
+
+/* Electrical credit realised from that heat. Two assumed efficiencies, both live
+   inputs: how much of the heat is raised as usable steam, and what the steam
+   cycle makes of it. Their product cannot approach 1, so the credit can never
+   wipe out the plant's own demand. */
+function steamCredit(o){
+  o = o||{};
+  if (o.on===undefined ? !UCREDIT : !o.on) return 0;
+  const rec = o.recov!==undefined?o.recov:U.recov, tur = o.turb!==undefined?o.turb:U.turb;
+  return rxnHeat()*rec/100*tur/100;
+}
+
+/* Export-terminal inventory and its boil-off. Steady state, not a static hold:
+   the tank is continuously replenished, so boil-off is inventory x BOR each day
+   and does not compound the way a parcel left standing would. Boil-off is
+   re-liquefied on both routes (KHI reply Q3) -> an energy penalty, not a loss. */
+function uTerminal(annualCarrierKg, rho, bor, reliqSec){
+  const fill = U.fill/100;
+  let vol, inv;
+  if (UBASIS==="days"){ inv = annualCarrierKg/365*U.days; vol = inv/rho/fill; }
+  else { vol = U.tank; inv = vol*rho*fill; }
+  const bogPerDay = inv*bor/100;
+  return {vol, inv, bogPerDay, annualKwh: bogPerDay*365*reliqSec};
+}
+
+function evalLH2(o){
+  o = o||{};
+  const sec = o.lsec!==undefined?o.lsec:U.lsec;
+  const fed = U.h2ktpa*1e6, delivered = fed;      // KHI reply Q15: no plant H2 loss
+  const convKwh = fed*sec;
+  const t = uTerminal(delivered, U.lrho, o.lbor!==undefined?o.lbor:U.lbor, U.lreliq);
+  return {route:"LH₂", fed, delivered, carrier:delivered, carrierName:"LH₂",
+    convKwh, creditKwh:0, termKwh:t.annualKwh, heatKwh:0,
+    vol:t.vol, inv:t.inv, invH2e:t.inv, bog:t.bogPerDay, days:t.inv/(delivered/365),
+    convMW: convKwh/U.hours/1000, creditMW:0, termMW: t.annualKwh/8760/1000};
+}
+
+function evalNH3(o){
+  o = o||{};
+  const hb = o.hbsec!==undefined?o.hbsec:U.hbsec;
+  const fed = U.h2ktpa*1e6, reacted = fed*(1-U.loss/100), nh3 = reacted*RATIO;
+  const convKwh = nh3*hb;
+  const creditKwh = reacted*steamCredit(o);
+  const t = uTerminal(nh3, U.nrho, U.nbor, U.nreliq);
+  return {route:"NH₃", fed, delivered:reacted, carrier:nh3, carrierName:"NH₃",
+    convKwh, creditKwh, termKwh:t.annualKwh, heatKwh: reacted*rxnHeat(),
+    vol:t.vol, inv:t.inv, invH2e:t.inv/RATIO, bog:t.bogPerDay,
+    days:(t.inv/RATIO)/(reacted/365),
+    convMW: convKwh/U.hours/1000, creditMW: creditKwh/U.hours/1000,
+    termMW: t.annualKwh/8760/1000};
+}
+
+const netMW  = r => r.convMW - r.creditMW + r.termMW;
+const netKwh = r => (r.convKwh - r.creditKwh + r.termKwh);
+const perKg  = r => netKwh(r)/r.delivered;
+
+/* Liquefaction SEC at which the two routes draw the same POWER. Solved on MW,
+   not on annual kWh: conversion is spread over the plant's operating hours
+   while the terminal runs all 8760 h, so the two are not interchangeable.
+   Linear in the SEC, so solved directly rather than by bisection. */
+function parityLsec(o){
+  const n = evalNH3(o), l = evalLH2(o);
+  return (netMW(n) - l.termMW)*1000*U.hours/l.fed;
+}
+/* Haber-Bosch SEC at which the two routes draw the same POWER. Same MW basis,
+   and also linear: neither the credit nor the terminal moves with it. */
+function parityHbsec(o){
+  const l = evalLH2(o), n = evalNH3(o);
+  return ((netMW(l) - n.termMW)*1000*U.hours + n.creditKwh)/n.carrier;
+}
+
+/* ---------- chart: signed column balance ---------- */
+/* cols = [{label, sub, color, segs:[{label,v,fill,tip}], net}] — positive segments
+   stack up from zero, negative ones down, and the net is marked with a rule. */
+function balanceChart(svgId,tipId,cfg){
+  const svg=$(svgId); svg.innerHTML="";
+  const vb=svg.getAttribute("viewBox").split(" ").map(Number), W=vb[2], H=vb[3];
+  const m={l:78,r:24,t:22,b:72}, pw=W-m.l-m.r, ph=H-m.t-m.b;
+  let hi=0, lo=0;
+  cfg.cols.forEach(c=>{ let p=0,n=0; c.segs.forEach(s=> s.v>=0 ? p+=s.v : n+=s.v);
+    hi=Math.max(hi,p); lo=Math.min(lo,n); });
+  const pad=(hi-lo)*0.12||1, ymax=hi+pad, ymin=lo-(lo<0?pad*0.6:0);
+  const Y=v=>m.t+ph-(v-ymin)/(ymax-ymin)*ph;
+  niceTicks(ymin,ymax,8).forEach(t=>{
+    el("line",{x1:m.l,x2:m.l+pw,y1:Y(t),y2:Y(t),stroke:"var(--rule)","stroke-width":1},svg);
+    el("text",{x:m.l-9,y:Y(t)+4,"text-anchor":"end","font-size":11.5,fill:"var(--ink-3)",
+               "font-family":"var(--mono)"},svg).textContent=cfg.fmtY(t); });
+  el("line",{x1:m.l,x2:m.l+pw,y1:Y(0),y2:Y(0),stroke:"var(--ink-3)","stroke-width":1.5},svg);
+  el("text",{x:16,y:m.t+ph/2,"text-anchor":"middle","font-size":11.5,fill:"var(--ink-2)",
+             transform:"rotate(-90 16 "+(m.t+ph/2)+")"},svg).textContent=cfg.yLabel;
+  const slot=pw/cfg.cols.length, bw=Math.min(150,slot*0.44), tip=$(tipId), host=svg.parentElement;
+  cfg.cols.forEach((c,i)=>{
+    const cx=m.l+slot*(i+0.5), x=cx-bw/2;
+    let up=0, dn=0;
+    c.segs.forEach(s=>{
+      const y0 = s.v>=0 ? Y(up+s.v) : Y(dn), y1 = s.v>=0 ? Y(up) : Y(dn+s.v);
+      const h=Math.max(1.5,Math.abs(y1-y0));
+      const r=el("rect",{x,y:Math.min(y0,y1),width:bw,height:h,fill:s.fill,rx:2,
+                         stroke:"var(--chart-surface)","stroke-width":1},svg);
+      if(h>19) el("text",{x:cx,y:Math.min(y0,y1)+h/2+4,"text-anchor":"middle","font-size":12,
+                          fill:"#fff","font-family":"var(--mono)","font-weight":500},svg)
+                 .textContent=cfg.fmtSeg(s.v);
+      else el("text",{x:x-9,y:Math.min(y0,y1)+h/2-4,"text-anchor":"end","font-size":11,fill:s.tip||s.fill,
+                      "font-family":"var(--mono)"},svg).textContent=s.label+" "+cfg.fmtSeg(s.v);
+      if(s.v>=0) up+=s.v; else dn+=s.v;
+      r.addEventListener("pointerenter",ev=>{
+        tip.innerHTML='<div class="th">'+c.label+'</div><div class="tr"><span>'+s.label+
+          '</span><span class="n">'+cfg.fmtTip(s.v)+'</span></div>'+
+          '<div class="tr" style="border-top:1px solid var(--rule);margin-top:4px;padding-top:4px"><span>Net</span><span class="n">'+
+          cfg.fmtTip(c.net)+'</span></div>';
+        const hr=host.getBoundingClientRect(); tip.style.opacity=1;
+        tip.style.left=Math.max(4,Math.min(hr.width-tip.offsetWidth-4,(ev.clientX-hr.left)-70))+"px";
+        tip.style.top=Math.max(2,(ev.clientY-hr.top)-tip.offsetHeight-12)+"px"; });
+      r.addEventListener("pointerleave",()=>{tip.style.opacity=0;});
+    });
+    el("line",{x1:x-11,x2:x+bw+11,y1:Y(c.net),y2:Y(c.net),stroke:"var(--chart-surface)","stroke-width":4.5},svg);
+    el("line",{x1:x-11,x2:x+bw+11,y1:Y(c.net),y2:Y(c.net),stroke:"var(--ink)","stroke-width":2},svg);
+    el("text",{x:x+bw+16,y:Y(c.net)+4,"font-size":12.5,fill:"var(--ink)","font-weight":600,
+               "font-family":"var(--mono)"},svg).textContent="net "+nf(c.net,1);
+    el("text",{x:cx,y:m.t+ph+26,"text-anchor":"middle","font-size":14,fill:c.color,
+               "font-weight":700,"font-family":"var(--display)"},svg).textContent=c.label;
+    el("text",{x:cx,y:m.t+ph+43,"text-anchor":"middle","font-size":11.5,fill:"var(--ink-3)"},svg)
+      .textContent=c.sub;
+    if(c.sub2) el("text",{x:cx,y:m.t+ph+58,"text-anchor":"middle","font-size":11.5,
+                          fill:"var(--ink-3)"},svg).textContent=c.sub2;
+  });
+}
+
+/* ---------- chart: per-row paired bars, each row on its own scale ---------- */
+function rowBars(svgId,tipId,cfg){
+  const svg=$(svgId); svg.innerHTML="";
+  const vb=svg.getAttribute("viewBox").split(" ").map(Number), W=vb[2], H=vb[3];
+  const m={l:196,r:150,t:24,b:14}, pw=W-m.l-m.r;
+  const rowH=(H-m.t-m.b)/cfg.rows.length, bh=14, gap=5;
+  el("text",{x:m.l,y:15,"font-size":10.5,"font-family":"var(--mono)",fill:"var(--ink-3)",
+             "letter-spacing":"0.08em"},svg).textContent="LH₂ ROUTE (UPPER) · NH₃ ROUTE (LOWER)";
+  el("text",{x:W-m.r+12,y:15,"font-size":10.5,"font-family":"var(--mono)",fill:"var(--ink-3)",
+             "letter-spacing":"0.08em"},svg).textContent="RATIO";
+  cfg.rows.forEach((r,i)=>{
+    const top=m.t+i*rowH, mid=top+rowH/2;
+    if(i) el("line",{x1:16,x2:W-16,y1:top,y2:top,stroke:"var(--rule)","stroke-width":1},svg);
+    el("text",{x:m.l-16,y:mid-1,"text-anchor":"end","font-size":13,fill:"var(--ink)",
+               "font-weight":600},svg).textContent=r.label;
+    el("text",{x:m.l-16,y:mid+15,"text-anchor":"end","font-size":11,fill:"var(--ink-3)"},svg)
+      .textContent=r.note;
+    const mx=Math.max(r.a.v,r.b.v)||1;
+    [[r.a,C.lh2,mid-bh-gap/2],[r.b,C.nh3,mid+gap/2]].forEach(([d,col,y])=>{
+      const w=Math.max(2,d.v/mx*pw);
+      el("rect",{x:m.l,y,width:w,height:bh,fill:col,rx:2},svg);
+      const inside=w>92;
+      el("text",{x:m.l+w+(inside?-9:8),y:y+11,"text-anchor":inside?"end":"start","font-size":11.5,
+                 fill:inside?"#fff":col,"font-family":"var(--mono)","font-weight":inside?500:600},svg)
+        .textContent=d.txt;
+    });
+    el("text",{x:W-m.r+12,y:mid+4,"font-size":13,fill:"var(--ink-2)","font-family":"var(--mono)",
+               "font-weight":500},svg).textContent=r.ratio;
+  });
+}
+
+/* ---------- render: upstream sheet ---------- */
+function renderUp(){
+  readUpstream();
+  const l=evalLH2(), n=evalNH3();
+  const lNet=netMW(l), nNet=netMW(n), nGross=n.convMW+n.termMW;
+  const pL=parityLsec(), pH=parityHbsec();
+  const gapGWh=(netKwh(l)-netKwh(n))/1e6;
+  const combined=UCREDIT ? U.recov/100*U.turb/100 : 0;
+
+  $("u-spec-basis").textContent = nf(U.h2ktpa)+" ktpa H₂ at the battery limit · "+nf(U.hours)+" operating h/y";
+  $("u-spec-tank").textContent = UBASIS==="days"
+    ? "sized for "+nf(U.days,1)+" days of cover each ("+nf(l.vol)+" vs "+nf(n.vol)+" m³)"
+    : "one "+nf(U.tank)+" m³ tank each";
+  $("u-eb5").textContent = UBASIS==="days"
+    ? "Export tanks sized for "+nf(U.days,1)+" days of cover on each route"
+    : "One "+nf(U.tank)+" m³ export tank on each route";
+  $("uh-hours").textContent = nf(U.hours/8760*100,1)+" % stream factor; the tank is charged over all 8,760 h";
+  $("uh-hbsec").textContent = "= "+nf(U.hbsec*RATIO,3)+" kWh per kg H₂ · parity needs "+nf(pH,2)+
+    " ("+nf(pH/U.hbsec,1)+"×)";
+  $("uh-credit").textContent = UCREDIT
+    ? "returns "+nf(steamCredit(),3)+" kWh/kg H₂ = "+nf(n.creditMW,1)+" MW ("+
+      nf(n.creditMW/n.convMW*100,0)+" % of the plant's own draw)"
+    : "excluded — the ammonia route is charged its gross electrical demand";
+  $("uh-tank").textContent = UBASIS==="days"
+    ? "each tank sized for "+nf(U.days,1)+" days: "+nf(l.vol)+" m³ LH₂ vs "+nf(n.vol)+" m³ NH₃"
+    : "same volume both sides: "+nf(l.days,1)+" days of LH₂ cover vs "+nf(n.days,1)+" days of NH₃";
+
+  /* verdict */
+  const floorNote = pL < MIN_PARA
+    ? (pL < MIN_NORMAL ? "below even the 3.3 kWh/kg normal-H₂ floor" : "below the 3.9 kWh/kg para-H₂ floor")
+    : "reachable — above the 3.9 kWh/kg floor";
+  $("u-verdict").innerHTML =
+    '<div class="tile win-lh2"><div class="k">LH₂ route draws</div><div class="v lh2">'+nf(lNet,0)+
+      '<span style="font-size:.45em;font-weight:500"> MW</span></div><div class="s">liquefier '+nf(l.convMW,1)+
+      ' MW + terminal '+nf(l.termMW*1000,0)+' kW</div></div>'+
+    '<div class="tile win-nh3"><div class="k">NH₃ route draws</div><div class="v nh3">'+nf(nNet,0)+
+      '<span style="font-size:.45em;font-weight:500"> MW</span></div><div class="s">'+
+      (UCREDIT?"net of an "+nf(n.creditMW,1)+" MW steam credit":"gross — steam credit excluded")+'</div></div>'+
+    '<div class="tile '+(lNet<=nNet?"win-lh2":"win-nh3")+'"><div class="k">'+
+      (lNet<=nNet?"NH₃ route needs":"LH₂ route needs")+'</div><div class="v '+(lNet<=nNet?"lh2":"nh3")+'">'+
+      nf(Math.max(lNet,nNet)/Math.max(Math.min(lNet,nNet),1e-9),1)+
+      '<span style="font-size:.45em;font-weight:500">×</span></div><div class="s">the other route\'s power, at these inputs</div></div>'+
+    '<div class="tile"><div class="k">Steam turbine returns</div><div class="v">'+nf(n.creditMW,1)+
+      '<span style="font-size:.45em;font-weight:500"> MW</span></div><div class="s">'+
+      (UCREDIT? nf(n.creditMW/n.convMW*100,0)+" % of the synthesis plant's own draw" : "not counted at this setting")+
+      '</div></div>'+
+    '<div class="tile '+(pL<MIN_PARA?"alert":"")+'"><div class="k">Parity liquefier SEC</div><div class="v '+
+      (pL<MIN_PARA?"warn":"")+'">'+nf(pL,2)+'<span style="font-size:.45em;font-weight:500"> kWh/kg</span></div><div class="s">'+
+      floorNote+'</div></div>';
+
+  /* --- U1: power balance --- */
+  balanceChart("uc1","ut1",{
+    yLabel:"Power at the fence, MW", fmtY:v=>nf(v,0), fmtSeg:v=>nf(Math.abs(v),1),
+    fmtTip:v=>(v<0?"−":"")+nf(Math.abs(v),2)+" MW",
+    cols:[
+      {label:"LH₂ · liquefaction", sub:nf(U.lsec,1)+" kWh/kg H₂ · "+nf(l.carrier/1e6,0)+" kt LH₂/y",
+       sub2:"→ "+nf(perKg(l),2)+" kWh per kg H₂ delivered", color:C.lh2, net:lNet,
+       segs:[{label:"Liquefier",v:l.convMW,fill:C.lh2,tip:C.lh2},
+             {label:"Terminal BOG",v:l.termMW,fill:C.fossil,tip:C.fossil}]},
+      {label:"NH₃ · Haber–Bosch", sub:nf(U.hbsec,2)+" kWh/kg NH₃ · "+nf(n.carrier/1e6,0)+" kt NH₃/y",
+       sub2:"→ "+nf(perKg(n),2)+" kWh per kg H₂ delivered", color:C.nh3, net:nNet,
+       segs:[{label:"Synthesis",v:n.convMW,fill:C.lh2,tip:C.lh2},
+             {label:"Terminal BOG",v:n.termMW,fill:C.fossil,tip:C.fossil},
+             {label:"Steam credit",v:-n.creditMW,fill:C.nh3,tip:C.nh3}]}
+    ]});
+  $("ur1").innerHTML =
+    "<b>"+nf(l.convMW,0)+" MW against "+nf(n.convMW,0)+" MW before the credit, "+nf(lNet,0)+" against "+
+    nf(nNet,0)+" MW after it.</b> The liquefier's job is to remove "+
+    "heat from hydrogen down to 20 K, and there is no product stream to recover it from — every kilowatt it draws leaves as waste heat to ambient. "+
+    "The synthesis loop's job is the opposite: the reaction gives off "+num(rxnHeat(),2)+" kWh of heat per kg of H₂ it consumes"+
+    (UCREDIT ? ", of which "+num(combined*100,1)+" % is assumed recoverable as electricity — worth "+num(n.creditMW,1)+
+      " MW, or "+num(n.creditMW/n.convMW*100,0)+" % of the plant's own demand." : " — excluded at this setting.")+
+    " <b>Note what barely appears:</b> the terminal columns are "+num(l.termMW*1000,0)+" kW and "+num(n.termMW*1000,0)+
+    " kW, together under "+num((l.termMW+n.termMW)/(l.convMW+n.convMW)*100,1)+
+    " % of the conversion load. Onshore, boil-off is not where this comparison is decided — the last study on this sheet says how far that holds.";
+
+  /* --- U2: steam credit sweep --- */
+  const xe=[]; for(let e=0;e<=45.001;e+=0.5) xe.push(+e.toFixed(2));
+  const nAtE = xe.map(e=>{ const r=evalNH3({on:true,recov:e,turb:100}); return netMW(r); });
+  lineChart("uc2","ut2",{
+    x:xe, xLabel:"Reaction heat raised as steam × steam-cycle efficiency, %",
+    bands:[{from:36,to:45,fill:"var(--warn)",opacity:.07,label:"beyond any real steam cycle",color:"var(--warn)"}],
+    series:[{label:"NH₃ net",color:C.nh3,y:nAtE},
+            {label:"LH₂",color:C.lh2,y:xe.map(()=>lNet)}],
+    vlines:[{x:combined*100,label:"your setting "+nf(combined*100,1)+"%"}],
+    fmtX:v=>nf(v,0)+"%", fmtY:v=>nf(v,0), fmtTip:v=>nf(v,1)+" MW",
+    fmtXTip:v=>nf(v,0)+"% heat → power"
+  });
+  const nAt0=netMW(evalNH3({on:false})), nAt36=netMW(evalNH3({on:true,recov:36,turb:100}));
+  $("ur2").innerHTML =
+    "<b>The credit is real, and it is not decisive.</b> Across the whole plausible span — from no recovery at all to an "+
+    "optimistic 36 % combined — the ammonia route moves from "+num(nAt0,1)+" MW to "+num(nAt36,1)+
+    " MW. The LH₂ route sits flat at "+num(lNet,1)+" MW the entire way, because a liquefier has no exothermic step to recover from. "+
+    "At your "+num(combined*100,1)+" % the credit is worth "+num(nAt0-nNet,1)+" MW; the gap it is trying to close is "+
+    num(lNet-nNet,1)+" MW. <b>So the steam turbine changes the ammonia plant's own energy bill by about a quarter, and changes the ranking not at all.</b> "+
+    "The honest caution is the other way round: if the 0.60 kWh/kg figure already includes steam-driven compression, part of this credit is being counted twice.";
+
+  /* --- U3: liquefaction SEC sweep --- */
+  const xs=[]; for(let s=2;s<=15.001;s+=0.1) xs.push(+s.toFixed(2));
+  lineChart("uc3","ut3",{
+    x:xs, xLabel:"Liquefaction specific energy consumption, kWh/kg H₂",
+    bands:[{from:2,to:MIN_PARA,fill:"var(--warn)",opacity:.09,label:"thermodynamically unreachable",color:"var(--warn)",labelAnchor:"start"},
+           {from:8,to:9,fill:"var(--lh2)",opacity:.10,label:"KHI 8–9",color:"var(--lh2)"}],
+    series:[{label:"LH₂",color:C.lh2,y:xs.map(s=>netMW(evalLH2({lsec:s})))},
+            {label:"NH₃ net",color:C.nh3,y:xs.map(()=>nNet)},
+            {label:"NH₃ gross",color:C.nh3,dash:"6 4",y:xs.map(()=>nGross)}],
+    vlines:[{x:U.lsec,label:"yours "+nf(U.lsec,1)},
+            {x:MIN_PARA,label:"floor 3.9 para",row:1,color:"var(--warn)"},
+            {x:MIN_NORMAL,label:"3.3 normal",row:2,color:"var(--warn)"}]
+      .concat(pL>=2&&pL<=15?[{x:pL,label:"parity "+nf(pL,2),row:3,color:"var(--ink-2)"}]:[]),
+    fmtX:v=>nf(v,0), fmtY:v=>nf(v,0), fmtTip:v=>nf(v,1)+" MW",
+    fmtXTip:v=>nf(v,2)+" kWh/kg liquefaction"
+  });
+  const pLgross=(nGross - l.termMW)*1000*U.hours/l.fed;
+  $("ur3").innerHTML =
+    "<b>Parity would need a liquefier at "+num(pL,2)+" kWh/kg.</b> The reversible work of liquefying hydrogen and converting it "+
+    "to para-H₂ is "+num(MIN_PARA,1)+" kWh/kg; without the ortho–para conversion it is "+num(MIN_NORMAL,1)+
+    " kWh/kg (<code>doe-2009-h2-liquefaction-energy</code>). "+
+    (pL<MIN_NORMAL
+      ? "<b>Parity sits below both.</b> No liquefier — not Kawasaki's, not a perfect one — can reach it. "
+      : pL<MIN_PARA
+        ? "<b>Parity sits below the para-H₂ floor</b>, so no real liquefier producing storable hydrogen can reach it. "
+        : "That is above the floor, so parity is at least physically admissible — though it would still demand a second-law efficiency far beyond anything built. ")+
+    "Even charged its <em>gross</em> demand with no steam credit at all, the ammonia route is only matched at "+num(pLgross,2)+
+    " kWh/kg. Kawasaki's own 8–9 kWh/kg implies a second-law efficiency of roughly "+num(MIN_PARA/U.lsec*100,0)+
+    " % on the para basis — already respectable for a cryogenic cycle. "+
+    "<b>The conclusion this study supports is narrow but firm: on upstream electricity, liquefaction cannot be engineered into a win. "+
+    "It can only win if the ammonia number is wrong</b> — which is the next study.";
+
+  /* --- U4: parity map, HB SEC x liquefaction SEC --- */
+  (function(){
+    const svg=$("uc4"); svg.innerHTML="";
+    const W=880,H=420,m={l:74,r:24,t:16,b:56}, pw=W-m.l-m.r, ph=H-m.t-m.b;
+    const NX=36,NY=24, hLo=0.2,hHi=2.0, sLo=2,sHi=14;
+    const X=h=>m.l+(h-hLo)/(hHi-hLo)*pw, Ys=s=>m.t+ph-(s-sLo)/(sHi-sLo)*ph;
+    const ramp=f=>{ const a=Math.min(1,Math.abs(f)/0.6), st=a<0.08?0:a<0.22?1:a<0.40?2:a<0.65?3:4;
+      return st===0?"var(--div-0)":(f>0?"var(--div-a"+st+")":"var(--div-b"+st+")"); };
+    const cw=pw/NX, ch=ph/NY, cells=[];
+    for(let i=0;i<NX;i++){
+      const h=hLo+(i+0.5)/NX*(hHi-hLo);
+      const nP=netMW(evalNH3({hbsec:h}));
+      for(let j=0;j<NY;j++){
+        const s=sLo+(j+0.5)/NY*(sHi-sLo);
+        const lP=netMW(evalLH2({lsec:s})), f=(nP-lP)/nP;   // + => LH2 draws less
+        cells.push({h,s,f,lP,nP});
+        el("rect",{x:m.l+i*cw+0.5,y:m.t+ph-(j+1)*ch+0.5,width:cw-1,height:ch-1,fill:ramp(f)},svg);
+      }
+    }
+    // hatched strip below the thermodynamic floor — no machine can occupy it
+    hatchDefs(svg,"hatch-uc4","var(--warn)");
+    el("rect",{x:m.l,y:Ys(MIN_PARA),width:pw,height:m.t+ph-Ys(MIN_PARA),fill:"url(#hatch-uc4)",opacity:.85},svg);
+    el("line",{x1:m.l,x2:m.l+pw,y1:Ys(MIN_PARA),y2:Ys(MIN_PARA),stroke:"var(--warn)","stroke-width":1.5},svg);
+    el("text",{x:m.l+9,y:Ys(MIN_PARA)+15,"font-size":11,"font-family":"var(--mono)",fill:"var(--warn)",
+               "font-weight":500,stroke:"var(--chart-surface)","stroke-width":3.5,"paint-order":"stroke"},svg)
+      .textContent="below 3.9 kWh/kg — reversible work, no liquefier can operate here";
+    // KHI's disclosed band
+    el("rect",{x:m.l,y:Ys(9),width:pw,height:Ys(8)-Ys(9),fill:"var(--lh2)",opacity:.16},svg);
+    el("text",{x:m.l+pw-8,y:Ys(9)-6,"text-anchor":"end","font-size":11,"font-family":"var(--mono)",
+               fill:"var(--lh2)","font-weight":500,stroke:"var(--chart-surface)","stroke-width":3.5,
+               "paint-order":"stroke"},svg).textContent="KHI 8–9 kWh/kg (disclosed)";
+    // parity contour: linear in both axes
+    let dp="";
+    for(let j=0;j<=NY*2;j++){
+      const s=sLo+j/(NY*2)*(sHi-sLo), h=parityHbsec({lsec:s});
+      if(h<hLo||h>hHi) continue;
+      dp+=(dp?"L":"M")+X(h).toFixed(1)+" "+Ys(s).toFixed(1)+" ";
+    }
+    if(dp){ el("path",{d:dp,fill:"none",stroke:"var(--chart-surface)","stroke-width":4},svg);
+            el("path",{d:dp,fill:"none",stroke:"var(--ink)","stroke-width":1.75,"stroke-dasharray":"6 4"},svg); }
+    if(U.hbsec>=hLo&&U.hbsec<=hHi&&U.lsec>=sLo&&U.lsec<=sHi){
+      const cx=X(U.hbsec), cy=Ys(U.lsec), right=cx>m.l+pw*0.7;
+      el("circle",{cx,cy,r:7,fill:"none",stroke:"var(--chart-surface)","stroke-width":4},svg);
+      el("circle",{cx,cy,r:7,fill:"none",stroke:"var(--ink)","stroke-width":2},svg);
+      el("circle",{cx,cy,r:2,fill:"var(--ink)"},svg);
+      el("text",{x:cx+(right?-13:13),y:cy+4,"text-anchor":right?"end":"start","font-size":11,
+                 "font-family":"var(--mono)",fill:"var(--ink)","font-weight":500},svg).textContent="you are here";
+    }
+    niceTicks(sLo,sHi,6).forEach(t=>{ if(t<sLo||t>sHi) return;
+      el("text",{x:m.l-9,y:Ys(t)+4,"text-anchor":"end","font-size":11.5,fill:"var(--ink-3)",
+                 "font-family":"var(--mono)"},svg).textContent=nf(t,0); });
+    niceTicks(hLo,hHi,7).forEach(t=>{ if(t<hLo||t>hHi) return;
+      el("text",{x:X(t),y:m.t+ph+19,"text-anchor":"middle","font-size":11.5,fill:"var(--ink-3)",
+                 "font-family":"var(--mono)"},svg).textContent=nf(t,1); });
+    el("text",{x:m.l+pw/2,y:H-10,"text-anchor":"middle","font-size":11.5,fill:"var(--ink-2)"},svg)
+      .textContent="Haber–Bosch electrical demand, kWh per kg NH₃";
+    el("text",{x:16,y:m.t+ph/2,"text-anchor":"middle","font-size":11.5,fill:"var(--ink-2)",
+               transform:"rotate(-90 16 "+(m.t+ph/2)+")"},svg).textContent="Liquefaction SEC, kWh/kg H₂";
+    el("text",{x:m.l+pw-12,y:m.t+18,"font-size":12,fill:"var(--lh2)","font-weight":600,"text-anchor":"end",
+               stroke:"var(--chart-surface)","stroke-width":3.5,"paint-order":"stroke"},svg)
+      .textContent="LH₂ draws less";
+    el("text",{x:m.l+12,y:m.t+18,"font-size":12,fill:"var(--nh3)","font-weight":600,
+               stroke:"var(--chart-surface)","stroke-width":3.5,"paint-order":"stroke"},svg)
+      .textContent="NH₃ draws less";
+    const tip=$("ut4"), host=svg.parentElement;
+    const hit=el("rect",{x:m.l,y:m.t,width:pw,height:ph,fill:"transparent"},svg);
+    hit.addEventListener("pointermove",ev=>{
+      const r=svg.getBoundingClientRect(), sx=(ev.clientX-r.left)/r.width*W, sy=(ev.clientY-r.top)/r.height*H;
+      const i=Math.max(0,Math.min(NX-1,Math.floor((sx-m.l)/cw))), j=Math.max(0,Math.min(NY-1,Math.floor((m.t+ph-sy)/ch)));
+      const c=cells[i*NY+j]; if(!c) return;
+      tip.innerHTML='<div class="th">HB '+nf(c.h,2)+' · liq '+nf(c.s,1)+' kWh/kg</div>'+
+        '<div class="tr"><span><i class="dot" style="background:var(--lh2)"></i>LH₂</span><span class="n">'+nf(c.lP,1)+' MW</span></div>'+
+        '<div class="tr"><span><i class="dot" style="background:var(--nh3)"></i>NH₃</span><span class="n">'+nf(c.nP,1)+' MW</span></div>'+
+        '<div class="tr" style="border-top:1px solid var(--rule);margin-top:4px;padding-top:4px"><span>'+
+        (c.f>0?"LH₂ draws less":"NH₃ draws less")+'</span><span class="n">'+nf(Math.abs(c.f)*100,0)+'%</span></div>'+
+        (c.s<MIN_PARA?'<div class="tr" style="color:var(--warn)"><span>below reversible work</span><span></span></div>':'');
+      tip.style.opacity=1;
+      const hr=host.getBoundingClientRect(), tw=tip.offsetWidth;
+      tip.style.left=Math.max(4,Math.min(hr.width-tw-4,(ev.clientX-hr.left)-tw/2))+"px";
+      tip.style.top=Math.max(2,(ev.clientY-hr.top)-tip.offsetHeight-14)+"px";
+    });
+    hit.addEventListener("pointerleave",()=>{ $("ut4").style.opacity=0; });
+    $("u-legend4").innerHTML='<span><i class="sq" style="background:var(--div-a5)"></i>LH₂ draws 60 %+ less</span>'+
+      '<span><i class="sq" style="background:var(--div-a3)"></i>LH₂ ~25 % less</span>'+
+      '<span><i class="sq" style="background:var(--div-0)"></i>parity ±5 %</span>'+
+      '<span><i class="sq" style="background:var(--div-b3)"></i>NH₃ ~25 % less</span>'+
+      '<span><i class="sq" style="background:var(--div-b5)"></i>NH₃ draws 60 %+ less</span>'+
+      '<span class="axes">X · Haber–Bosch electrical demand (kWh/kg NH₃)<br>Y · liquefaction SEC (kWh/kg H₂)</span>';
+    const h8=parityHbsec({lsec:8}), h9=parityHbsec({lsec:9}), hFloor=parityHbsec({lsec:MIN_PARA});
+    $("ur4").innerHTML =
+      "<b>Across Kawasaki's whole disclosed band, parity needs a Haber–Bosch plant drawing "+
+      num(Math.min(h8,h9),2)+"–"+num(Math.max(h8,h9),2)+
+      " kWh per kg of ammonia</b> — "+num(Math.min(h8,h9)/U.hbsec,1)+" to "+num(Math.max(h8,h9)/U.hbsec,1)+
+      "× the "+num(U.hbsec,2)+" kWh/kg estimate in use. "+
+      "Even a thermodynamically perfect liquefier at "+num(MIN_PARA,1)+" kWh/kg would need the ammonia plant to draw "+
+      num(hFloor,2)+" kWh/kg before the two met. "+
+      "<b>That is the decision-grade statement this sheet can actually make:</b> the ranking survives being wrong about the ammonia number by a factor of "+
+      num(Math.min(h8,h9)/U.hbsec,1)+", and it does not depend on the steam credit, the terminal, or the tank basis. "+
+      "It depends only on the fact that liquefying hydrogen costs about "+num(U.lsec/H2_LHV_KWH*100,0)+
+      " % of the hydrogen's own energy content while reacting it into ammonia costs about "+
+      num(U.hbsec*RATIO/H2_LHV_KWH*100,0)+" %, both before any steam credit. "+
+      "<span style=\"color:var(--warn)\">Get the internal NH₃ dataset in and this map is the first thing to re-run.</span>";
+  })();
+
+  /* --- U5: one tank, two cargoes --- */
+  const rat=(a,b,unit)=>nf(a/b,2)+"× "+(unit||"");
+  rowBars("uc5","ut5",{rows:[
+    {label:"Carrier held", note:"tank inventory at "+nf(U.fill,0)+" % fill",
+     a:{v:l.inv,txt:nf(l.inv/1e6,2)+" kt LH₂"}, b:{v:n.inv,txt:nf(n.inv/1e6,1)+" kt NH₃"},
+     ratio:"NH₃ "+nf(n.inv/l.inv,1)+"× heavier"},
+    {label:"Hydrogen held", note:"H₂ contained (NH₃ ÷ 5.632)",
+     a:{v:l.invH2e,txt:nf(l.invH2e/1e6,2)+" kt H₂"}, b:{v:n.invH2e,txt:nf(n.invH2e/1e6,2)+" kt H₂-eq"},
+     ratio:"NH₃ "+nf(n.invH2e/l.invH2e,2)+"×"},
+    {label:"Days of cover", note:"at "+nf(U.h2ktpa)+" ktpa H₂ output",
+     a:{v:l.days,txt:nf(l.days,1)+" d"}, b:{v:n.days,txt:nf(n.days,1)+" d"},
+     ratio:"NH₃ "+nf(n.days/l.days,2)+"×"},
+    {label:"Boil-off", note:"as H₂-equivalent, per day",
+     a:{v:l.bog,txt:nf(l.bog/1000,2)+" t H₂/d"}, b:{v:n.bog/RATIO,txt:nf(n.bog/RATIO/1000,2)+" t H₂-eq/d"},
+     ratio:"LH₂ "+nf(l.bog/(n.bog/RATIO),2)+"×"},
+    {label:"Re-liquefaction power", note:"continuous, all 8,760 h",
+     a:{v:l.termMW*1000,txt:nf(l.termMW*1000,0)+" kW"}, b:{v:n.termMW*1000,txt:nf(n.termMW*1000,0)+" kW"},
+     ratio:"LH₂ "+nf(l.termMW/n.termMW,1)+"×"}
+  ]});
+  $("ur5").innerHTML = (UBASIS==="fixed"
+    ? "<b>Equal volume is not equal storage.</b> The same "+nf(U.tank)+" m³ holds "+num(l.invH2e/1e6,2)+
+      " kt of hydrogen as LH₂ and "+num(n.invH2e/1e6,2)+" kt as ammonia — "+num(n.invH2e/l.invH2e,2)+
+      "× more — because liquid ammonia's "+num(U.nrho,0)+" kg/m³ at 17.75 % hydrogen beats liquid hydrogen's "+
+      num(U.lrho,1)+" kg/m³ outright. In cover that is "+num(n.days,1)+" days against "+num(l.days,1)+". "
+    : "<b>Equal cover is not equal steel.</b> To hold "+num(U.days,1)+" days each, the LH₂ terminal needs "+
+      num(l.vol,0)+" m³ against the ammonia terminal's "+num(n.vol,0)+" m³ — "+num(l.vol/n.vol,2)+
+      "× the volume for the same hydrogen. ")+
+    "The boil-off follows the same asymmetry twice over: the LH₂ tank loses "+num(l.bog/(n.bog/RATIO),1)+
+    "× more hydrogen a day even from a smaller hydrogen inventory, and each kilogram costs "+
+    num(U.lreliq/(U.nreliq*RATIO),1)+"× more to put back — "+num(U.lreliq,2)+" kWh/kg H₂ against "+
+    num(U.nreliq*RATIO,2)+" kWh per kg of H₂-equivalent. <b>The result is "+num(l.termMW*1000,0)+
+    " kW against "+num(n.termMW*1000,0)+" kW.</b> Real, but small: see the next study for how small.";
+
+  /* --- U6: when does terminal BOG matter --- */
+  const xb2=[]; for(let b=0;b<=3.001;b+=0.02) xb2.push(+b.toFixed(3));
+  const lShare = xb2.map(b=>evalLH2({lbor:b}).termKwh/8760/1000/l.convMW*100);
+  const nShare = n.termMW/n.convMW*100;
+  const tenPct = l.convMW*0.10*1000*8760/(l.inv/100*365*U.lreliq); // BOR at which LH2 terminal = 10% of liquefier
+  lineChart("uc6","ut6",{
+    x:xb2, xLabel:"LH₂ tank boil-off rate at rest, %/day",
+    series:[{label:"LH₂ terminal",color:C.lh2,y:lShare},
+            {label:"NH₃ terminal",color:C.nh3,y:xb2.map(()=>nShare)},
+            {label:"10 % reference",color:C.fossil,dash:"6 4",y:xb2.map(()=>10)}],
+    vlines:[{x:U.lbor,label:"KHI "+nf(U.lbor,2)}]
+      .concat(tenPct<=3?[{x:tenPct,label:"10 % at "+nf(tenPct,2),row:1,color:"var(--ink-2)"}]:[]),
+    fmtX:v=>nf(v,1), fmtY:v=>nf(v,0)+"%", fmtTip:v=>nf(v,2)+"% of conversion power",
+    fmtXTip:v=>nf(v,2)+" %/day at rest"
+  });
+  $("ur6").innerHTML =
+    "<b>At Kawasaki's "+num(U.lbor,2)+" %/day the terminal re-liquefier is "+num(l.termMW/l.convMW*100,2)+
+    " % of the liquefier beside it.</b> It would take "+num(tenPct,2)+" %/day — "+num(tenPct/U.lbor,0)+
+    "× the disclosed rate — before terminal boil-off reached even a tenth of the conversion load. "+
+    "<b>This is the structural difference between the two sheets.</b> A ship carries its whole cargo for weeks with nothing but insulation, so its "+
+    "boil-off is charged against one voyage's cargo. A terminal holds "+num(l.days,1)+" days of production at a time and re-liquefies into a plant "+
+    "already sized for the full stream, so the same physics lands as a rounding error. "+
+    "Terminal boil-off is a design detail here; at sea it is the whole argument.";
+
+  /* --- ledger --- */
+  const gwh=v=>nf(v/1e6,1)+" GWh";
+  const usdkg = r => netKwh(r)/1000*U.pwr/r.delivered;
+  const urows=[
+    ["g","Mass balance, per year"],
+    ["H₂ at the battery limit", nf(l.fed/1e6,1)+" kt", nf(n.fed/1e6,1)+" kt"],
+    ["Process H₂ loss", "0 % — KHI reply Q15", nf(U.loss,1)+" % — purge / inerts"],
+    ["Carrier produced", nf(l.carrier/1e6,1)+" kt LH₂", nf(n.carrier/1e6,1)+" kt NH₃"],
+    ["H₂ delivered into the tank", "<b>"+nf(l.delivered/1e6,2)+" kt</b>", "<b>"+nf(n.delivered/1e6,2)+" kt</b>"],
+    ["g","Conversion"],
+    ["Specific energy", nf(U.lsec,2)+" kWh/kg H₂", nf(U.hbsec,3)+" kWh/kg NH₃ = "+nf(U.hbsec*RATIO,3)+" kWh/kg H₂"],
+    ["Electricity drawn", gwh(l.convKwh)+"/y", gwh(n.convKwh)+"/y"],
+    ["Reaction heat released", "— none (endothermic duty only)", gwh(n.heatKwh)+"/y thermal ("+nf(rxnHeat(),2)+" kWh/kg H₂)"],
+    ["Steam-turbine credit", "—", (UCREDIT? "−"+gwh(n.creditKwh)+"/y at "+nf(U.recov,0)+" % × "+nf(U.turb,0)+" %" : "excluded")],
+    ["Power", "<b>"+nf(l.convMW,1)+" MW</b>", "<b>"+nf(n.convMW,1)+" MW</b>"+(UCREDIT?" − "+nf(n.creditMW,1)+" MW":"")],
+    ["g","Export terminal — "+(UBASIS==="days"? nf(U.days,1)+" days of cover each" : nf(U.tank)+" m³ each")],
+    ["Tank volume", nf(l.vol)+" m³", nf(n.vol)+" m³"],
+    ["Inventory held", nf(l.inv/1e6,2)+" kt LH₂", nf(n.inv/1e6,2)+" kt NH₃"],
+    ["H₂-equivalent held", nf(l.invH2e/1e6,2)+" kt", nf(n.invH2e/1e6,2)+" kt"],
+    ["Days of cover", nf(l.days,1)+" d", nf(n.days,1)+" d"],
+    ["Boil-off", nf(l.bog/1000,2)+" t H₂/d ("+nf(U.lbor,2)+" %/d)", nf(n.bog/1000,2)+" t NH₃/d ("+nf(U.nbor,2)+" %/d)"],
+    ["BOG disposition", "re-liquefied — KHI reply Q3", "re-liquefied [ESTIMATE]"],
+    ["Re-liquefaction energy", gwh(l.termKwh)+"/y", gwh(n.termKwh)+"/y"],
+    ["Re-liquefaction power", nf(l.termMW*1000,0)+" kW", nf(n.termMW*1000,0)+" kW"],
+    ["g","Totals — H₂ in the export tank, ready to load"],
+    ["Net power at the fence", "<b>"+nf(lNet,1)+" MW</b>", "<b>"+nf(nNet,1)+" MW</b>"],
+    ["Net electricity", gwh(netKwh(l))+"/y", gwh(netKwh(n))+"/y"],
+    ["Per kg H₂ delivered", "<b>"+nf(perKg(l),3)+" kWh/kg</b>", "<b>"+nf(perKg(n),3)+" kWh/kg</b>"],
+    ["Share of the H₂'s own LHV", nf(perKg(l)/H2_LHV_KWH*100,1)+" %", nf(perKg(n)/H2_LHV_KWH*100,1)+" %"],
+    ["At $"+nf(U.pwr,0)+"/MWh", "$"+nf(usdkg(l),3)+"/kg H₂", "$"+nf(usdkg(n),3)+"/kg H₂"],
+    ["Annual difference", "<b>"+nf(gapGWh,0)+" GWh/y = $"+nf(gapGWh*1000*U.pwr/1e6,1)+" M/y more</b>", "—"]
+  ];
+  $("u-ledger").innerHTML='<thead><tr><th>Metric</th><th>LH₂ route · liquefaction</th><th>NH₃ route · Haber–Bosch</th></tr></thead><tbody>'+
+    urows.map(r=> r[0]==="g" ? '<tr class="group"><td colspan="3">'+r[1]+'</td></tr>'
+                             : '<tr><td>'+r[0]+'</td><td class="n">'+r[1]+'</td><td class="n">'+r[2]+'</td></tr>').join('')+'</tbody>';
+}
+
+/* ---------- wiring: upstream sheet ---------- */
+Object.keys(UDEF).forEach(k=>{ const e=$("iu-"+k); if(e) e.addEventListener("input",renderUp); });
+["lsec","hbsec","recov","turb"].forEach(k=>{
+  const a=$("iu-"+k), b=$("ru-"+k); if(!a||!b) return;
+  a.addEventListener("input",()=>{ b.value=a.value; renderUp(); });
+  b.addEventListener("input",()=>{ a.value=b.value; renderUp(); });
+});
+function upPreset(id,sec){ $(id).addEventListener("click",()=>{
+  $("iu-lsec").value=sec; $("ru-lsec").value=sec;
+  ["up-khihigh","up-khilow","up-floor"].forEach(x=>$(x).setAttribute("aria-pressed",String(x===id)));
+  renderUp(); }); }
+upPreset("up-khihigh",9); upPreset("up-khilow",8); upPreset("up-floor",MIN_PARA);
+$("up-reset").addEventListener("click",()=>{
+  Object.keys(UDEF).forEach(k=>{ const e=$("iu-"+k); if(e) e.value=UDEF[k]; });
+  ["lsec","hbsec","recov","turb"].forEach(k=>{ const b=$("ru-"+k); if(b) b.value=UDEF[k]; });
+  UCREDIT=true; $("us-on").setAttribute("aria-pressed","true"); $("us-off").setAttribute("aria-pressed","false");
+  UBASIS="fixed"; $("ut-fixed").setAttribute("aria-pressed","true"); $("ut-days").setAttribute("aria-pressed","false");
+  ["up-khihigh","up-khilow","up-floor"].forEach(x=>$(x).setAttribute("aria-pressed",String(x==="up-khihigh")));
+  renderUp(); });
+segPair("us-on","us-off",()=>{UCREDIT=true; renderUp();},()=>{UCREDIT=false; renderUp();});
+segPair("ut-fixed","ut-days",()=>{UBASIS="fixed"; renderUp();},()=>{UBASIS="days"; renderUp();});
+
+/* ---------- sheet switching ---------- */
+function showSheet(which){
+  const up = which==="up";
+  $("sh-up").hidden = !up;  $("sh-ship").hidden = up;
+  $("tab-up").setAttribute("aria-selected",String(up));
+  $("tab-ship").setAttribute("aria-selected",String(!up));
+  window.scrollTo({top:0,behavior:"auto"});
+}
+$("tab-up").addEventListener("click",()=>showSheet("up"));
+$("tab-ship").addEventListener("click",()=>showSheet("ship"));
+
 render();
+renderUp();
 </script>

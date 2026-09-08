@@ -4,7 +4,7 @@
 > Updated every session. `CLAUDE.md` points here — read this at the start of
 > any session where the user references prior work or continuing a task.
 >
-> Last updated: 2026-09-07
+> Last updated: 2026-09-08
 
 ---
 
@@ -1004,3 +1004,102 @@ Even at VLGC scale one ammonia carrier does not match one 160,000 m³ LH2 ship:
 parity needs ~108,000 m³, above both the scenario set and the fleet in service.
 
 Tests: **177 passing**. Merged to `main`.
+
+---
+
+## Upstream sheet added to the shipping artifact (2026-09-08)
+
+User asked for the liquefaction/upstream study to live in the **same artifact as
+a second sheet**, at **100 ktpa H2**: Haber-Bosch vs liquefaction, energy sized
+**as power (MW)**, ammonia's **steam-turbine credit from the exothermic reaction
+included**, then a terminal at **60,000 m3 for both** with boil-off and
+re-liquefaction energy.
+
+### What was built
+
+| File | Action | Purpose |
+|------|--------|---------|
+| `docs/reports/lh2-vs-nh3-shipping-studies.html` | Extended | Sheet-tab navigation (Segment 1 Upstream / Segment 2 Shipping) + a complete second sheet: 5 verdict tiles, 6 studies, power ledger, gap list, sources. Title renamed **"Two Ways to Move Hydrogen"** — "LH2 vs Ammonia at Sea" no longer described half the page. Favicon unchanged |
+| `scripts/run_upstream_comparison.py` | Created | Mirror model: `Inputs`, `evaluate_lh2/_nh3`, `reaction_heat_per_kg_h2`, `steam_credit_per_kg_h2`, `parity_lh2_sec/_hb_sec`, CLI ledger |
+| `tests/test_upstream_comparison.py` | Created | 26 tests. Suite now **203 passing** (was 177) |
+
+New chart primitives in the artifact: `balanceChart` (signed columns — drawn
+above the zero line, returned below) and `rowBars` (per-row paired bars, each
+row on its own scale). Both reuse the existing token system unchanged.
+
+### Boundary and basis
+
+`H2 at the battery limit -> conversion -> carrier in the export tank`.
+**Production is excluded** — it is common to both chains (~750 MW at the repo's
+60 kWh/kg placeholder, stated as scale context only). 8,000 operating h/y
+[ASSUMPTION]; the terminal is charged over all 8,760 h because a tank boils off
+whether or not the plant runs.
+
+### Headline results (defaults)
+
+| | LH2 route | NH3 route |
+|---|---:|---:|
+| Conversion power | 112.5 MW | 41.4 MW |
+| Steam-turbine credit | — | −11.6 MW |
+| Terminal BOG re-liq. | 0.68 MW | 0.17 MW |
+| **Net power at the fence** | **113.2 MW** | **29.9 MW** |
+| Per kg H2 delivered | 9.060 kWh/kg | 2.445 kWh/kg |
+| Share of the H2's own LHV | 27.2 % | 7.3 % |
+
+**LH2 needs 3.8x the ammonia route's power.** Annual gap 666 GWh/y.
+
+### The three findings worth carrying forward
+
+1. **Liquefaction cannot be engineered into a win on upstream electricity.**
+   Parity needs a liquefier at **2.34 kWh/kg** — below the reversible work of
+   liquefaction (3.9 kWh/kg para, 3.3 kWh/kg normal, `doe-2009`). Even with the
+   steam credit *excluded* entirely, parity is 3.27 kWh/kg — still below the
+   para floor. A thermodynamically perfect liquefier still loses.
+2. **The steam credit matters to the ammonia plant, not to the ranking.**
+   Worth 11.6 MW = 28 % of the synthesis plant's own draw; the gap it is trying
+   to close is 83 MW. Across the whole plausible 0-36 % combined heat-to-power
+   span the ranking never moves. ⚠️ **Double-counting risk logged:** if the
+   0.60 kWh/kg figure is already net of steam drives, part of this credit is
+   taken twice. The repo row says it excludes a steam credit, but that row is
+   itself unsourced.
+3. **Onshore boil-off is a rounding error.** At KHI's 0.1 %/day the terminal
+   re-liquefier is **0.61 %** of the liquefier beside it; it takes 1.65 %/day
+   (16x) to reach even 10 %. The structural contrast with the shipping sheet is
+   now stated on the page: a ship charges boil-off against one voyage's cargo,
+   a terminal re-liquefies into a plant already sized for the full stream.
+
+### The 60,000 m3 instruction — how it was read
+
+Read as **same tank volume both sides** (the literal instruction), with **equal
+days of cover** offered as a live toggle, because the choice is not neutral:
+
+| Basis | LH2 | NH3 |
+|---|---:|---:|
+| Same volume (60,000 m3) | 4.16 kt H2, 15.2 d cover, 683 kW | 7.12 kt H2-eq, 26.5 d, 167 kW |
+| Same 5 days of cover | 19,743 m3 | 11,312 m3 |
+
+At equal volume ammonia holds **1.71x** the hydrogen (682 kg/m3 x 17.75 % beats
+70.8 kg/m3). KHI's own LH2 export tank is 64,000 m3, so 60,000 is within a few
+percent of a real LH2 design — worth noting to the user.
+
+### Two model bugs the tests caught
+
+1. **Parity was solved on annual kWh while every chart reads MW.** Conversion is
+   spread over operating hours, the terminal over 8,760 h — the two equations
+   are not the same. Both solvers moved onto the MW basis in Python *and* in the
+   artifact (the U4 map's parity contour would otherwise not have sat on its own
+   colour boundary). Pinned by `test_parity_is_solved_on_power_not_on_annual_energy`.
+2. A test premise was wrong, not the model: synthesis kWh per kg delivered is
+   loss-independent, but the *total* only is on the equal-days tank basis (a
+   fixed tank does not shrink with the purge loss).
+
+### ⚠️ Standing caveat on this sheet
+
+Everything above rests on **Haber-Bosch at 0.60 kWh/kg NH3**, an `[ESTIMATE]`
+placeholder pending the internal Gentari NH3 dataset (**decision D4**). The
+ranking survives that being wrong by **2.7x** (parity needs 1.63-1.81 kWh/kg
+across KHI's disclosed 8-9 band), which is why the conclusion is stated at all —
+but **the parity map is the first thing to re-run when D4 lands**. Also
+unresolved: whether the 0.60 figure covers product let-down/refrigeration to
+-33 C. No CapEx or OpEx anywhere on the sheet — KHI declined both (Q8/Q9), so
+this ranks the routes on energy only, and excludes the cracker at the far end.
