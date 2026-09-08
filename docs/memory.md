@@ -1103,3 +1103,58 @@ but **the parity map is the first thing to re-run when D4 lands**. Also
 unresolved: whether the 0.60 figure covers product let-down/refrigeration to
 -33 C. No CapEx or OpEx anywhere on the sheet — KHI declined both (Q8/Q9), so
 this ranks the routes on energy only, and excludes the cracker at the far end.
+
+---
+
+## Merged to main (2026-09-08, session close)
+
+The upstream sheet (liquefaction vs Haber-Bosch, 100 ktpa) merged cleanly to
+`main` — fast-forward, no conflicts (`500f436`). 203 tests passing. Branch
+`claude/upstream-hydrogen-comparison-nb4rnj` is now identical to main.
+
+## ➡️ NEXT SESSION: downstream — regas (LH2) vs cracker (NH3)
+
+User is starting a new session on **downstream regasification**: LH2
+vaporization vs ammonia cracking, presumably as a third sheet on the same
+artifact (`docs/reports/lh2-vs-nh3-shipping-studies.html`, "Two Ways to Move
+Hydrogen"), following the pattern set by the upstream sheet — sheet tabs,
+verdict tiles, a handful of swept studies, a ledger, a gap list.
+
+What is already in the repo for that segment:
+
+- **LH2 regas** (`data/properties/regas.csv`, cited `kawasaki-2026-questionnaire`):
+  ORV (open-rack seawater) vaporizer, heat duty **3.8 MJ/kg LH2** (thermal, from
+  ambient seawater — not purchased energy). Electrical penalty is *derived*,
+  not disclosed: **0.031 kWh/kg** for cryo pump to 30 barg send-out + seawater
+  circulation pump (send-out spec 30 barg/30°C, seawater dT 5°C, head 20 m,
+  pump efficiencies 70%/75%) — see `docs/reports/khi-lh2-reliq-shipping-regas-bfd.html`
+  notes 31-32 for the derivation. Import-terminal BOR at rest 0.1%/day, tank
+  65,000 m³ (3-11 tanks Base/Large).
+- **NH3 cracking** (`data/carriers/chain-energy-defaults.csv`, node F2, all
+  `[ESTIMATE]`/`[ASSUMPTION]` pending D4): process loss 3% (PSA tail-gas slip),
+  NG-fired thermal efficiency 85%, electrical energy 0.5 kWh/kg (PSA,
+  compression, BOP), reaction heat duty **4.22 kWh/kg H2** (same 45.9 kJ/mol
+  enthalpy the upstream sheet's steam credit now uses — this is the *reverse*
+  direction, purchased NG heat rather than recovered heat). Cracker is
+  NG-fired per user direction 2026-09-02 (not self-consumed H2/NH3).
+- `src/lh2/regas.py` — regas duty function (LH2 side only; no cracker module
+  yet — would need a new one, e.g. `src/lh2/cracking.py`, or extend
+  `scenario.py`).
+- Qualitative gap already flagged in the KHI database report: NH3 needs
+  cracking + purification steps at the destination that LH2 does not.
+
+Likely shape of the sheet, by analogy with upstream: liquefaction→Haber-Bosch
+became **regas→cracker**; the steam-turbine credit's mirror-image is the
+cracker's **NG-fired reaction heat as a cost, not a credit** (endothermic this
+time — cracking ammonia back to H2 consumes heat rather than releasing it,
+opposite sign to synthesis). The 45.9 kJ/mol-NH3 enthalpy and its 4.22 kWh/kg-H2
+derivation are already first-principles and shared between both directions —
+reuse, do not re-derive.
+
+Open gaps carried forward: reaction heat duty is charged as purchased NG
+energy (not free), so a cracker energy comparison should probably show
+**NG price** as a live input alongside electricity price, unlike the upstream
+sheet which was electricity-only. The 3% process loss and 0.5 kWh/kg PSA/BOP
+figures are placeholders pending the internal NH3 dataset (D4) — same
+standing caveat pattern as upstream. No CapEx/OpEx for either regas or
+cracking is in the repo.
