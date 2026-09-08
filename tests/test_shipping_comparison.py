@@ -340,3 +340,54 @@ def test_parity_price_is_below_any_plausible_green_hydrogen_value():
     D, VP = m.DISTANCE_CAPE_KM, 600.0
     for vessel in (m.LH2_40K, m.LH2_160K):
         assert m.breakeven_h2_price(D, VP, vessel=vessel) < 2.0
+
+
+# --- ammonia vessel scenarios ----------------------------------------------
+
+NH3_SCENARIO_CAPACITIES = (24_000.0, 40_000.0, 60_000.0, 90_000.0)
+
+
+def test_nh3_scenarios_scale_throughput_monotonically():
+    """The four selectable ammonia hulls deliver strictly more as they grow."""
+    out = []
+    for cap in NH3_SCENARIO_CAPACITIES:
+        v = m.VesselCase(**{**m.NH3_24K.__dict__, "capacity_m3": cap})
+        out.append(m.evaluate(v, m.DISTANCE_CAPE_KM, is_nh3=True).annual_delivered_h2_equivalent_kg)
+    assert out == sorted(out)
+    # throughput is linear in capacity at fixed speed/port time
+    assert math.isclose(out[3] / out[0], 90_000 / 24_000, rel_tol=1e-9)
+
+
+def test_nh3_boiloff_cost_is_independent_of_hull_size():
+    """Re-liquefaction fuel and delivered cargo both scale with the hull, so the
+    ammonia carrier's boil-off cost per kg H2 is invariant to its size. This is
+    why the cost studies barely move when the scenario changes -- only the
+    throughput studies do."""
+    per_kg = []
+    for cap in NH3_SCENARIO_CAPACITIES:
+        v = m.VesselCase(**{**m.NH3_24K.__dict__, "capacity_m3": cap})
+        fb = m.fuel_balance(v, m.DISTANCE_CAPE_KM, True)
+        per_kg.append(m.voyage_cost_per_kg(fb, 0.0, 600.0, mode="boiloff")["per_kg"])
+    for v in per_kg[1:]:
+        assert math.isclose(v, per_kg[0], rel_tol=1e-9)
+
+
+def test_largest_nh3_scenario_still_short_of_the_160k_lh2_ship():
+    """Even at VLGC scale one ammonia carrier does not match one 160,000 m3
+    hydrogen carrier -- the parity capacity (~108,000 m3) is above the scenario
+    set and above the largest ammonia carriers in service."""
+    lh2 = m.evaluate(m.LH2_160K, m.DISTANCE_CAPE_KM, is_nh3=False).annual_delivered_h2_equivalent_kg
+    v = m.VesselCase(**{**m.NH3_24K.__dict__, "capacity_m3": 90_000.0})
+    nh3 = m.evaluate(v, m.DISTANCE_CAPE_KM, is_nh3=True).annual_delivered_h2_equivalent_kg
+    assert nh3 < lh2
+    assert m.breakeven_nh3_capacity_m3(m.DISTANCE_CAPE_KM) > 90_000
+
+
+def test_duty_suggestion_for_each_scenario_is_sane():
+    """The size^2/3 duty suggestion the artifact offers per hull, mirrored here
+    so the two cannot drift: it must rise with hull size and reproduce the
+    anchor exactly."""
+    duties = [m.scaled_duty(c, 24_000.0, 25.0, 2.0 / 3.0) for c in NH3_SCENARIO_CAPACITIES]
+    assert math.isclose(duties[0], 25.0)
+    assert duties == sorted(duties)
+    assert 55 < duties[3] < 65          # ~60 t/day at 90,000 m3

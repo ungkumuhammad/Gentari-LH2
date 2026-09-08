@@ -63,7 +63,7 @@ button{font-family:var(--body);font-size:12.5px;cursor:pointer}
 .preset[aria-pressed="true"]{background:var(--ink);color:var(--ground);border-color:var(--ink)}
 .grid-in{display:grid;grid-template-columns:repeat(auto-fit,minmax(178px,1fr));gap:14px 18px}
 .field label{display:block;font-size:11.5px;color:var(--ink-2);font-weight:500;margin-bottom:5px}
-.field .tag{font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;padding:1px 4px;border-radius:2px;margin-left:5px;vertical-align:1px}
+.field .tag{font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;padding:1px 4px;border-radius:2px;margin-left:5px;vertical-align:1px;white-space:nowrap;display:inline-block}
 .tag.est{background:var(--warn-soft);color:var(--warn)}
 .tag.cit{background:var(--lh2-soft);color:var(--lh2)}
 .field input[type=number]{width:100%;font-family:var(--mono);font-size:13.5px;padding:7px 9px;border:1px solid var(--rule-2);border-radius:3px;background:var(--ground);color:var(--ink)}
@@ -93,6 +93,8 @@ details.adv .grid-in{margin-top:14px}
 .legend{display:flex;gap:16px;flex-wrap:wrap;align-items:center;padding:0 18px 10px;font-size:12.5px;color:var(--ink-2)}
 .legend .sw{display:inline-block;width:22px;height:3px;border-radius:2px;vertical-align:3px;margin-right:7px}
 .legend .sq{display:inline-block;width:11px;height:11px;border-radius:2px;vertical-align:-1px;margin-right:7px}
+.hint{font-family:var(--mono);font-size:10.5px;color:var(--ink-3);margin-top:5px;line-height:1.45}
+.hint button{background:none;border:0;color:var(--lh2);text-decoration:underline;padding:0 0 0 4px;font-family:var(--mono);font-size:10.5px}
 .axes{font-family:var(--mono);font-size:11px;color:var(--ink-3);border-left:1px solid var(--rule-2);padding-left:12px;line-height:1.5}
 .legend .hatch{background-image:repeating-linear-gradient(45deg,var(--lh2) 0 2px,transparent 2px 4px);border:1px solid var(--lh2)}
 .chart-scroll{overflow-x:auto;position:relative;padding:0 6px 4px}
@@ -157,6 +159,16 @@ footer code{font-family:var(--mono);font-size:11.5px;color:var(--ink-2)}
         <button id="v-160" aria-pressed="true" style="flex:1">160,000 m³ · commercial target</button>
       </div>
     </div>
+    <div class="field" style="grid-column:span 2;min-width:280px">
+      <label>NH₃ vessel scenario <span class="tag est">USER / CLASS</span></label>
+      <div class="seg" role="group" aria-label="NH3 vessel scenario" style="width:100%">
+        <button id="n-24" aria-pressed="true" style="flex:1">24k</button>
+        <button id="n-40" aria-pressed="false" style="flex:1">40k</button>
+        <button id="n-60" aria-pressed="false" style="flex:1">60k</button>
+        <button id="n-90" aria-pressed="false" style="flex:1">90k</button>
+      </div>
+      <div class="hint" id="nh3-class">24,000 m³ — as originally specified</div>
+    </div>
     <div class="field">
       <label for="i-dist">One-way distance, km <span class="tag est">EST</span></label>
       <input type="number" id="i-dist" value="21200" min="200" max="30000" step="100">
@@ -169,11 +181,13 @@ footer code{font-family:var(--mono);font-size:11.5px;color:var(--ink-2)}
     <div class="field">
       <label for="i-bunker">NH₃ propulsion fuel, t/day <span class="tag est">USER</span></label>
       <input type="number" id="i-bunker" value="25" min="1" max="300" step="1">
+      <div class="hint" id="hint-nh3duty"></div>
     </div>
     <div class="field">
-      <label for="i-lh2bunker">LH₂ propulsion fuel, t/day <span class="tag est">CHECK ME</span></label>
+      <label for="i-lh2bunker">LH₂ propulsion fuel, t/day <span class="tag est">CHECK</span></label>
       <input type="number" id="i-lh2bunker" value="25" min="1" max="300" step="1">
       <input type="range" id="r-lh2bunker" value="25" min="10" max="200" step="5" aria-label="LH2 propulsion fuel rate">
+      <div class="hint" id="hint-lh2duty"></div>
     </div>
     <div class="field">
       <label for="i-h2price">Hydrogen value, USD/kg <span class="tag est">SET IT</span></label>
@@ -196,7 +210,7 @@ footer code{font-family:var(--mono);font-size:11.5px;color:var(--ink-2)}
       <div class="field"><label for="i-lh2speed">LH₂ speed, km/h <span class="tag cit">KHI</span></label><input type="number" id="i-lh2speed" value="29.6" min="10" max="45" step="0.4"></div>
       <div class="field"><label for="i-lh2port">LH₂ port days / call <span class="tag cit">KHI</span></label><input type="number" id="i-lh2port" value="1.25" min="0.25" max="6" step="0.25"></div>
       <div class="field"><label for="i-lh2rho">LH₂ density, kg/m³ <span class="tag est">NIST?</span></label><input type="number" id="i-lh2rho" value="70.8" min="60" max="80" step="0.1"></div>
-      <div class="field"><label for="i-nh3cap">NH₃ capacity, m³ <span class="tag est">USER</span></label><input type="number" id="i-nh3cap" value="24000" min="5000" max="90000" step="1000"></div>
+      <div class="field"><label for="i-nh3cap">NH₃ capacity, m³ <span class="tag est">USER</span></label><input type="number" id="i-nh3cap" value="24000" min="5000" max="120000" step="1000"></div>
       <div class="field"><label for="i-nh3speed">NH₃ speed, knots <span class="tag est">USER</span></label><input type="number" id="i-nh3speed" value="13" min="6" max="24" step="0.5"></div>
       <div class="field"><label for="i-nh3port">NH₃ port days / call <span class="tag est">USER</span></label><input type="number" id="i-nh3port" value="1.5" min="0.25" max="6" step="0.25"></div>
       <div class="field"><label for="i-nh3rho">NH₃ density, kg/m³ <span class="tag est">EST</span></label><input type="number" id="i-nh3rho" value="682" min="600" max="720" step="1"></div>
@@ -370,7 +384,8 @@ footer code{font-family:var(--mono);font-size:11.5px;color:var(--ink-2)}
     <li><b>LH₂ voyage boil-off rate.</b> Kawasaki disclosed none — only that fuel-gas consumption equals the boil-off rate. 0.2 %/day is a placeholder; the nearest public figure for a comparable vessel (RSER, 2026) is ~3.44 %/day. Everything on this page turns on it.</li>
     <li><b>The LH₂ carrier's propulsion duty is the weakest number on this page.</b> 25 t/day is your figure for the 24,000 m³ ammonia vessel, carried across so both ships share one basis — but a 160,000 m³ hull at ~16 kn would realistically burn several times that. It is a live input for exactly this reason: at ~100 t/day (roughly proportionate to the 4× cargo) the boil-off covers about 64 % of demand and the surplus disappears entirely. <b>The venting finding below is largely an artifact of the 25 t/day figure</b> — set it to something real before quoting any of it.</li>
     <li><b>Hydrogen and bunker prices are yours to set.</b> Neither is logged in the repository, and no default is asserted as correct — the study reports the breakeven price instead.</li>
-    <li><b>Every ammonia vessel figure</b> — speed, capacity, port time, boil-off, re-liquefaction energy, genset efficiency — is user-stated or estimated, pending the internal Gentari NH₃ dataset (decision D4).</li>
+    <li><b>Every ammonia vessel figure</b> — speed, capacity, port time, boil-off, re-liquefaction energy, genset efficiency — is user-stated or estimated, pending the internal Gentari NH₃ dataset (decision D4). The 24k / 40k / 60k / 90k scenario sizes and their class labels (mid-size, large, VLGC) are general industry size bands, not figures from this repository.</li>
+    <li><b>Propulsion duty does not transfer between hulls.</b> The stated 25 t/day belongs to the 24,000 m³ ammonia vessel. Each duty input carries a size^⅔ suggestion scaled from that pair (resistance ≈ wetted area), offered as a one-click "use" rather than applied silently — at 90,000 m³ that is ≈60 t/day, and for the 160,000 m³ LH₂ hull ≈89 t/day. No power curve is held for any of these vessels, so the scaling is a rule of thumb, not a specification.</li>
     <li><b>Surplus disposal.</b> The page defaults to venting, per your framing. Kawasaki's own reply Q26 describes a <em>gas combustion unit</em> burning excess boil-off above MARVS — in which case the hydrogen is oxidised to water and the warming figure does not apply. The hydrogen is lost from the cargo either way; only the environmental line changes. Toggle it in the detail panel.</li>
     <li><b>Vented-hydrogen warming potential (11.6 kg CO₂e/kg, 100-year)</b> is an estimate with a wide published uncertainty band and no primary citation logged.</li>
     <li><b>Ballast leg excluded</b> for both vessels. Propulsion fuel is charged over the laden leg only, where the boil-off is generated. Including it would raise both carriers' fuel bills and dilute the LH₂ carrier's displacement credit.</li>
@@ -634,6 +649,9 @@ const C={lh2:"var(--lh2)",nh3:"var(--nh3)",fossil:"var(--fossil)"};
 function render(){
   readInputs();
   setVesselButtons();
+  setNh3Buttons();
+  dutyHint("hint-nh3duty", V.nh3cap, V.bunker, "i-bunker");
+  dutyHint("hint-lh2duty", V.lh2cap, V.lh2bunker, "i-lh2bunker");
   const D=V.dist;
   const lfb=fuelBalance(false,D), nfb=fuelBalance(true,D);
   const lc=costPerKg(lfb,V.h2price,V.vlsfoprice,MODE), ncst=costPerKg(nfb,V.h2price,V.vlsfoprice,MODE);
@@ -1028,7 +1046,7 @@ function render(){
   const ships = lh2flat/nh3.annualH2e;
   const cap17 = capAt(17);
   $("r7").innerHTML = "<b>One "+nf(V.lh2cap)+" m³ LH₂ carrier does the work of "+num(ships,1)+
-    " of the specified 24,000 m³ ammonia ships</b> on this route — "+ktpa(lh2flat)+" against "+ktpa(nh3.annualH2e)+
+    " of the "+nf(V.nh3cap)+" m³ ammonia ships</b> on this route — "+ktpa(lh2flat)+" against "+ktpa(nh3.annualH2e)+
     " each. To match it with a <em>single</em> ammonia vessel you would need roughly <b>"+
     (capNow===null?"—":nf(capNow/1000,0)+"k m³")+" at "+num(V.nh3speed,0)+" kn"+
     (cap17!==null?", or "+nf(cap17/1000,0)+"k m³ if it sailed at 17 kn":"")+
@@ -1089,6 +1107,41 @@ function segPair(aId,bId,onA,onB){
   $(aId).addEventListener("click",()=>{ $(aId).setAttribute("aria-pressed","true"); $(bId).setAttribute("aria-pressed","false"); onA(); render(); });
   $(bId).addEventListener("click",()=>{ $(bId).setAttribute("aria-pressed","true"); $(aId).setAttribute("aria-pressed","false"); onB(); render(); });
 }
+const NH3_CLASSES = {
+  24000:"24,000 m³ — as originally specified",
+  40000:"40,000 m³ — mid-size gas carrier",
+  60000:"60,000 m³ — large gas carrier",
+  90000:"90,000 m³ — VLGC scale; the largest ammonia carriers in service are ~87k m³"
+};
+/* Duty scaled off a known hull/duty pair, resistance basis (size^2/3).
+   Shown as a suggestion, never applied silently — the stated 25 t/day belongs
+   to the 24,000 m³ ammonia vessel and does not transfer to a bigger hull. */
+const DUTY_ANCHOR_CAP = 24000, DUTY_ANCHOR_T = 25;
+const suggestDuty = cap => DUTY_ANCHOR_T * Math.pow(cap/DUTY_ANCHOR_CAP, 2/3);
+function dutyHint(elId, cap, current, inputId){
+  const sug = suggestDuty(cap);
+  const off = Math.abs(sug-current)/Math.max(sug,1e-9) > 0.05;
+  $(elId).innerHTML = off
+    ? "≈ "+nf(sug,0)+" t/day at this hull (size^⅔ from 24k / 25 t·d⁻¹)"+
+      '<button type="button" data-set="'+inputId+'" data-val="'+sug.toFixed(1)+'">use</button>'
+    : "matches the size^⅔ scaling from the 24k / 25 t·d⁻¹ basis";
+}
+document.addEventListener("click", ev=>{
+  const b = ev.target.closest("button[data-set]"); if(!b) return;
+  $(b.dataset.set).value = (+b.dataset.val).toFixed(1);
+  const r = $(b.dataset.set.replace("i-","r-")); if(r) r.value = b.dataset.val;
+  render();
+});
+function setNh3Buttons(){
+  const opts = [24000,40000,60000,90000];
+  opts.forEach(c=>$("n-"+(c/1000)).setAttribute("aria-pressed", String(Math.round(V.nh3cap)===c)));
+  $("nh3-class").textContent = NH3_CLASSES[Math.round(V.nh3cap)]
+    || nf(V.nh3cap)+" m³ — custom size, set in the detail panel below";
+}
+[24000,40000,60000,90000].forEach(c=>{
+  $("n-"+(c/1000)).addEventListener("click",()=>{ $("i-nh3cap").value=c; render(); });
+});
+
 function setVesselButtons(){
   const big = V.lh2cap >= 100000;
   $("v-160").setAttribute("aria-pressed", String(big));

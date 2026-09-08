@@ -972,3 +972,35 @@ for that segment:
 - Standing data policy unchanged: Kawasaki data first; external sources need
   explicit permission, except via Zane (who has standing consent but must cite
   everything).
+
+### Ammonia vessel scenarios added (2026-09-08)
+
+User asked for selectable ammonia hulls: **24k / 40k / 60k / 90k m³**, matching
+the LH2 scenario control. 24k is the originally specified vessel; the rest are
+mid-size / large / VLGC-scale gas carriers — general industry size bands,
+**not** repository figures (largest ammonia carriers in service ~87k m³,
+`[ESTIMATE]`).
+
+| NH3 hull | Annual per vessel | NH3 ships per 160k LH2 ship |
+|---|---:|---:|
+| 24,000 m³ | 12.2 ktpa | 4.5 |
+| 40,000 m³ | 20.4 ktpa | 2.7 |
+| 60,000 m³ | 30.6 ktpa | 1.8 |
+| 90,000 m³ | 45.9 ktpa | 1.2 |
+
+**Two things worth remembering about this control:**
+1. **The cost studies do not move with it.** The ammonia carrier's boil-off
+   cost per kg H2 is *invariant to hull size* — reliq fuel and delivered cargo
+   both scale with cargo, so the ratio cancels. Only the throughput studies and
+   the full-leg cost basis respond. There is a test pinning this.
+2. **Propulsion duty does not transfer between hulls.** The stated 25 t/day is
+   the 24k vessel's. Each duty input now shows a size^⅔ suggestion scaled from
+   that pair with a one-click "use" — deliberately NOT applied silently, since
+   it is a rule of thumb and no power curve is held for any vessel. 90k → ≈60
+   t/day; the 160k LH2 hull → ≈89 t/day (which, if applied, largely dissolves
+   the venting finding — see the S16 caveat).
+
+Even at VLGC scale one ammonia carrier does not match one 160,000 m³ LH2 ship:
+parity needs ~108,000 m³, above both the scenario set and the fleet in service.
+
+Tests: **177 passing**. Merged to `main`.

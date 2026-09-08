@@ -375,3 +375,41 @@ hydrogen at those values, so **on shipping boil-off cost the whole map belongs
 to ammonia**. LH2's case has to be made on what this study deliberately
 excludes: throughput per vessel (where the 160k ship wins 4.5:1), terminal and
 conversion CapEx, and not needing a cracker at the far end.
+
+
+## 10. Ammonia vessel scenarios (2026-09-08)
+
+The ammonia hull is now a scenario alongside the LH2 one — **24,000 / 40,000 /
+60,000 / 90,000 m³**. The 24,000 m³ vessel is the originally specified one; the
+other three correspond to mid-size, large and VLGC-scale gas carriers. Those
+size bands and class labels are **general industry categories, not figures from
+this repository**; the largest ammonia carriers in service are around 87,000 m³
+`[ESTIMATE — needs source: vessel register]`.
+
+**Annual H2-equivalent delivered per ammonia vessel** (Cape route, 13 kn),
+against one 160,000 m³ LH2 carrier at 55.2 ktpa:
+
+| NH3 hull | Per vessel | LH2 ships' worth | NH3 ships per LH2 ship |
+|---|---:|---:|---:|
+| 24,000 m³ | 12.2 ktpa | 0.22 | 4.5 |
+| 40,000 m³ | 20.4 ktpa | 0.37 | 2.7 |
+| 60,000 m³ | 30.6 ktpa | 0.55 | 1.8 |
+| 90,000 m³ | 45.9 ktpa | 0.83 | 1.2 |
+
+Throughput is linear in capacity at fixed speed and port time, so the ratio
+falls exactly in proportion. Even at VLGC scale one ammonia carrier does not
+match one 160,000 m³ hydrogen carrier: parity needs ~108,000 m³, above both the
+scenario set and the largest ammonia carriers afloat.
+
+**The cost studies barely move.** The ammonia carrier's boil-off cost per kg H2
+is **invariant to hull size** — re-liquefaction fuel and delivered cargo both
+scale with the cargo, so the ratio cancels. Changing the ammonia scenario
+therefore moves the throughput studies and the full-leg cost basis, but leaves
+the boil-off-cost parity price where it was.
+
+**Propulsion duty does not transfer between hulls.** The stated 25 t/day
+belongs to the 24,000 m³ vessel. Each duty input now carries a size^⅔
+suggestion scaled from that pair (resistance ≈ wetted area) — offered as a
+one-click "use" rather than applied silently, since it is a rule of thumb and
+not a specification. At 90,000 m³ that is ≈60 t/day; for the 160,000 m³ LH2
+hull, ≈89 t/day.
