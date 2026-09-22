@@ -1,3 +1,4 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Two Ways to Move Hydrogen</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -117,6 +118,12 @@ td.n{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right;
 tbody tr:last-child td{border-bottom:none}
 tbody tr.group td{background:var(--surface-2);font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
 .tbl-scroll{overflow-x:auto}
+tr.ledger-toggle{cursor:pointer}
+tr.ledger-toggle:hover td{background:var(--surface-2)}
+tr.ledger-toggle .chevron{display:inline-block;width:10px;color:var(--ink-3);font-size:10px;transition:transform .1s}
+tr.ledger-toggle[aria-expanded="true"] .chevron{transform:rotate(90deg)}
+tr.ledger-detail td{padding-left:30px;color:var(--ink-3);font-size:12.5px;background:var(--surface-2)}
+tr.ledger-detail td:first-child{font-style:italic}
 .gaps{background:var(--surface);border:1px solid var(--rule);border-left:3px solid var(--warn);border-radius:4px;padding:16px 20px;margin-bottom:22px}
 .gaps h3{font-size:16px;margin-bottom:8px}
 .gaps ol{margin:0;padding-left:20px;color:var(--ink-2);font-size:14px}
@@ -154,13 +161,17 @@ footer code{font-family:var(--mono);font-size:11.5px;color:var(--ink-2)}
     <span class="seq">SEGMENT 1</span><span class="ttl">Upstream</span>
     <span class="sub">Liquefaction vs Haber&#8211;Bosch &#183; 100 ktpa</span>
   </button>
-  <button class="sheet-tab" id="tab-ship" role="tab" aria-selected="true" aria-controls="sh-ship">
+  <button class="sheet-tab" id="tab-ship" role="tab" aria-selected="false" aria-controls="sh-ship">
     <span class="seq">SEGMENT 2</span><span class="ttl">Shipping</span>
     <span class="sub">LH&#8322; vs NH&#8323; at sea</span>
   </button>
+  <button class="sheet-tab" id="tab-down" role="tab" aria-selected="true" aria-controls="sh-down">
+    <span class="seq">SEGMENT 3</span><span class="ttl">Downstream</span>
+    <span class="sub">Regas vs cracker &#183; 100 ktpa</span>
+  </button>
 </nav>
 
-<div class="sheet" id="sh-ship" role="tabpanel" aria-labelledby="tab-ship">
+<div class="sheet" id="sh-ship" role="tabpanel" aria-labelledby="tab-ship" hidden>
 
 <header class="masthead">
   <div class="eyebrow">Gentari · KR1.3 · Shipping segment (nodes D1 / D2)</div>
@@ -651,6 +662,234 @@ footer code{font-family:var(--mono);font-size:11.5px;color:var(--ink-2)}
 </footer>
 
 </div><!-- /sheet: upstream -->
+
+<div class="sheet" id="sh-down" role="tabpanel" aria-labelledby="tab-down">
+
+<header class="masthead">
+  <div class="eyebrow">Gentari · KR1.3 · Downstream segment (nodes E1/F1 vs E2/F2)</div>
+  <h1>Regasify It, or Crack It</h1>
+  <p class="deck">The same 100 ktpa of hydrogen arrives at the fence as a liquid or a molecule. One route warms it back to a gas against seawater; the other burns natural gas to tear ammonia apart. <b>Regasification spends almost no purchased energy. Cracking spends real fuel and emits real carbon</b> — the mirror image of the upstream sheet, where synthesis gave heat back and liquefaction only ever took it. This sheet puts the same 60,000 m³ tank behind each receiving terminal and sizes both routes in power, carbon and cost.</p>
+  <div class="spec">
+    <span><b>Basis</b> <span id="d-spec-basis">100 ktpa H₂ delivered at the battery limit · 8,400 operating h/y</span></span>
+    <span><b>Boundary</b> carrier at the discharge arm → H₂ ready for end-use · shipping and everything upstream excluded</span>
+    <span><b>Routes</b> LH₂ regasification (ORV, KHI) vs ammonia cracking (KBR H2ACT®)</span>
+    <span><b>Terminal</b> <span id="d-spec-tank">one 60,000 m³ tank each</span></span>
+    <span><b>Comparison</b> MW at the fence · kg CO₂ and USD per kg H₂ delivered</span>
+  </div>
+</header>
+
+<div class="note">
+  <b>How the 60,000 m³ instruction is read here.</b> Both receiving terminals get the <b>same tank volume</b> — the ammonia tank holds more hydrogen-equivalent and covers more days at that volume, exactly as on the upstream sheet's export side. Toggle to <b>equal days of cover</b> in the controls to see it the other way. Both terminals default to <b>0.1 %/day</b> boil-off — Kawasaki's disclosed at-rest figure for LH₂; ammonia has no equivalent figure in this repository, so 0.1 %/day is applied here as a matching assumption, not a citation. Both boil-off rates are live inputs.
+</div>
+
+<section class="controls" aria-label="Downstream study inputs">
+  <div class="controls-head">
+    <div class="eyebrow">Study inputs — every chart below recomputes live</div>
+    <div class="presets">
+      <button class="preset" id="dp-ng" aria-pressed="true">100% NG fuel</button>
+      <button class="preset" id="dp-50" aria-pressed="false">50% NG fuel</button>
+      <button class="preset" id="dp-cf" aria-pressed="false">Clean fuel mode</button>
+      <button class="preset" id="dp-reset" aria-pressed="false">Reset all</button>
+    </div>
+  </div>
+  <div class="grid-in">
+    <div class="field">
+      <label for="id-h2ktpa">H₂ delivered, ktpa <span class="tag est">USER</span></label>
+      <input type="number" id="id-h2ktpa" value="100" min="5" max="2000" step="5">
+    </div>
+    <div class="field">
+      <label for="id-hours">Plant operating hours, h/y <span class="tag cit">KBR</span></label>
+      <input type="number" id="id-hours" value="8400" min="2000" max="8760" step="100">
+      <div class="hint">≥95% onstream factor, KBR design basis</div>
+    </div>
+    <div class="field">
+      <label for="id-crackelec">Cracker electricity, kWh/kg H₂ <span class="tag cit">KBR</span></label>
+      <input type="number" id="id-crackelec" value="0.290" min="0.05" max="1" step="0.005">
+    </div>
+    <div class="field">
+      <label for="id-nh3ratio">Ammonia feed, t NH₃/t H₂ <span class="tag cit">KBR</span></label>
+      <input type="number" id="id-nh3ratio" value="6.35" min="5.632" max="10" step="0.01">
+      <div class="hint" id="dh-nh3ratio"></div>
+    </div>
+    <div class="field">
+      <label for="id-ci">Cracker CI, direct, kg CO₂/kg H₂ <span class="tag cit">KBR</span></label>
+      <input type="number" id="id-ci" value="0.80" min="0" max="2" step="0.01">
+    </div>
+    <div class="field">
+      <label for="id-regaselec">Regas electricity, kWh/kg LH₂ <span class="tag est">DERIVED</span></label>
+      <input type="number" id="id-regaselec" value="0.031" min="0" max="0.5" step="0.001">
+      <div class="hint">cryo pump + ORV seawater circulation, at 30 barg send-out</div>
+    </div>
+    <div class="field">
+      <label for="id-gridci">Grid electricity CI, kg CO₂/kWh <span class="tag est">SET IT</span></label>
+      <input type="number" id="id-gridci" value="0.50" min="0" max="1.2" step="0.01">
+      <input type="range" id="rd-gridci" value="0.50" min="0" max="1.2" step="0.01" aria-label="Grid electricity carbon intensity">
+    </div>
+    <div class="field">
+      <label for="id-elecprice">Electricity price, USD/MWh <span class="tag cit">KBR</span></label>
+      <input type="number" id="id-elecprice" value="140" min="0" max="400" step="5">
+      <input type="range" id="rd-elecprice" value="140" min="0" max="300" step="5" aria-label="Electricity price">
+    </div>
+    <div class="field" style="grid-column:span 2;min-width:220px">
+      <label>NG price <span class="tag cit">KBR-equiv.</span></label>
+      <div style="display:flex;gap:8px;align-items:flex-start">
+        <input type="number" id="id-ngprice" value="8.79" min="0" max="200" step="0.05" style="flex:1">
+        <div class="seg" role="group" aria-label="NG price unit">
+          <button id="ngu-mmbtu" aria-pressed="true">USD/MMBtu</button>
+          <button id="ngu-mwh" aria-pressed="false">USD/MWh</button>
+        </div>
+      </div>
+      <div class="hint" id="dh-ngprice"></div>
+    </div>
+    <div class="field">
+      <label for="id-nh3price">NH₃ price, USD/t <span class="tag cit">KBR</span></label>
+      <input type="number" id="id-nh3price" value="500" min="0" max="2000" step="10">
+    </div>
+    <div class="field" style="grid-column:span 2;min-width:280px">
+      <label>Terminal tank basis <span class="tag est">CHOICE</span></label>
+      <div class="seg" role="group" aria-label="Tank basis" style="width:100%">
+        <button id="dt-fixed" aria-pressed="true" style="flex:1">Same volume, as specified</button>
+        <button id="dt-days" aria-pressed="false" style="flex:1">Same days of cover</button>
+      </div>
+    </div>
+    <div class="field">
+      <label for="id-tank">Tank volume, m³ each <span class="tag est">USER</span></label>
+      <input type="number" id="id-tank" value="60000" min="5000" max="200000" step="1000">
+    </div>
+  </div>
+  <details class="adv">
+    <summary>Terminal, fuel and price detail — regas and its tank are KHI-disclosed or derived; every ammonia-cracker figure below is KBR's, extrapolated from 80 ktpa to this basis</summary>
+    <div class="grid-in">
+      <div class="field"><label for="id-lbor">LH₂ terminal BOR, %/day <span class="tag est">USER</span></label><input type="number" id="id-lbor" value="0.1" min="0" max="3" step="0.01"></div>
+      <div class="field"><label for="id-nbor">NH₃ terminal BOR, %/day <span class="tag est">USER</span></label><input type="number" id="id-nbor" value="0.1" min="0" max="3" step="0.01"></div>
+      <div class="field"><label for="id-lreliq">LH₂ BOG re-liq., kWh/kg H₂ <span class="tag est">ASSUM</span></label><input type="number" id="id-lreliq" value="3.94" min="0" max="12" step="0.05"></div>
+      <div class="field"><label for="id-nreliq">NH₃ BOG re-liq., kWh/kg NH₃ <span class="tag est">EST</span></label><input type="number" id="id-nreliq" value="0.25" min="0" max="3" step="0.05"></div>
+      <div class="field"><label for="id-days">Hold time, days <span class="tag est">ASSUM</span></label><input type="number" id="id-days" value="5" min="1" max="60" step="0.5"></div>
+      <div class="field"><label for="id-fill">Tank fill fraction, % <span class="tag est">ASSUM</span></label><input type="number" id="id-fill" value="98" min="80" max="100" step="1"></div>
+      <div class="field"><label for="id-lrho">LH₂ density, kg/m³ <span class="tag est">NIST?</span></label><input type="number" id="id-lrho" value="70.8" min="60" max="80" step="0.1"></div>
+      <div class="field"><label for="id-nrho">NH₃ density, kg/m³ <span class="tag est">EST</span></label><input type="number" id="id-nrho" value="682" min="600" max="720" step="1"></div>
+      <div class="field"><label for="id-regasheat">Regas heat duty, MJ/kg <span class="tag cit">KHI</span></label><input type="number" id="id-regasheat" value="3.8" min="0" max="10" step="0.1"></div>
+      <div class="field"><label for="id-nglhv">NG LHV, MJ/kg <span class="tag est">DERIVED</span></label><input type="number" id="id-nglhv" value="48.9" min="35" max="55" step="0.1"></div>
+    </div>
+  </details>
+</section>
+
+<section class="verdict" id="d-verdict" aria-label="Headline downstream result at current inputs"></section>
+
+<section class="study">
+  <div class="study-head"><h2>Where does the electricity go?</h2><span class="lever">At current inputs</span></div>
+  <p class="intro">Both routes draw real electrical power — a cryo pump on one side, a cracker's PSA and compression on the other — and both terminals re-liquefy whatever boils off at rest. This chart is electrical power only; the cracker's natural-gas duty is not electricity and is charged separately below.</p>
+  <div class="panel">
+    <div class="panel-pad"><div class="eyebrow">Electrical power at the fence, MW</div></div>
+    <div class="legend">
+      <span><i class="sq" style="background:var(--lh2)"></i>Regas / cracker process electricity</span>
+      <span><i class="sq" style="background:var(--fossil)"></i>Terminal boil-off re-liquefaction</span>
+      <span class="axes">Columns · the two routes<br>Y · electrical power at the fence (MW)</span>
+    </div>
+    <div class="chart-scroll"><svg class="chart" id="dc1" viewBox="0 0 880 380" role="img" aria-label="Electrical power drawn by each downstream route"></svg><div class="tip" id="dt1"></div></div>
+    <div class="readout" id="dr1"></div>
+  </div>
+</section>
+
+<section class="study">
+  <div class="study-head"><h2>Not all heat is equal</h2><span class="lever">Sweeping: ammonia feed rate</span></div>
+  <p class="intro">Regasification's heat comes from ambient seawater — free, and carbon-free. The cracker's heat is a fixed total duty — standardised here to the 80 ktpa Clean Fuel case, where zero external NG is burned and every kilogram of ammonia beyond the 5.632 stoichiometric ratio supplies it instead — split between purchased natural gas and self-fuelled cracked ammonia. Move the ammonia feed rate above and the split below moves with it.</p>
+  <div class="panel">
+    <div class="panel-pad"><div class="eyebrow">Thermal duty at the fence, MW — LH₂ (ambient) vs NH₃ (NG + self-fuelled ammonia, stacked)</div></div>
+    <div class="legend">
+      <span><i class="sq" style="background:var(--lh2)"></i>LH₂ — ambient seawater heat</span>
+      <span><i class="sq" style="background:var(--fossil)"></i>NH₃ — purchased natural gas</span>
+      <span><i class="sq" style="background:var(--nh3)"></i>NH₃ — self-fuelled from cracked ammonia</span>
+      <span class="axes">Columns · the two routes<br>Y · thermal power at the fence (MW)</span>
+    </div>
+    <div class="chart-scroll"><svg class="chart" id="dc2" viewBox="0 0 880 380" role="img" aria-label="Thermal duty of each route, stacked by fuel source for the cracker"></svg><div class="tip" id="dt2"></div></div>
+    <div class="tbl-scroll"><table id="d-heat-table"></table></div>
+    <div class="readout" id="dr2"></div>
+  </div>
+</section>
+
+<section class="study">
+  <div class="study-head"><h2>Does the grid mix change the answer?</h2><span class="lever">Sweeping: grid electricity carbon intensity</span></div>
+  <p class="intro">Electricity is the one input both routes share, so it is worth asking whether a dirtier or cleaner grid could flip the ranking. It cannot, on its own — because the gap between them starts at the cracker's <em>direct</em> combustion, which no grid decarbonisation touches.</p>
+  <div class="panel">
+    <div class="panel-pad"><div class="eyebrow">Total downstream carbon intensity, kg CO₂ per kg H₂ delivered</div></div>
+    <div class="legend">
+      <span><i class="sw" style="background:var(--lh2)"></i>LH₂ — indirect only (electricity)</span>
+      <span><i class="sw" style="background:var(--nh3)"></i>NH₃ — direct (NG combustion) + indirect (electricity)</span>
+      <span class="axes">X · grid electricity carbon intensity (kg CO₂/kWh)<br>Y · downstream CI (kg CO₂/kg H₂)</span>
+    </div>
+    <div class="chart-scroll"><svg class="chart" id="dc3" viewBox="0 0 880 340" role="img" aria-label="Downstream carbon intensity of each route against grid electricity carbon intensity"></svg><div class="tip" id="dt3"></div></div>
+    <div class="readout" id="dr3"></div>
+  </div>
+</section>
+
+<section class="study">
+  <div class="study-head"><h2>What does it cost per kg delivered?</h2><span class="lever">Sweeping: electricity price</span></div>
+  <p class="intro">Downstream only: electricity for both routes, natural gas for the cracker's furnace, and the ammonia the cracker consumes beyond the pure 5.632 stoichiometric ratio — the mass lost to purge and purification, valued at the ammonia price like the shipping sheet values hydrogen given up as fuel. Toggle to USD/MWh to compare directly against the electricity and NG prices themselves, on the same energy basis (H₂ LHV, 33.333 kWh/kg).</p>
+  <div class="panel">
+    <div class="panel-pad" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+      <div class="eyebrow" id="d-eb4">Downstream cost, USD per kg H₂ delivered</div>
+      <div class="seg" role="group" aria-label="Cost basis">
+        <button id="dc-kg" aria-pressed="true">USD/kg H₂</button>
+        <button id="dc-mwh" aria-pressed="false">USD/MWh H₂</button>
+      </div>
+    </div>
+    <div class="legend">
+      <span><i class="sw" style="background:var(--lh2)"></i>LH₂ — regas + terminal electricity only</span>
+      <span><i class="sw" style="background:var(--nh3)"></i>NH₃ — electricity + NG fuel + excess ammonia</span>
+      <span class="axes" id="d-ax4">X · electricity price (USD/MWh)<br>Y · downstream cost (USD/kg H₂)</span>
+    </div>
+    <div class="chart-scroll"><svg class="chart" id="dc4" viewBox="0 0 880 340" role="img" aria-label="Downstream cost per kilogram against electricity price"></svg><div class="tip" id="dt4"></div></div>
+    <div class="readout" id="dr4"></div>
+  </div>
+</section>
+
+<hr class="sect-rule">
+
+<section class="study">
+  <div class="study-head"><h2>One tank, two cargoes — at the receiving end</h2><span class="lever">At current inputs</span></div>
+  <p class="intro">The same asymmetry the upstream sheet found at the export terminal repeats here, in reverse direction but the same physics: ammonia's density buys more hydrogen and more days from the same steel, and loses less of it a day even before accounting for the mass each kilogram of boil-off represents.</p>
+  <div class="panel">
+    <div class="panel-pad"><div class="eyebrow" id="d-eb5">One 60,000 m³ import tank on each route</div></div>
+    <div class="legend">
+      <span><i class="sq" style="background:var(--lh2)"></i>LH₂ route</span>
+      <span><i class="sq" style="background:var(--nh3)"></i>NH₃ route</span>
+      <span class="axes">Each row is scaled to its own maximum — compare within a row, not across rows</span>
+    </div>
+    <div class="chart-scroll"><svg class="chart" id="dc5" viewBox="0 0 880 360" role="img" aria-label="What one import tank of each carrier holds, and what its boil-off costs"></svg><div class="tip" id="dt5"></div></div>
+    <div class="readout" id="dr5"></div>
+  </div>
+</section>
+
+<hr class="sect-rule">
+
+<section class="study">
+  <div class="study-head"><h2>Downstream ledger</h2><span class="lever">At current inputs</span></div>
+  <p class="intro">One year, both routes, every figure recomputed from the inputs above.</p>
+  <div class="panel"><div class="tbl-scroll"><table id="d-ledger"></table></div></div>
+</section>
+
+<section class="gaps">
+  <h3>What is not sourced here</h3>
+  <ol>
+    <li><b>Every cracker figure is scaled from KBR's disclosed 80 ktpa case, not a 100 ktpa design.</b> KBR states H2ACT® performance is consistent "across different modes of operation and the scale range," but 100 ktpa was never itself quoted — the four disclosed capacities top out at 80 ktpa H₂. Electricity, ammonia ratio and direct CI are carried forward unscaled; CAPEX, which KBR shows scaling well below linearly (78 → 209 MMUSD across 12 → 80 ktpA), is not shown on this sheet at all.</li>
+    <li><b>Natural-gas duty is no longer read directly from KBR — it is derived from a standardised total thermal-duty budget.</b> The 80 ktpa Clean Fuel case (7.20 t NH₃/t H₂, zero external NG) is read as the 100%-self-fuelled anchor: its excess ammonia over the 5.632 stoichiometric ratio (1.568 t NH₃-equiv/t H₂) is taken to be the <em>entire</em> cracker thermal duty, expressed via NH₃'s own LHV (5.167 kWh/kg, itself an <code>[ESTIMATE]</code>). Every other ammonia-feed input then splits that same fixed duty between self-fuelled cracked ammonia and purchased NG. This makes the two fuel sources move together with one input (as requested), but it assumes KBR's 100% NG (6.35 t/t) and 50% NG (6.72 t/t) cases sit on the <em>same</em> total-duty line as the Clean Fuel case — checking the 100% NG point against this model implies roughly 4.4 kWh/kg H₂ of NG duty, about 11% above the value implied by directly reading the 12 ktpa heat & material balance's NG:H₂ mass flow ratio (0.2914 kg/kg → ~3.96 kWh/kg). That gap is plausibly real — KBR's own disclosed "Energy Efficiency (LHV)" differs slightly by firing mode (89.8% at 100% NG vs 88.7% at Clean Fuel, 80 ktpa) — but it means this sheet's NG figures at the 100%/50% NG presets no longer reproduce the HMB's own mass-flow figure exactly; they are self-consistent with each other, not independently re-verified against it.</li>
+    <li><b>NG LHV (48.9 MJ/kg) is not a KBR figure.</b> It was originally back-solved to reproduce KBR's disclosed direct CI at the 100% NG point via an IPCC 2006 default combustion factor (56.1 kg CO₂/GJ); it is now used only to convert the derived NG thermal-energy figure back into a mass (kt/y) for display, and no longer feeds the CI calculation at all (CI now comes straight from KBR's disclosed per-firing-mode figure, <code>id-ci</code>).</li>
+    <li><b>Ammonia fed beyond the Clean Fuel basis (&gt;7.20 t/t) is not modelled as displacing anything further.</b> The sheet flags it ("beyond 100% self-fuelling") and still charges its full cost via the yield-loss tile, but treats any NG requirement as already at zero — it cannot go negative.</li>
+    <li><b>The ammonia terminal boil-off rate (0.1 %/day) is a deliberate match to LH₂'s figure, not a citation.</b> The repository's own upstream sheet and <code>chain-energy-defaults.csv</code> instead carry 0.04 %/day for ammonia at rest — that figure was itself an <code>[ESTIMATE]</code> pending the internal Gentari NH₃ dataset (decision D4). The two are not reconciled; this sheet's default is a user instruction for this comparison, not a correction to the other one.</li>
+    <li><b>Import-terminal BOG disposition is assumed re-liquefied for both carriers</b>, mirroring the export-terminal disposition Kawasaki discloses (reply Q3) and this repository's own placeholder for ammonia — KHI was not asked about the receiving side specifically.</li>
+    <li><b>Grid electricity carbon intensity (0.50 kg CO₂/kWh) is yours to set</b> and is not logged as a Malaysia-specific or any other grid figure in this repository.</li>
+    <li><b>The "ammonia lost to cracker yield" cost line is this repository's own construction</b>, not a KBR cost line — it values the gap between KBR's disclosed 6.35 t NH₃/t H₂ and the pure stoichiometric 5.632 at the ammonia price. KBR's own LCOH table (<code>Licensor/kbr/kbr-johor-hub.md</code> §3.3) prices the <em>entire</em> ammonia feed, not just this excess, which is why headline $/kg figures will not match this sheet's cost chart — the boundaries differ by design.</li>
+    <li><b>Plant operating hours (8,400 h/y) apply to both the cracker and the regasifier</b> for comparability. KBR discloses 8,400 h/y (≥95% onstream) for the cracker; no separate figure exists for the regasifier, which more plausibly follows continuous send-out demand.</li>
+    <li><b>Neither route's terminal CapEx nor the cracker's CapEx appears on this sheet.</b> KBR's own ISBL CAPEX (Class V, ±40% roughly implied, 3Q2025 factored estimate) is disclosed in <code>Licensor/kbr/kbr-johor-hub.md</code> but not wired into this comparison — this sheet ranks the two routes on downstream operating cost only.</li>
+  </ol>
+</section>
+
+<footer>
+  <b style="color:var(--ink-2)">Sources.</b> Regas heat duty (3.8 MJ/kg, ambient seawater) and LH₂ terminal BOR at rest (0.1 %/day): Kawasaki Heavy Industries questionnaire reply Q18 and cost-basis supplemental (<code>kawasaki-2026-questionnaire</code>, <code>kawasaki-2026-supplemental</code>). Regas electrical energy (0.031 kWh/kg): first-principles derivation at the default send-out spec, <code>data/properties/regas.csv</code>. Cracker electricity, ammonia feed ratio, direct carbon intensity and hydrogen yield across firing modes (100% NG / 50% NG / Clean Fuel), all at 80 ktpa H₂: KBR H2ACT® Technical Information Package, December 2025 (<code>kbr-cracker-johorhub</code>, <code>sources/raw/Project/Gentari Ammonia Cracker Workstream/Licensor/kbr/kbr-johor-hub.md</code> §3.3). Natural-gas thermal duty is derived (not read directly) from the ammonia feed input via the standardised total-thermal-duty basis described in the gaps list; the 12 ktpa NG:H₂ mass-flow figure from <code>kbr-gentari-hmb-001</code> is kept only as a cross-check reference, no longer as the modelled value. Cracker onstream factor and electricity price assumption ($140/MWh): <code>kbr-gentari-pdb-001</code>, KBR H2ACT® package §3.3 note 4. NG price ($30/MWh assumed by KBR for Malaysia, entered here as its USD/MMBtu equivalent, $8.79) converted via 1 MMBtu = 0.293071 MWh. Ammonia price scenarios ($500 / $950 / $1100 per t): same KBR package. Stoichiometric ratio 5.632 kg NH₃ per kg H₂ and reaction enthalpy: first-principles, <code>data/carriers/chain-energy-defaults.csv</code>. NG combustion factor (56.1 kg CO₂/GJ): IPCC 2006 Guidelines default, not separately registered in <code>references.csv</code>. LH₂ density and H₂ LHV: <code>data/properties/lh2-properties.csv</code>, pending NIST citation approval. Grid electricity carbon intensity, NG LHV and every ammonia terminal boil-off/re-liquefaction figure: assumptions or estimates, stated as such above.
+</footer>
+
+</div><!-- /sheet: downstream -->
 
 </div>
 <script>
@@ -1391,6 +1630,15 @@ document.addEventListener("click", ev=>{
   const r = $(b.dataset.set.replace("i-","r-")); if(r) r.value = b.dataset.val;
   render();
 });
+/* Expandable ledger rows -- works for any table built by ledgerHTML(), on
+   any sheet. Delegated so it survives the innerHTML rebuild on every render. */
+document.addEventListener("click", ev=>{
+  const tr = ev.target.closest("tr.ledger-toggle"); if(!tr) return;
+  const gid = tr.dataset.group;
+  const open = tr.getAttribute("aria-expanded")==="true";
+  tr.setAttribute("aria-expanded", String(!open));
+  document.querySelectorAll('tr.ledger-detail[data-group="'+gid+'"]').forEach(d=>{ d.hidden = open; });
+});
 function setNh3Buttons(){
   const opts = [24000,40000,60000,90000];
   opts.forEach(c=>$("n-"+(c/1000)).setAttribute("aria-pressed", String(Math.round(V.nh3cap)===c)));
@@ -1954,17 +2202,444 @@ $("up-reset").addEventListener("click",()=>{
 segPair("us-on","us-off",()=>{UCREDIT=true; renderUp();},()=>{UCREDIT=false; renderUp();});
 segPair("ut-fixed","ut-days",()=>{UBASIS="fixed"; renderUp();},()=>{UBASIS="days"; renderUp();});
 
+/* ======================================================================
+   SHEET 3 — DOWNSTREAM: regasification vs ammonia cracking at 100 ktpa H2
+   Boundary: carrier at the discharge arm -> H2 ready for end-use.
+   ====================================================================== */
+const DDEF = {h2ktpa:100, hours:8400, tank:60000, days:5, fill:98,
+  lbor:0.1, nbor:0.1, lrho:70.8, nrho:682, lreliq:3.94, nreliq:0.25,
+  regaselec:0.031, regasheat:3.8, crackelec:0.290, nh3ratio:6.35, ci:0.80,
+  nglhv:48.9, ngprice:8.79, nh3price:500, elecprice:140, gridci:0.50};
+/* Firing-mode anchors, KBR H2ACT (R) 80 ktpa table. ngratio is kept here only
+   as a record of KBR's own 100% NG disclosure for cross-checking -- it is no
+   longer read by the model, which now derives NG duty from nh3ratio instead
+   (see THERMAL_NH3_TOTAL below). */
+const FIRING = {
+  ng:{crackelec:0.290, nh3ratio:6.35, ci:0.80, ngratio_disclosed:0.2914, label:"100% NG fuel"},
+  h50:{crackelec:0.284, nh3ratio:6.72, ci:0.45, ngratio_disclosed:0.1457, label:"50% NG fuel"},
+  cf:{crackelec:0.290, nh3ratio:7.20, ci:0.00, ngratio_disclosed:0.0000, label:"Clean fuel mode"}
+};
+/* Standardised cracker thermal-duty basis (2026-09-22 revision, user direction).
+   The 100% Clean Fuel case burns NO external NG at all -- every kilogram of
+   ammonia beyond the pure 5.632 stoichiometric mass balance is cracked and
+   burned as fuel. That makes CF's excess ammonia (7.20 - 5.632 = 1.568 t
+   NH3-equiv/t H2) a direct read of the TOTAL cracker thermal duty, expressed
+   as an NH3 mass-equivalent via NH3's own LHV. Every other firing mode is
+   read as splitting that SAME total duty between purchased NG and
+   self-fuelled (cracked) ammonia -- so moving the ammonia-feed input now
+   moves the NG requirement too, instead of the two being independent KBR
+   figures from mismatched capacities (12 ktpa NG ratio vs 80 ktpa NH3 ratio). */
+const NH3_LHV = 5.167;   // kWh/kg, data/carriers/chain-energy-defaults.csv [ESTIMATE]
+const THERMAL_NH3_TOTAL = FIRING.cf.nh3ratio - RATIO;         // 1.568 t NH3-equiv/t H2
+const TOTAL_THERMAL_KWH_PER_KG = THERMAL_NH3_TOTAL*NH3_LHV;   // fixed across firing modes
+const MMBTU_TO_MWH = 0.293071;   // 1 MMBtu = 1.055056 GJ = 0.293071 MWh
+
+const D = {};
+let DBASIS = "fixed";
+let NGUNIT = "mmbtu";   // which unit the id-ngprice input is currently showing
+let DCOSTUNIT = "kg";   // "kg" or "mwh" -- cost-chart basis
+
+function readDown(){
+  for (const k of Object.keys(DDEF)){ const e=$("id-"+k); D[k]= e?parseFloat(e.value):DDEF[k];
+    if(!isFinite(D[k])) D[k]=DDEF[k]; }
+  D.ngpriceDisplay = D.ngprice;   // whatever is in the box, in the currently-selected unit
+  D.ngprice = NGUNIT==="mmbtu" ? D.ngpriceDisplay/MMBTU_TO_MWH : D.ngpriceDisplay;   // canonical USD/MWh from here on
+}
+
+function dTerminal(annualCarrierKg, rho, bor, reliqSec){
+  const fill = D.fill/100;
+  let vol, inv;
+  if (DBASIS==="days"){ inv = annualCarrierKg/365*D.days; vol = inv/rho/fill; }
+  else { vol = D.tank; inv = vol*rho*fill; }
+  const bogPerDay = inv*bor/100;
+  return {vol, inv, bogPerDay, annualKwh: bogPerDay*365*reliqSec};
+}
+
+function evalLH2Down(o){
+  o = o||{};
+  const fed = D.h2ktpa*1e6;                    // no regas mass loss (KHI: vaporisation only)
+  const regasElecKwh = fed*(o.regaselec!==undefined?o.regaselec:D.regaselec);
+  const t = dTerminal(fed, D.lrho, o.lbor!==undefined?o.lbor:D.lbor, D.lreliq);
+  const totalElecKwh = regasElecKwh + t.annualKwh;
+  return {fed, delivered:fed, regasElecKwh, termKwh:t.annualKwh, totalElecKwh,
+    regasHeatMJ: fed*D.regasheat, vol:t.vol, inv:t.inv, invH2e:t.inv, bog:t.bogPerDay,
+    days:t.inv/(fed/365), procMW: regasElecKwh/D.hours/1000, termMW: t.annualKwh/8760/1000};
+}
+
+function evalNH3Down(o){
+  o = o||{};
+  const fed = D.h2ktpa*1e6;
+  const nh3ratio = o.nh3ratio!==undefined?o.nh3ratio:D.nh3ratio;
+  const crackelec = o.crackelec!==undefined?o.crackelec:D.crackelec;
+  const ci = o.ci!==undefined?o.ci:D.ci;
+  const nh3In = fed*nh3ratio;
+  const crackElecKwh = fed*crackelec;
+
+  /* Thermal-duty split: excess ammonia (beyond 5.632 stoichiometric) first
+     supplies as much of the standardised total thermal duty as it can, up to
+     100% (the Clean Fuel basis); natural gas makes up whatever is left. Any
+     ammonia fed beyond what 100% self-fuelling would ever need (excess >
+     THERMAL_NH3_TOTAL) is not modelled as displacing anything further -- it
+     is flagged separately as ammonia beyond any disclosed KBR firing mode. */
+  const excessNH3 = Math.max(0, nh3ratio-RATIO);                    // t NH3-equiv/t H2
+  const nh3ForThermal = Math.min(excessNH3, THERMAL_NH3_TOTAL);     // t NH3-equiv/t H2, clamped
+  const nh3ThermalKwh = nh3ForThermal*NH3_LHV*fed;                  // kWh/y, self-fuelled from cracked NH3
+  const ngThermalKwh = Math.max(0, TOTAL_THERMAL_KWH_PER_KG - nh3ForThermal*NH3_LHV)*fed;
+  const ngKg = ngThermalKwh*3.6/D.nglhv;                            // kg/y, back out mass via NG LHV
+  const overfeedNH3 = Math.max(0, excessNH3-THERMAL_NH3_TOTAL);     // t/t beyond the 100% clean-fuel basis
+
+  const t = dTerminal(nh3In, D.nrho, o.nbor!==undefined?o.nbor:D.nbor, D.nreliq);
+  const totalElecKwh = crackElecKwh + t.annualKwh;
+  return {fed, delivered:fed, nh3In, crackElecKwh, ngKg, ngThermalKwh, nh3ThermalKwh, nh3ForThermal,
+    excessNH3, overfeedNH3, termKwh:t.annualKwh,
+    totalElecKwh, directCO2: fed*ci, nh3ExcessKg: excessNH3*fed,
+    vol:t.vol, inv:t.inv, invH2e:t.inv/RATIO, bog:t.bogPerDay, days:(t.inv/RATIO)/(fed/365),
+    procMW: crackElecKwh/D.hours/1000, termMW: t.annualKwh/8760/1000,
+    ngMW: ngThermalKwh/D.hours/1000, nh3ThermalMW: nh3ThermalKwh/D.hours/1000};
+}
+
+const dElecMW = r => r.procMW + r.termMW;
+const dCiPerKg = (r,isNH3) => isNH3 ? (r.directCO2/r.fed + r.totalElecKwh/r.fed*D.gridci)
+                                     : (r.totalElecKwh/r.fed*D.gridci);
+const dCostPerKg = (l,n) => ({
+  lh2: l.totalElecKwh/l.fed/1000*D.elecprice,
+  nh3: n.totalElecKwh/n.fed/1000*D.elecprice + n.ngThermalKwh/n.fed/1000*D.ngprice + n.nh3ExcessKg/n.fed*(D.nh3price/1000)
+});
+
+function renderDown(){
+  readDown();
+  const l=evalLH2Down(), n=evalNH3Down();
+  const lMW=dElecMW(l), nMW=dElecMW(n);
+  const lCI=dCiPerKg(l,false), nCI=dCiPerKg(n,true);
+  const cost=dCostPerKg(l,n);
+  const gwh=v=>nf(v/1e6,1)+" GWh";
+  const H2_MWH_PER_KG = H2_LHV_KWH/1000;         // 0.033333 MWh/kg, LHV basis
+  const toMWh = v => v/H2_MWH_PER_KG;            // USD/kg H2 -> USD/MWh H2
+  const asCost = v => DCOSTUNIT==="mwh" ? toMWh(v) : v;
+
+  $("d-spec-basis").textContent = nf(D.h2ktpa)+" ktpa H₂ delivered at the battery limit · "+nf(D.hours)+" operating h/y";
+  $("d-spec-tank").textContent = DBASIS==="days"
+    ? "sized for "+nf(D.days,1)+" days of cover each ("+nf(l.vol)+" vs "+nf(n.vol)+" m³)"
+    : "one "+nf(D.tank)+" m³ tank each";
+  $("d-eb5").textContent = DBASIS==="days"
+    ? "Import tanks sized for "+nf(D.days,1)+" days of cover on each route"
+    : "One "+nf(D.tank)+" m³ import tank on each route";
+  $("dh-nh3ratio").textContent = n.overfeedNH3>1e-6
+    ? "= "+nf(n.excessNH3,3)+" t/t beyond stoichiometric — 100% self-fuelled, plus "+nf(n.overfeedNH3,3)+" t/t beyond even that (not modelled — treat as margin)"
+    : "= "+nf(n.excessNH3,3)+" t/t beyond stoichiometric — "+nf(n.nh3ForThermal/THERMAL_NH3_TOTAL*100,0)+"% of cracker thermal duty self-fuelled, "+nf(100-n.nh3ForThermal/THERMAL_NH3_TOTAL*100,0)+"% from natural gas";
+  $("dh-ngprice").textContent = NGUNIT==="mmbtu"
+    ? "= $"+nf(D.ngprice,1)+"/MWh"
+    : "= $"+nf(D.ngprice*MMBTU_TO_MWH,2)+"/MMBtu";
+
+  $("d-verdict").innerHTML =
+    '<div class="tile win-lh2"><div class="k">LH₂ route draws</div><div class="v lh2">'+nf(lMW,2)+
+      '<span style="font-size:.45em;font-weight:500"> MW</span></div><div class="s">regas '+nf(l.procMW*1000,0)+
+      ' kW + terminal '+nf(l.termMW*1000,0)+' kW</div></div>'+
+    '<div class="tile win-nh3"><div class="k">NH₃ route draws</div><div class="v nh3">'+nf(nMW,2)+
+      '<span style="font-size:.45em;font-weight:500"> MW elec.</span></div><div class="s">+ '+nf(n.ngMW,1)+
+      ' MW NG fuel, not electrical</div></div>'+
+    '<div class="tile '+(cost.lh2<=cost.nh3?"win-lh2":"win-nh3")+'"><div class="k">Cheaper downstream</div><div class="v '+
+      (cost.lh2<=cost.nh3?"lh2":"nh3")+'">'+(cost.lh2<=cost.nh3?"LH₂":"NH₃")+'</div><div class="s">$'+
+      nf(Math.min(cost.lh2,cost.nh3),3)+' vs $'+nf(Math.max(cost.lh2,cost.nh3),3)+' per kg H₂<br>$'+
+      nf(Math.min(toMWh(cost.lh2),toMWh(cost.nh3)),1)+' vs $'+nf(Math.max(toMWh(cost.lh2),toMWh(cost.nh3)),1)+' per MWh H₂</div></div>'+
+    '<div class="tile '+(lCI<=nCI?"win-lh2":"win-nh3")+'"><div class="k">Lower carbon</div><div class="v '+
+      (lCI<=nCI?"lh2":"nh3")+'">'+(lCI<=nCI?"LH₂":"NH₃")+'</div><div class="s">'+nf(Math.min(lCI,nCI),2)+
+      ' vs '+nf(Math.max(lCI,nCI),2)+' kg CO₂/kg H₂</div></div>'+
+    '<div class="tile alert"><div class="k">NH₃ lost to cracker yield</div><div class="v warn">'+
+      nf(n.nh3ExcessKg/n.fed,2)+'<span style="font-size:.45em;font-weight:500"> kg/kg H₂</span></div><div class="s">beyond the 5.632 stoichiometric ratio</div></div>';
+
+  /* --- D1: electrical power --- */
+  balanceChart("dc1","dt1",{
+    yLabel:"Electrical power at the fence, MW", fmtY:v=>nf(v,1), fmtSeg:v=>nf(Math.abs(v),2),
+    fmtTip:v=>nf(v,2)+" MW",
+    cols:[
+      {label:"LH₂ · regasification", sub:nf(D.regaselec,3)+" kWh/kg LH₂ · ORV, seawater heat",
+       sub2:"→ "+nf(l.totalElecKwh/l.fed,3)+" kWh electrical per kg H₂", color:C.lh2, net:lMW,
+       segs:[{label:"Regas process",v:l.procMW,fill:C.lh2,tip:C.lh2},
+             {label:"Terminal BOG",v:l.termMW,fill:C.fossil,tip:C.fossil}]},
+      {label:"NH₃ · cracking (KBR)", sub:nf(D.crackelec,3)+" kWh/kg H₂ · PSA + compression + BOP",
+       sub2:"→ "+nf(n.totalElecKwh/n.fed,3)+" kWh electrical per kg H₂", color:C.nh3, net:nMW,
+       segs:[{label:"Cracker process",v:n.procMW,fill:C.lh2,tip:C.lh2},
+             {label:"Terminal BOG",v:n.termMW,fill:C.fossil,tip:C.fossil}]}
+    ]});
+  $("dr1").innerHTML =
+    "<b>"+nf(lMW,2)+" MW against "+nf(nMW,2)+" MW, electrical only.</b> Regasification is a phase change against ambient seawater plus a small cryo pump — there is very little for a motor to do. The cracker runs a PSA unit, gas compression and balance-of-plant continuously, "+
+    nf(n.procMW/l.procMW,0)+"× the regas process load. <b>Neither terminal dominates its route:</b> boil-off re-liquefaction is "+
+    nf(l.termMW/lMW*100,0)+"% of the LH₂ total and "+nf(n.termMW/nMW*100,1)+"% of the NH₃ total — this is the receiving-end version of the same finding the upstream sheet made at the export terminal. "+
+    "<b>What this chart leaves out is the larger number:</b> the cracker's natural-gas furnace duty, "+nf(n.ngMW,1)+" MW of purchased thermal energy that is not electricity at all — the next study.";
+
+  /* --- D2: not all heat is equal (stacked) --- */
+  const lheatMW = (l.regasHeatMJ/3.6)/D.hours/1000;   // annual MJ -> kWh -> MW at process hours
+  const nThermalMW = n.ngMW + n.nh3ThermalMW;         // total cracker duty -- fixed at TOTAL_THERMAL_KWH_PER_KG regardless of split
+  balanceChart("dc2","dt2",{
+    yLabel:"Thermal power at the fence, MW", fmtY:v=>nf(v,0), fmtSeg:v=>nf(Math.abs(v),1),
+    fmtTip:v=>nf(v,2)+" MW",
+    cols:[
+      {label:"LH₂ · regas", sub:nf(D.regasheat,1)+" MJ/kg LH₂ · ambient seawater",
+       sub2:"free, uncosted, zero CO₂", color:C.lh2, net:lheatMW,
+       segs:[{label:"Ambient heat",v:lheatMW,fill:C.lh2,tip:C.lh2}]},
+      {label:"NH₃ · cracker furnace", sub:nf(n.nh3ForThermal/THERMAL_NH3_TOTAL*100,0)+"% self-fuelled · "+nf(100-n.nh3ForThermal/THERMAL_NH3_TOTAL*100,0)+"% purchased NG",
+       sub2:"total duty fixed at "+nf(TOTAL_THERMAL_KWH_PER_KG,2)+" kWh/kg H₂", color:C.nh3, net:nThermalMW,
+       segs:[{label:"Natural gas (purchased)",v:n.ngMW,fill:C.fossil,tip:C.fossil},
+             {label:"Cracked ammonia (self-fuel)",v:n.nh3ThermalMW,fill:C.nh3,tip:C.nh3}]}
+    ]});
+  const heatRows=[
+    ["LH₂ — ambient seawater heat", nf(D.h2ktpa,0)+" ktpa H₂ eq.", gwh(l.regasHeatMJ/3.6)+"/y", nf(lheatMW,2)+" MW", nf(D.regasheat/3.6,3)+" kWh/kg H₂"],
+    ["NH₃ — natural gas (purchased)", nf(n.ngKg/1e6,2)+" kt NG/y", gwh(n.ngThermalKwh)+"/y", nf(n.ngMW,2)+" MW", nf(n.ngThermalKwh/n.fed,3)+" kWh/kg H₂"],
+    ["NH₃ — cracked ammonia (self-fuel)", nf(n.nh3ForThermal*n.fed/1e6,2)+" kt NH₃/y", gwh(n.nh3ThermalKwh)+"/y", nf(n.nh3ThermalMW,2)+" MW", nf(n.nh3ThermalKwh/n.fed,3)+" kWh/kg H₂"],
+    ["NH₃ — total thermal duty", "—", gwh(n.ngThermalKwh+n.nh3ThermalKwh)+"/y", "<b>"+nf(nThermalMW,2)+" MW</b>", "<b>"+nf(TOTAL_THERMAL_KWH_PER_KG,3)+" kWh/kg H₂</b>"]
+  ];
+  $("d-heat-table").innerHTML = '<thead><tr><th>Component</th><th>Mass, kt/y</th><th>Energy, GWh/y</th><th>Power, MW</th><th>Specific, kWh/kg H₂</th></tr></thead><tbody>'+
+    heatRows.map(r=>'<tr><td>'+r[0]+'</td><td class="n">'+r[1]+'</td><td class="n">'+r[2]+'</td><td class="n">'+r[3]+'</td><td class="n">'+r[4]+'</td></tr>').join('')+'</tbody>';
+  $("dr2").innerHTML =
+    "<b>The cracker's total thermal duty is held fixed</b> at "+nf(TOTAL_THERMAL_KWH_PER_KG,2)+
+    " kWh/kg H₂ — the 80 ktpa Clean Fuel case's own basis, where 100% of it comes from cracked ammonia and zero from NG. "+
+    "At your current ammonia feed of "+nf(D.nh3ratio,2)+" t/t, "+nf(n.excessNH3,3)+
+    " t/t sits above the 5.632 stoichiometric mass balance, supplying "+nf(n.nh3ForThermal/THERMAL_NH3_TOTAL*100,0)+
+    "% of that duty (the rest of the excess NH3 mass, and all its cost, still counts against the "+
+    "\"NH₃ lost to cracker yield\" tile). The remaining "+nf(100-n.nh3ForThermal/THERMAL_NH3_TOTAL*100,0)+
+    "% — "+nf(n.ngMW,1)+" MW, "+nf(n.ngKg/1e6,1)+" kt/y — has to come from purchased natural gas instead. "+
+    (n.overfeedNH3>1e-6 ? "<b>At this feed rate you are past 100% self-fuelling</b> — "+nf(n.overfeedNH3,3)+
+      " t/t of ammonia beyond even the Clean Fuel basis is not displacing any further NG; it is pure margin this model does not use. " : "")+
+    "<b>Move the \"Ammonia feed\" input above and this chart's split — and its readout below — updates with it.</b> "+
+    "Regasification has no equivalent line at all: its "+nf(lheatMW,1)+
+    " MW of heat comes from ambient seawater, free and carbon-free, entirely outside this fuel-cost/CO₂ accounting.";
+
+  /* --- D3: CI vs grid --- */
+  const xg=[]; for(let g=0;g<=1.2001;g+=0.02) xg.push(+g.toFixed(3));
+  lineChart("dc3","dt3",{
+    x:xg, xLabel:"Grid electricity carbon intensity, kg CO₂/kWh",
+    series:[{label:"LH₂",color:C.lh2,y:xg.map(g=>{const k=D.gridci;D.gridci=g;const v=dCiPerKg(l,false);D.gridci=k;return v;})},
+            {label:"NH₃",color:C.nh3,y:xg.map(g=>{const k=D.gridci;D.gridci=g;const v=dCiPerKg(n,true);D.gridci=k;return v;})}],
+    vlines:[{x:D.gridci,label:"your "+nf(D.gridci,2)}],
+    fmtX:v=>nf(v,2), fmtY:v=>nf(v,2), fmtTip:v=>nf(v,3)+" kg CO₂/kg",
+    fmtXTip:v=>nf(v,2)+" kg CO₂/kWh grid"
+  });
+  $("dr3").innerHTML =
+    "<b>The two lines do not cross anywhere in this range.</b> At a zero-carbon grid the gap is exactly "+
+    nf(D.ci,2)+" kg CO₂/kg H₂ — the cracker's direct combustion floor — and it only widens as the grid gets dirtier, "+
+    "because the cracker also draws "+nf(n.crackelec/l.regaselec,0)+"× more electricity than regas. "+
+    "<b>Decarbonising the grid narrows the electrical term on both sides equally in absolute terms, but proportionally hurts LH₂ less</b> — it never touches the cracker's direct emissions at all. "+
+    "At your "+nf(D.gridci,2)+" kg CO₂/kWh the split is "+nf(lCI,2)+" against "+nf(nCI,2)+" kg CO₂/kg H₂. "+
+    "Closing this gap would need the cracker to switch fuel modes — the Clean Fuel preset above removes the direct term entirely, at the cost of "+
+    "consuming "+nf(FIRING.cf.nh3ratio,2)+" t NH₃/t H₂ instead of "+nf(FIRING.ng.nh3ratio,2)+".";
+
+  /* --- D4: cost vs electricity price --- */
+  $("d-eb4").textContent = DCOSTUNIT==="mwh"
+    ? "Downstream cost, USD per MWh H₂ delivered (LHV basis)"
+    : "Downstream cost, USD per kg H₂ delivered";
+  $("d-ax4").innerHTML = DCOSTUNIT==="mwh"
+    ? "X · electricity price (USD/MWh)<br>Y · downstream cost (USD/MWh H₂)"
+    : "X · electricity price (USD/MWh)<br>Y · downstream cost (USD/kg H₂)";
+  const xp=[]; for(let p=0;p<=300.001;p+=5) xp.push(p);
+  lineChart("dc4","dt4",{
+    x:xp, xLabel:"Electricity price, USD/MWh",
+    series:[{label:"LH₂",color:C.lh2,y:xp.map(p=>{const k=D.elecprice;D.elecprice=p;const v=asCost(dCostPerKg(l,n).lh2);D.elecprice=k;return v;})},
+            {label:"NH₃",color:C.nh3,y:xp.map(p=>{const k=D.elecprice;D.elecprice=p;const v=asCost(dCostPerKg(l,n).nh3);D.elecprice=k;return v;})}],
+    vlines:[{x:D.elecprice,label:"your "+nf(D.elecprice,0)}],
+    fmtX:v=>"$"+nf(v,0), fmtY:v=>"$"+nf(v,DCOSTUNIT==="mwh"?0:2),
+    fmtTip:v=>"$"+nf(v,DCOSTUNIT==="mwh"?1:3)+(DCOSTUNIT==="mwh"?"/MWh":"/kg"),
+    fmtXTip:v=>"$"+nf(v,0)+"/MWh electricity"
+  });
+  const ngPart=n.ngThermalKwh/n.fed/1000*D.ngprice, nh3Part=n.nh3ExcessKg/n.fed*(D.nh3price/1000);
+  $("dr4").innerHTML =
+    "<b>Electricity price barely moves either line</b> — both routes draw modest power downstream, so this axis is nowhere near as decisive as it was for shipping. "+
+    "The NH₃ line sits above LH₂'s almost entirely because of two flat terms electricity price does not touch: $"+nf(ngPart,3)+
+    "/kg of natural gas at "+nf(D.ngprice*MMBTU_TO_MWH,2)+" USD/MMBtu (= $"+nf(D.ngprice,1)+"/MWh), and $"+nf(nh3Part,3)+
+    "/kg for the ammonia lost to cracker yield at "+nf(D.nh3price,0)+" USD/t. At your "+usd(D.elecprice,0)+
+    "/MWh the split is "+usd(cost.lh2,3)+" against "+usd(cost.nh3,3)+" per kg H₂ — or, on the same energy basis as the electricity and NG prices themselves, <b>$"+
+    nf(toMWh(cost.lh2),1)+"/MWh H₂ against $"+nf(toMWh(cost.nh3),1)+"/MWh H₂</b> (33.333 kWh/kg H₂ LHV). "+
+    "<b>This boundary excludes the ammonia feedstock itself</b> — only its cracking loss is charged — so it is not comparable to KBR's own LCOH table, which prices the whole NH₃ feed.";
+
+  /* --- D5: one tank, two cargoes --- */
+  rowBars("dc5","dt5",{rows:[
+    {label:"Carrier held", note:"tank inventory at "+nf(D.fill,0)+" % fill",
+     a:{v:l.inv,txt:nf(l.inv/1e6,2)+" kt LH₂"}, b:{v:n.inv,txt:nf(n.inv/1e6,1)+" kt NH₃"},
+     ratio:"NH₃ "+nf(n.inv/l.inv,1)+"× heavier"},
+    {label:"Hydrogen held", note:"H₂ contained (NH₃ ÷ 5.632)",
+     a:{v:l.invH2e,txt:nf(l.invH2e/1e6,2)+" kt H₂"}, b:{v:n.invH2e,txt:nf(n.invH2e/1e6,2)+" kt H₂-eq"},
+     ratio:"NH₃ "+nf(n.invH2e/l.invH2e,2)+"×"},
+    {label:"Days of cover", note:"at "+nf(D.h2ktpa)+" ktpa H₂ delivered",
+     a:{v:l.days,txt:nf(l.days,1)+" d"}, b:{v:n.days,txt:nf(n.days,1)+" d"},
+     ratio:"NH₃ "+nf(n.days/l.days,2)+"×"},
+    {label:"Boil-off", note:"as H₂-equivalent, per day",
+     a:{v:l.bog,txt:nf(l.bog/1000,2)+" t H₂/d"}, b:{v:n.bog/RATIO,txt:nf(n.bog/RATIO/1000,2)+" t H₂-eq/d"},
+     ratio:"LH₂ "+nf(l.bog/(n.bog/RATIO),2)+"×"},
+    {label:"Re-liquefaction power", note:"continuous, all 8,760 h",
+     a:{v:l.termMW*1000,txt:nf(l.termMW*1000,0)+" kW"}, b:{v:n.termMW*1000,txt:nf(n.termMW*1000,0)+" kW"},
+     ratio:"LH₂ "+nf(l.termMW/Math.max(n.termMW,1e-9),1)+"×"}
+  ]});
+  $("dr5").innerHTML = (DBASIS==="fixed"
+    ? "<b>Equal volume is not equal storage, again.</b> The same "+nf(D.tank)+" m³ holds "+num(l.invH2e/1e6,2)+
+      " kt of hydrogen as LH₂ and "+num(n.invH2e/1e6,2)+" kt as ammonia — "+num(n.invH2e/l.invH2e,2)+
+      "× more — in "+num(n.days,1)+" days of cover against "+num(l.days,1)+". "
+    : "<b>Equal cover is not equal steel.</b> To hold "+num(D.days,1)+" days each, the LH₂ terminal needs "+
+      num(l.vol,0)+" m³ against the ammonia terminal's "+num(n.vol,0)+" m³. ")+
+    "At matched "+nf(D.lbor,2)+" %/day boil-off rates, the LH₂ tank still loses "+num(l.bog/(n.bog/RATIO),1)+
+    "× more hydrogen a day, purely because it holds less hydrogen per cubic metre to begin with. "+
+    "Re-liquefaction power is "+num(l.termMW*1000,0)+" kW against "+num(n.termMW*1000,0)+
+    " kW — both a rounding error next to the process loads on the first chart, exactly as at the export terminal.";
+
+  /* --- ledger --- */
+  /* Fuel cost breakdown, per year -- each fuel's own unit price (USD/MWh of
+     that fuel's own energy content) alongside what it actually costs at your
+     current consumption. Ammonia's unit price is its USD/t feedstock price
+     converted to USD/MWh via NH3_LHV (5.167 kWh/kg == 5.167 MWh/t). */
+  const lhElecCostM = l.totalElecKwh/1000*D.elecprice/1e6;
+  const nhElecCostM = n.totalElecKwh/1000*D.elecprice/1e6;
+  const nhNgCostM = n.ngThermalKwh/1000*D.ngprice/1e6;
+  const nh3PriceMWh = D.nh3price/NH3_LHV;
+  const nhNh3CostM = n.nh3ExcessKg*D.nh3price/1000/1e6;
+  const lhTotalM = lhElecCostM;
+  const nhTotalM = nhElecCostM+nhNgCostM+nhNh3CostM;
+
+  const lhElecPerKg = l.totalElecKwh/l.fed/1000*D.elecprice;
+  const nhElecPerKg = n.totalElecKwh/n.fed/1000*D.elecprice;
+  const nhNgPerKg = n.ngThermalKwh/n.fed/1000*D.ngprice;
+  const nhNh3PerKg = n.nh3ExcessKg/n.fed*(D.nh3price/1000);
+
+  const drows=[
+    ["g","Delivery, per year"],
+    ["H₂ delivered at the battery limit", "<b>"+nf(l.fed/1e6,1)+" kt</b>", "<b>"+nf(n.fed/1e6,1)+" kt</b>"],
+    ["Carrier arriving", nf(l.fed/1e6,1)+" kt LH₂", nf(n.nh3In/1e6,1)+" kt NH₃ ("+nf(D.nh3ratio,2)+" t/t)"],
+    ["g","Conversion"],
+    ["Electricity", nf(D.regaselec,3)+" kWh/kg LH₂", nf(D.crackelec,3)+" kWh/kg H₂"],
+    ["Natural gas (derived from ammonia feed)", "—", nf(n.ngKg/n.fed,3)+" kg NG/kg H₂ = "+gwh(n.ngThermalKwh)+"/y thermal"],
+    ["Cracked ammonia, self-fuelled", "—", nf(n.nh3ForThermal,3)+" t NH₃/t H₂ = "+gwh(n.nh3ThermalKwh)+"/y thermal"],
+    ["Electrical power", "<b>"+nf(l.procMW,2)+" MW</b>", "<b>"+nf(n.procMW,2)+" MW</b>"],
+    ["Thermal power (fixed total)", "<b>"+nf(lheatMW,2)+" MW</b> (free)", "<b>"+nf(n.ngMW+n.nh3ThermalMW,2)+" MW</b> (not electrical)"],
+    ["g","Import terminal — "+(DBASIS==="days"? nf(D.days,1)+" days of cover each" : nf(D.tank)+" m³ each")],
+    ["Tank volume", nf(l.vol)+" m³", nf(n.vol)+" m³"],
+    ["Inventory held", nf(l.inv/1e6,2)+" kt LH₂", nf(n.inv/1e6,2)+" kt NH₃"],
+    ["Boil-off", nf(l.bog/1000,2)+" t H₂/d ("+nf(D.lbor,2)+" %/d)", nf(n.bog/1000,2)+" t NH₃/d ("+nf(D.nbor,2)+" %/d)"],
+    ["Re-liquefaction power", nf(l.termMW*1000,0)+" kW", nf(n.termMW*1000,0)+" kW"],
+    ["g","Fuel cost, per year"],
+    ["Electricity — cost", "$"+nf(lhElecCostM,2)+" M/y", "$"+nf(nhElecCostM,2)+" M/y", [
+      ["Consumption", gwh(l.totalElecKwh)+"/y", gwh(n.totalElecKwh)+"/y"],
+      ["× Unit price", "$"+nf(D.elecprice,0)+"/MWh", "$"+nf(D.elecprice,0)+"/MWh"],
+      ["= Cost", "$"+nf(lhElecCostM,2)+" M/y", "$"+nf(nhElecCostM,2)+" M/y"]
+    ]],
+    ["Natural gas — cost", "—", "$"+nf(nhNgCostM,2)+" M/y", [
+      ["Consumption (energy)", "—", gwh(n.ngThermalKwh)+"/y"],
+      ["Consumption (mass)", "—", nf(n.ngKg/1e6,2)+" kt/y"],
+      ["× Unit price", "—", "$"+nf(D.ngprice,1)+"/MWh"],
+      ["= Cost", "—", "$"+nf(nhNgCostM,2)+" M/y"]
+    ]],
+    ["Ammonia (excess/self-fuel) — cost", "—", "$"+nf(nhNh3CostM,2)+" M/y", [
+      ["Excess ammonia mass", "—", nf(n.nh3ExcessKg/1e6,2)+" kt/y"],
+      ["× Unit price", "—", "$"+nf(D.nh3price,0)+"/t (= $"+nf(nh3PriceMWh,1)+"/MWh LHV-equiv.)"],
+      ["= Cost", "—", "$"+nf(nhNh3CostM,2)+" M/y"]
+    ]],
+    ["Total fuel cost, per year", "<b>$"+nf(lhTotalM,2)+" M/y</b>", "<b>$"+nf(nhTotalM,2)+" M/y</b>", [
+      ["Electricity", "$"+nf(lhElecCostM,2)+" M/y", "$"+nf(nhElecCostM,2)+" M/y"],
+      ["Natural gas", "—", "$"+nf(nhNgCostM,2)+" M/y"],
+      ["Ammonia (excess/self-fuel)", "—", "$"+nf(nhNh3CostM,2)+" M/y"],
+      ["= Total", "<b>$"+nf(lhTotalM,2)+" M/y</b>", "<b>$"+nf(nhTotalM,2)+" M/y</b>"]
+    ]],
+    ["g","Totals, per kg H₂ delivered"],
+    ["Electrical power at the fence", "<b>"+nf(dElecMW(l),3)+" MW</b>", "<b>"+nf(dElecMW(n),3)+" MW</b>"],
+    ["Carbon intensity @ "+nf(D.gridci,2)+" kgCO₂/kWh grid", "<b>"+nf(lCI,3)+" kg CO₂/kg</b>", "<b>"+nf(nCI,3)+" kg CO₂/kg</b>", [
+      ["Direct (NG combustion)", "—", nf(D.ci,3)+" kg CO₂/kg"],
+      ["Indirect (electricity × grid CI)", nf(lCI,3)+" kg CO₂/kg", nf(nCI-D.ci,3)+" kg CO₂/kg"],
+      ["= Total", "<b>"+nf(lCI,3)+" kg CO₂/kg</b>", "<b>"+nf(nCI,3)+" kg CO₂/kg</b>"]
+    ]],
+    ["Cost @ "+nf(D.elecprice,0)+" USD/MWh elec.", "<b>$"+nf(cost.lh2,3)+"/kg</b>", "<b>$"+nf(cost.nh3,3)+"/kg</b>", [
+      ["Electricity", "$"+nf(lhElecPerKg,3)+"/kg", "$"+nf(nhElecPerKg,3)+"/kg"],
+      ["Natural gas", "—", "$"+nf(nhNgPerKg,3)+"/kg"],
+      ["Ammonia (excess/self-fuel)", "—", "$"+nf(nhNh3PerKg,3)+"/kg"],
+      ["= Total, per kg H₂", "<b>$"+nf(cost.lh2,3)+"/kg</b>", "<b>$"+nf(cost.nh3,3)+"/kg</b>"]
+    ]],
+    ["Same, per MWh H₂ (33.333 kWh/kg LHV)", "<b>$"+nf(toMWh(cost.lh2),1)+"/MWh</b>", "<b>$"+nf(toMWh(cost.nh3),1)+"/MWh</b>", [
+      ["Electricity", "$"+nf(toMWh(lhElecPerKg),1)+"/MWh", "$"+nf(toMWh(nhElecPerKg),1)+"/MWh"],
+      ["Natural gas", "—", "$"+nf(toMWh(nhNgPerKg),1)+"/MWh"],
+      ["Ammonia (excess/self-fuel)", "—", "$"+nf(toMWh(nhNh3PerKg),1)+"/MWh"],
+      ["= Total, per MWh H₂", "<b>$"+nf(toMWh(cost.lh2),1)+"/MWh</b>", "<b>$"+nf(toMWh(cost.nh3),1)+"/MWh</b>"]
+    ]]
+  ];
+  $("d-ledger").innerHTML = ledgerHTML(drows,"d");
+}
+
+/* ---------- expandable ledger rows (shared by any sheet's ledger) ----------
+   Row = [label, lh2, nh3] or [label, lh2, nh3, detailRows] where detailRows
+   is [[sublabel, lh2, nh3], ...]. Rows with a 4th element get a clickable
+   chevron that reveals the breakdown as indented sub-rows. */
+function ledgerHTML(rows, idPrefix){
+  let html = '<thead><tr><th>Metric</th><th>LH₂ route</th><th>NH₃ route</th></tr></thead><tbody>';
+  rows.forEach((r,i)=>{
+    if (r[0]==="g"){ html += '<tr class="group"><td colspan="3">'+r[1]+'</td></tr>'; return; }
+    const detail = r[3];
+    if (detail && detail.length){
+      const gid = idPrefix+"-lg"+i;
+      html += '<tr class="ledger-toggle" data-group="'+gid+'"><td><span class="chevron">▸</span> '+r[0]+
+        '</td><td class="n">'+r[1]+'</td><td class="n">'+r[2]+'</td></tr>';
+      detail.forEach(sr=>{
+        html += '<tr class="ledger-detail" data-group="'+gid+'" hidden><td>'+sr[0]+
+          '</td><td class="n">'+sr[1]+'</td><td class="n">'+sr[2]+'</td></tr>';
+      });
+    } else {
+      html += '<tr><td>'+r[0]+'</td><td class="n">'+r[1]+'</td><td class="n">'+r[2]+'</td></tr>';
+    }
+  });
+  return html+'</tbody>';
+}
+
+/* ---------- wiring: downstream sheet ---------- */
+Object.keys(DDEF).forEach(k=>{ const e=$("id-"+k); if(e) e.addEventListener("input",renderDown); });
+syncPair2("id-gridci","rd-gridci"); syncPair2("id-elecprice","rd-elecprice");
+function syncPair2(n,r){ const a=$(n), b=$(r); if(!a||!b) return;
+  a.addEventListener("input",()=>{b.value=a.value; renderDown();});
+  b.addEventListener("input",()=>{a.value=b.value; renderDown();}); }
+function applyFiring(id,mode){
+  const f=FIRING[mode];
+  $("id-crackelec").value=f.crackelec; $("id-nh3ratio").value=f.nh3ratio;
+  $("id-ci").value=f.ci;
+  ["dp-ng","dp-50","dp-cf"].forEach(x=>$(x).setAttribute("aria-pressed",String(x===id)));
+  renderDown();
+}
+$("dp-ng").addEventListener("click",()=>applyFiring("dp-ng","ng"));
+$("dp-50").addEventListener("click",()=>applyFiring("dp-50","h50"));
+$("dp-cf").addEventListener("click",()=>applyFiring("dp-cf","cf"));
+$("dp-reset").addEventListener("click",()=>{
+  Object.keys(DDEF).forEach(k=>{ const e=$("id-"+k); if(e) e.value=DDEF[k]; });
+  $("rd-gridci").value=DDEF.gridci; $("rd-elecprice").value=DDEF.elecprice;
+  DBASIS="fixed"; $("dt-fixed").setAttribute("aria-pressed","true"); $("dt-days").setAttribute("aria-pressed","false");
+  NGUNIT="mmbtu"; $("ngu-mmbtu").setAttribute("aria-pressed","true"); $("ngu-mwh").setAttribute("aria-pressed","false");
+  DCOSTUNIT="kg"; $("dc-kg").setAttribute("aria-pressed","true"); $("dc-mwh").setAttribute("aria-pressed","false");
+  ["dp-ng","dp-50","dp-cf"].forEach(x=>$(x).setAttribute("aria-pressed",String(x==="dp-ng")));
+  renderDown(); });
+segPair("dt-fixed","dt-days",()=>{DBASIS="fixed"; renderDown();},()=>{DBASIS="days"; renderDown();});
+segPair("dc-kg","dc-mwh",()=>{DCOSTUNIT="kg"; renderDown();},()=>{DCOSTUNIT="mwh"; renderDown();});
+/* NG price unit toggle -- converts the displayed number so the underlying
+   price stays the same, rather than just relabelling it. */
+function setNgUnit(unit){
+  if (unit===NGUNIT) return;
+  const inp=$("id-ngprice"), v=parseFloat(inp.value);
+  if (isFinite(v)) inp.value = (unit==="mwh" ? v/MMBTU_TO_MWH : v*MMBTU_TO_MWH).toFixed(2);
+  NGUNIT=unit;
+  $("ngu-mmbtu").setAttribute("aria-pressed",String(unit==="mmbtu"));
+  $("ngu-mwh").setAttribute("aria-pressed",String(unit==="mwh"));
+  renderDown();
+}
+$("ngu-mmbtu").addEventListener("click",()=>setNgUnit("mmbtu"));
+$("ngu-mwh").addEventListener("click",()=>setNgUnit("mwh"));
+
 /* ---------- sheet switching ---------- */
 function showSheet(which){
-  const up = which==="up";
-  $("sh-up").hidden = !up;  $("sh-ship").hidden = up;
-  $("tab-up").setAttribute("aria-selected",String(up));
-  $("tab-ship").setAttribute("aria-selected",String(!up));
+  $("sh-up").hidden = which!=="up";
+  $("sh-ship").hidden = which!=="ship";
+  $("sh-down").hidden = which!=="down";
+  $("tab-up").setAttribute("aria-selected",String(which==="up"));
+  $("tab-ship").setAttribute("aria-selected",String(which==="ship"));
+  $("tab-down").setAttribute("aria-selected",String(which==="down"));
   window.scrollTo({top:0,behavior:"auto"});
 }
 $("tab-up").addEventListener("click",()=>showSheet("up"));
 $("tab-ship").addEventListener("click",()=>showSheet("ship"));
+$("tab-down").addEventListener("click",()=>showSheet("down"));
 
 render();
 renderUp();
+renderDown();
 </script>
+
+</body></html>
