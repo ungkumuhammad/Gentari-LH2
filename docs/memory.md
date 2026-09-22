@@ -1217,3 +1217,74 @@ part of this replication. The Gentari-ammoniacracker repo's own
 it is that repo's own deliverable tooling, out of scope for this repo's
 `src/lh2/` library; port specific formulas by hand if/when needed rather
 than importing the module wholesale.
+
+---
+
+## Downstream sheet built — regas vs. cracker, third segment of the artifact (2026-09-22)
+
+Added **Segment 3 — Downstream** to `docs/reports/lh2-vs-nh3-shipping-studies.html`
+("Two Ways to Move Hydrogen"), completing the third leg of the whole-chain
+comparison the shipping sheet's "NEXT SESSION" note flagged back on 2026-09-08.
+Boundary: carrier at the discharge arm → H₂ ready for end-use. LH₂ regas uses
+the existing KHI-cited figures (`data/properties/regas.csv`); the ammonia
+cracker side now uses **real KBR H2ACT® numbers** pulled from the licensor
+packages replicated earlier this session (`kbr-cracker-johorhub`,
+`kbr-gentari-hmb-001`) instead of the old `chain-energy-defaults.csv`
+placeholders — electricity (0.29 kWh/kg H₂), ammonia feed ratio (6.35 t/t),
+and direct CI (0.80 kg CO₂/kg H₂) at KBR's 80 ktpa, 100% NG case, with a
+firing-mode switch (100% NG / 50% NG / Clean Fuel) swapping in KBR's own
+numbers for each mode.
+
+**Methodology note worth carrying into any future edit of this sheet:** the
+cracker's natural-gas duty is *derived*, not read directly from KBR. The
+80 ktpa Clean Fuel case (7.20 t NH₃/t H₂, zero external NG) is read as a
+100%-self-fuelled anchor — its excess ammonia over the 5.632 stoichiometric
+ratio (1.568 t NH₃-equiv/t H₂) is taken as the *entire* cracker thermal duty,
+converted via NH₃'s LHV (5.167 kWh/kg). Every other ammonia-feed value splits
+that same fixed duty between purchased NG and self-fuelled cracked ammonia —
+so moving the "Ammonia feed" input now moves the NG requirement too (the
+original build read NG straight off the 12 ktpa heat-and-material-balance's
+mass ratio, independent of the ammonia-feed input, which meant editing one
+didn't move the other — flagged by the user and fixed by this standardised-duty
+approach). Implied NG duty at the 100%-NG feed rate is now ~4.4 kWh/kg H₂,
+about 11% above the value read directly off the 12 ktpa HMB (~3.96 kWh/kg) —
+plausibly real (KBR's own disclosed efficiency differs slightly by firing
+mode) but not independently re-verified; noted in the sheet's own gaps list.
+
+Also added: NG price entry with a unit toggle (USD/MMBtu ↔ USD/MWh, converts
+the displayed number rather than relabelling it); a USD/MWh cost-basis toggle
+alongside the existing USD/kg one, so the cracker's electricity + NG + ammonia
+cost stack is directly comparable to the raw commodity prices; and expandable
+breakdown rows (click to reveal) on the downstream ledger's composite cost and
+CI lines — electricity/NG/ammonia cost, total fuel cost, carbon intensity,
+and both cost-per-kg and cost-per-MWh totals now show their arithmetic, not
+just the result.
+
+**Known JS pitfall hit and fixed during this build:** a `const` (`gwh`,
+the GWh formatter) was declared partway through `renderDown()` but used
+earlier in the same function — harmless-looking in isolation, but JS's
+temporal dead zone throws on that, silently killing every study after the
+point of first use. Verified now by actually executing `render()`,
+`renderUp()`, and `renderDown()` against a stub DOM in Node before every
+publish, not just checking `node --check` syntax — the syntax check alone
+would not have caught this class of bug.
+
+**Open, not yet done:** the user separately asked for (1) a consolidated
+first "Inputs" sheet holding every parameter across all three assessments,
+with shared parameters (H₂ chain capacity, electricity price, grid CI,
+LH₂/NH₃ density, tank basis/volume, terminal BOR, BOG re-liquefaction SEC)
+unified into single canonical fields instead of three separate copies, and
+(2) a final "Overall Value Chain" sheet synthesising Upstream + Shipping +
+Downstream into one LH₂-vs-NH₃ verdict. This is a substantial restructuring
+(new shared-state plumbing across all three sheets' independent `V`/`U`/`D`
+render systems) that was **in progress but not finished or published** when
+a "merge to main" instruction arrived mid-session — what's merged here is the
+last fully tested, working state (the downstream sheet plus the fixes above),
+not that restructuring. The in-progress work was not carried forward; the
+Inputs/Overall sheets still need to be (re)built from scratch in a future
+session. Two data-reconciliation decisions to carry into that work: upstream's
+old placeholders (`$50/MWh` electricity, `0.04%/day` ammonia terminal BOR)
+should be retired in favour of the downstream sheet's more specific figures
+(`$140/MWh` KBR-cited, `0.1%/day` matched to LH₂ at user direction) once
+inputs are unified, per the same "flag the disagreement, don't silently
+pick one" principle used elsewhere in this repo.
