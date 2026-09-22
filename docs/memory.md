@@ -4,7 +4,7 @@
 > Updated every session. `CLAUDE.md` points here — read this at the start of
 > any session where the user references prior work or continuing a task.
 >
-> Last updated: 2026-09-08
+> Last updated: 2026-09-22
 
 ---
 
@@ -1158,3 +1158,62 @@ sheet which was electricity-only. The 3% process loss and 0.5 kWh/kg PSA/BOP
 figures are placeholders pending the internal NH3 dataset (D4) — same
 standing caveat pattern as upstream. No CapEx/OpEx for either regas or
 cracking is in the repo.
+
+---
+
+## Data Provenance — Ammonia cracker workstream replicated (2026-09-22)
+
+At the user's request, `Licensor/`, `tolling/`, and `tcoedatabase/` were
+replicated verbatim from `ungkumuhammad/Gentari-ammoniacracker` at commit
+`300a9153507e7f35d13903a4562cf05e02cfd9d8` (branch
+`claude/tender-bardeen-6me9iz`) into
+`sources/raw/Project/Gentari Ammonia Cracker Workstream/` in this repo,
+following the same `sources/raw/Project/<source>/` convention already used
+for the Kawasaki LH2 files. Source tree SHAs: `Licensor` =
+`bb69e83a2348d82796b373de0d2fb139c4ae2ad1`, `tcoedatabase` =
+`2db8e3679f4c6d8c28c2c763e0a36a6a7c07c8de`, `tolling` =
+`51c661f546248e23034767dceb8228aecf876d67`. This is a one-time snapshot — if
+either repo's copy is edited independently afterward, the two will diverge;
+don't assume they're in sync without checking.
+
+**Why:** this is explicitly the basis for the next deliverable flagged
+above — the downstream **regas (LH2) vs. cracker (NH3)** comparison. It
+replaces several of that section's `[ESTIMATE]`/`[ASSUMPTION]` cracker-side
+placeholders with real licensor data:
+
+- **Casale** (MACH2™, adiabatic + top-fired furnace, axial-radial reactor),
+  **Duiker** (AHC — SCO combustor + convective reactor + PSA, incl. an
+  indicative €2.7M construction + €8.50/t H₂ licence fee), **KBR** (H₂ACT®,
+  down-fired furnace — general package plus the Johor/Gentari-specific
+  12/24/68/80 kTPA proposal series I.A–I.I, three firing modes 100% NG /
+  50-50 / 100% cracked NH₃), and **Technip** (Hynext, packaged as a Nippon
+  Sanso/LBC Netherlands tolling offer) licensor technical packages.
+- **Vopak** (+ Linde, Antwerp) and **VTTI** (Rotterdam/Antwerp) tolling/
+  offtake commercial packages — take-or-pay tariff structures, both
+  indicative/non-binding (Class III–V, ±40%).
+- Gentari TCOE's own **`WIP_Ammonia_Cracker_Database.md`** — the licensor
+  comparison matrix, tolling model comparison, and the RFNBO
+  (~28.2 gCO₂e/MJ derived ceiling) / Korea KEEI (<4.0 kgCO₂/kgH₂) clean-
+  hydrogen screening section.
+
+All 18 documents were registered in `data/references.csv` (ids
+`casale-cracker-johorhub`, `duiker-cracker-johorhub`, `kbr-cracker-johorhub`,
+`kbr-gentari-*` ×8, `technip-nippon-sanso-tolling`, `vopak-cracker-tolling`,
+`vtti-cracker-tolling`, `gentari-tcoe-ammonia-cracker-db`), tier
+`proprietary`, each carrying forward the accuracy-class caveats
+(Class III–V, indicative/non-binding where the source says so) per this
+repo's §4 no-fabrication rule.
+
+**Not yet done — flag for the downstream session:** the figures above are
+registered as *sources*, not yet *extracted* into `data/properties/` or
+`data/costs/` tables, and `chain-energy-defaults.csv` node F2 (NH₃ cracking)
+still carries the old `[ESTIMATE]` placeholders. Pulling specific numbers
+(cracker CAPEX/OPEX, NG duty, H₂ yield, CI by firing mode) out of these
+licensor packages into the modeling tables — reconciling any
+discrepancies between licensors rather than silently picking one — is the
+natural first step of the regas-vs-cracker work, not something done as
+part of this replication. The Gentari-ammoniacracker repo's own
+`tools/cracker_model/` (Python Excel-model builder) was **not** copied —
+it is that repo's own deliverable tooling, out of scope for this repo's
+`src/lh2/` library; port specific formulas by hand if/when needed rather
+than importing the module wholesale.
