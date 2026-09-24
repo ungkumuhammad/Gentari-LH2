@@ -1,0 +1,427 @@
+<title>LH₂ Boil-off Bunker Check</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Source+Sans+3:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#f4f6f7; --surface:#ffffff; --ink:#0f1a20; --ink-2:#44545d; --muted:#6f7f88;
+  --rule:#d8e0e4; --grid:#e8edf0; --accent:#0e6a86;
+  --s1:#2a78d6; --s1-fill:rgba(42,120,214,.14); --s2:#eb6834; --ref:#44545d;
+  --good:#1f7a4a; --good-bg:#e3f3ea; --warn:#9a5b00; --warn-bg:#fdf0da;
+  --display:"Barlow Semi Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Source Sans 3",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0c1316; --surface:#131c20; --ink:#e7eef1; --ink-2:#a8b7be; --muted:#7f8f97;
+    --rule:#263439; --grid:#1c282d; --accent:#56b6d3;
+    --s1:#3987e5; --s1-fill:rgba(57,135,229,.20); --s2:#d95926; --ref:#a8b7be;
+    --good:#6fd29c; --good-bg:#12291d; --warn:#f0b454; --warn-bg:#2d2210;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0c1316; --surface:#131c20; --ink:#e7eef1; --ink-2:#a8b7be; --muted:#7f8f97;
+  --rule:#263439; --grid:#1c282d; --accent:#56b6d3;
+  --s1:#3987e5; --s1-fill:rgba(57,135,229,.20); --s2:#d95926; --ref:#a8b7be;
+  --good:#6fd29c; --good-bg:#12291d; --warn:#f0b454; --warn-bg:#2d2210;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.55 var(--body);margin:0}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:28px 56px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;letter-spacing:.005em}
+h1{font-size:clamp(28px,4vw,40px);font-weight:700;line-height:1.1}
+h2{font-size:24px;font-weight:600;line-height:1.2}
+h3{font-size:17px;font-weight:600}
+p{margin:0;max-width:68ch}
+.eyebrow{font:500 12px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.lede{color:var(--ink-2);font-size:16px}
+.boundary{display:flex;flex-wrap:wrap;gap:6px 18px;font:400 12.5px/1.4 var(--mono);color:var(--muted);border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding-block:10px}
+.boundary b{color:var(--ink-2);font-weight:500}
+header{display:grid;gap:14px;margin-bottom:28px}
+.layout{display:grid;grid-template-columns:300px minmax(0,1fr);gap:28px;align-items:start}
+@media (max-width:900px){.layout{grid-template-columns:1fr}}
+aside{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);background:var(--surface);border:1px solid var(--rule);border-radius:8px;padding:16px;display:grid;gap:14px;max-height:calc(100vh - 24px);overflow:auto}
+@media (max-width:900px){aside{position:static;max-height:none}}
+fieldset{border:0;margin:0;padding:0;display:grid;gap:8px}
+legend{font:600 13px/1 var(--display);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);padding:0;margin-bottom:6px}
+.field{display:grid;grid-template-columns:1fr 92px;align-items:center;gap:8px}
+.field label{font-size:13.5px;color:var(--ink-2);line-height:1.25}
+.field label small{display:block;color:var(--muted);font-size:11.5px}
+input[type=number]{width:100%;font:500 13.5px var(--mono);color:var(--ink);background:var(--bg);border:1px solid var(--rule);border-radius:5px;padding:5px 7px;text-align:right;font-variant-numeric:tabular-nums}
+input[type=number]:focus-visible,button:focus-visible,input[type=range]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.hr{height:1px;background:var(--rule)}
+button.reset{font:600 13px var(--body);color:var(--accent);background:none;border:1px solid var(--rule);border-radius:5px;padding:6px 10px;cursor:pointer}
+main{display:grid;gap:36px;min-width:0}
+section{display:grid;gap:14px;min-width:0}
+.card{background:var(--surface);border:1px solid var(--rule);border-radius:8px;padding:16px}
+.verdict{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:8px;background:var(--good-bg);color:var(--ink)}
+.verdict .pill{flex:none;font:600 12px/1 var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--good);border:1.5px solid currentColor;border-radius:99px;padding:5px 9px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.tile{background:var(--surface);border:1px solid var(--rule);border-radius:8px;padding:12px 14px;display:grid;gap:4px;align-content:start}
+.tile .k{font-size:12.5px;color:var(--muted);line-height:1.3}
+.tile .v{font:600 24px/1.1 var(--display);font-variant-numeric:tabular-nums}
+.tile .v small{font:500 13px var(--body);color:var(--ink-2)}
+.tile .n{font-size:12px;color:var(--ink-2);line-height:1.35}
+.tbl{overflow-x:auto;border:1px solid var(--rule);border-radius:8px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:640px}
+th,td{padding:7px 10px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
+th{font:600 12px/1.25 var(--body);color:var(--ink-2);background:var(--bg);vertical-align:bottom;white-space:normal}
+td{font-family:var(--mono);font-variant-numeric:tabular-nums}
+td:first-child,th:first-child{text-align:left}
+tr.cross td{background:var(--s1-fill)}
+td.ok{color:var(--good);font-family:var(--body);font-weight:600}
+td.bad{color:var(--warn);font-family:var(--body);font-weight:600}
+td.neg{color:var(--muted)}
+.chart{position:relative}
+.chart svg{width:100%;height:auto;display:block;overflow:visible}
+.chart svg text{font-family:var(--mono);font-size:11px;fill:var(--muted)}
+.chart svg .lbl{fill:var(--ink-2);font-family:var(--body);font-size:12px}
+.chart svg .lblb{fill:var(--ink);font-family:var(--body);font-size:12.5px;font-weight:600}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--ink-2)}
+.legend span{display:inline-flex;align-items:center;gap:7px}
+.legend i{display:inline-block;width:18px;height:0;border-top:2.5px solid;border-radius:2px}
+.legend i.dash{border-top-style:dashed}
+.legend i.box{height:10px;border:0;border-radius:2px}
+.tip{position:absolute;pointer-events:none;background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:8px 10px;font-size:12.5px;line-height:1.45;box-shadow:0 4px 14px rgba(0,0,0,.12);min-width:170px;z-index:5}
+.tip b{font-family:var(--mono);font-weight:500}
+.tip .row{display:flex;justify-content:space-between;gap:14px}
+.tip .sw{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px}
+.seg{display:inline-flex;border:1px solid var(--rule);border-radius:6px;overflow:hidden;background:var(--surface)}
+.seg button{font:600 13px var(--body);color:var(--ink-2);background:none;border:0;padding:7px 12px;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--accent);color:var(--surface)}
+.slider{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center}
+.slider label{font-weight:600;font-size:14px}
+.slider output{font:600 18px var(--display);font-variant-numeric:tabular-nums;min-width:90px;text-align:right}
+input[type=range]{width:100%;accent-color:var(--s1)}
+.note{font-size:13.5px;color:var(--ink-2)}
+.callout{border-left:3px solid var(--warn);background:var(--warn-bg);padding:10px 14px;border-radius:0 6px 6px 0;font-size:13.5px}
+.callout b{color:var(--warn)}
+ul.caveats{margin:0;padding-left:18px;display:grid;gap:6px;font-size:13.5px;color:var(--ink-2);max-width:80ch}
+.formula{font:13px/1.7 var(--mono);color:var(--ink-2);background:var(--bg);border:1px solid var(--rule);border-radius:6px;padding:10px 12px;overflow-x:auto;white-space:pre}
+.tag{font:500 11px var(--mono);color:var(--warn)}
+.cite{font:500 11px var(--mono);color:var(--accent)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+<header>
+  <span class="eyebrow">Shipping segment only · 40,000 m³ LH₂ vs NH₃ carrier</span>
+  <h1>LH₂ Boil-off Bunker Check</h1>
+  <p class="lede">Does the LH₂ carrier's boil-off cover its own fuel bill, and at what hydrogen price does burning cargo H₂ lose to an ammonia carrier running 95&nbsp;% on ammonia fuel?</p>
+  <div class="boundary">
+    <span><b>Boundary</b> LH₂/NH₃ loaded → discharged, laden sea day</span>
+    <span><b>Basis</b> per ship-day (t/d, kg/d, USD/d)</span>
+    <span><b>Energy</b> LHV basis</span>
+    <span><b>Currency</b> USD, prices are user inputs (no cost year asserted)</span>
+  </div>
+</header>
+
+<div class="layout">
+<aside aria-label="Inputs">
+  <fieldset>
+    <legend>Common</legend>
+    <div class="field"><label for="vol">Cargo capacity, m³<small>both ships · user</small></label><input id="vol" type="number" step="1000" value="40000"></div>
+    <div class="field"><label for="lhvV">VLSFO LHV, MJ/kg<small>implied by your table · assumption</small></label><input id="lhvV" type="number" step="0.1" value="41.0"></div>
+    <div class="field"><label for="pV">VLSFO price, USD/t<small>assumption · edit</small></label><input id="pV" type="number" step="10" value="600"></div>
+  </fieldset>
+  <div class="hr"></div>
+  <fieldset>
+    <legend style="color:var(--s1)">LH₂ carrier (no reliq)</legend>
+    <div class="field"><label for="borL">Boil-off rate, %/day<small>user</small></label><input id="borL" type="number" step="0.01" value="0.40"></div>
+    <div class="field"><label for="dutyL">Fuel demand, t/d VLSFO-eq<small>user</small></label><input id="dutyL" type="number" step="0.5" value="39"></div>
+    <div class="field"><label for="rhoL">LH₂ density, kg/m³<small>repo · needs source</small></label><input id="rhoL" type="number" step="0.1" value="70.8"></div>
+    <div class="field"><label for="fillL">Fill, % of capacity<small>100 matches your table</small></label><input id="fillL" type="number" step="1" value="100"></div>
+    <div class="field"><label for="lhvH">H₂ LHV, MJ/kg<small>repo · needs source</small></label><input id="lhvH" type="number" step="0.1" value="120"></div>
+    <div class="field"><label for="pilotL">Pilot VLSFO on H₂, % energy<small>0 matches your table</small></label><input id="pilotL" type="number" step="1" value="0"></div>
+  </fieldset>
+  <div class="hr"></div>
+  <fieldset>
+    <legend style="color:var(--s2)">NH₃ carrier (with reliq)</legend>
+    <div class="field"><label for="borN">Boil-off rate, %/day<small>user · re-liquefied, no loss</small></label><input id="borN" type="number" step="0.01" value="0.15"></div>
+    <div class="field"><label for="dutyN">Fuel demand, t/d VLSFO-eq<small>user · incl. reliq power</small></label><input id="dutyN" type="number" step="0.5" value="30"></div>
+    <div class="field"><label for="shareN">NH₃ share of fuel energy, %<small>user · rest is VLSFO pilot</small></label><input id="shareN" type="number" step="1" value="95"></div>
+    <div class="field"><label for="lhvN">NH₃ LHV, MJ/kg<small>repo · estimate</small></label><input id="lhvN" type="number" step="0.1" value="18.6"></div>
+    <div class="field"><label for="rhoN">NH₃ density, kg/m³<small>repo · estimate</small></label><input id="rhoN" type="number" step="1" value="682"></div>
+    <div class="field"><label for="pN">NH₃ fuel price, USD/t<small>assumption · edit</small></label><input id="pN" type="number" step="10" value="600"></div>
+  </fieldset>
+  <button class="reset" id="reset" type="button">Reset to your basis</button>
+</aside>
+
+<main>
+<!-- 1 -->
+<section id="check">
+  <span class="eyebrow">Check 1 · your surplus column</span>
+  <h2>Your surplus numbers are correct</h2>
+  <div class="verdict" id="verdict"></div>
+  <div class="formula" id="formula"></div>
+  <div class="tbl"><table id="tbl"></table></div>
+  <p class="note">Your figures appear in grey beside each recomputed value. The shaded row is the first rate in your table above the crossover.</p>
+</section>
+
+<!-- 2 -->
+<section id="cross">
+  <span class="eyebrow">Chart 1 · where boil-off becomes surplus</span>
+  <h2 id="crossTitle">Boil-off covers the full fuel demand above 0.47 %/day</h2>
+  <div class="card chart" id="c1wrap">
+    <div class="legend" id="c1leg"></div>
+    <svg id="c1" viewBox="0 0 720 320" role="img" aria-label="H2 boil-off versus H2 needed to cover fuel demand, by boil-off rate"></svg>
+  </div>
+  <div class="card chart" id="c2wrap">
+    <div class="legend" id="c2leg"></div>
+    <svg id="c2" viewBox="0 0 720 260" role="img" aria-label="VLSFO top-up needed by boil-off rate"></svg>
+  </div>
+  <div class="tiles" id="t1"></div>
+</section>
+
+<!-- 3 -->
+<section id="price">
+  <span class="eyebrow">Assessment · H₂ price</span>
+  <h2 id="priceTitle">At what H₂ price does burning boil-off still beat the ammonia ship?</h2>
+  <p class="note">The LH₂ carrier has no re-liquefaction, so every kilogram that boils off leaves the cargo. It is either burned in the engine or, above the crossover, sent to the GCU or vented. Its cost is the hydrogen's sale value. The ammonia carrier re-liquefies its boil-off and buys ammonia fuel plus a 5&nbsp;% VLSFO pilot.</p>
+  <div class="card" style="display:grid;gap:14px">
+    <div class="slider">
+      <label for="pH">H₂ price</label>
+      <input id="pH" type="range" min="0" max="10" step="0.05" value="4">
+      <output id="pHout" for="pH">4.00 USD/kg</output>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+      <span class="note">Compare on</span>
+      <div class="seg" role="group" aria-label="Comparison basis">
+        <button type="button" id="bDay" aria-pressed="true">Per ship-day</button>
+        <button type="button" id="bH2" aria-pressed="false">Per tonne H₂ carried</button>
+      </div>
+    </div>
+  </div>
+  <div class="tiles" id="t2"></div>
+  <div class="card chart" id="c3wrap">
+    <div class="legend" id="c3leg"></div>
+    <svg id="c3" viewBox="0 0 720 320" role="img" aria-label="Daily fuel cost versus H2 price for both carriers"></svg>
+  </div>
+  <div class="callout" id="basisNote"></div>
+  <h3>How the breakeven moves with the ammonia fuel price</h3>
+  <div class="card chart" id="c4wrap">
+    <div class="legend" id="c4leg"></div>
+    <svg id="c4" viewBox="0 0 720 300" role="img" aria-label="Breakeven H2 price versus ammonia fuel price"></svg>
+  </div>
+</section>
+
+<!-- 4 -->
+<section id="method">
+  <span class="eyebrow">Method, assumptions and gaps</span>
+  <h2>What the numbers rest on</h2>
+  <div class="formula" id="method-f"></div>
+  <ul class="caveats">
+    <li><b>Energy parity.</b> One MJ of H₂ is assumed to displace one MJ of VLSFO in the engine (LHV basis, equal engine efficiency on either fuel). <span class="tag">[ASSUMPTION]</span> A dual-fuel engine's efficiency on gas and on oil is not held in the repo.</li>
+    <li><b>Pilot fuel.</b> Your table lets VLSFO fall to zero. Dual-fuel engines normally keep a small liquid pilot. Set a pilot % in the inputs to see the crossover move right. No sourced pilot figure for the KHI engine is held. <span class="tag">[ESTIMATE – needs source]</span></li>
+    <li><b>VLSFO LHV of 41.0 MJ/kg</b> is back-calculated from your table (it reproduces your VLSFO column to the second decimal). The repo's existing shipping study uses 40.2 MJ/kg <span class="tag">[ESTIMATE]</span>. At 40.2 the crossover moves to about 0.461 %/day.</li>
+    <li><b>Full cargo, laden leg.</b> Boil-off is taken on 100 % of 40,000 m³. With the repo's 98 % fill the boil-off is 2 % lower and the crossover about 0.480 %/day. The ballast leg (heel only) is not modelled.</li>
+    <li><b>NH₃ carrier.</b> The 0.15 %/day boil-off is re-liquefied back to cargo, so it causes no cargo loss. Reliquefaction power is assumed to sit inside the 30 t/d demand. <span class="tag">[ASSUMPTION]</span></li>
+    <li><b>Prices.</b> VLSFO and NH₃ prices default to USD 600/t as placeholders <span class="tag">[ASSUMPTION]</span>. They are not market quotes. Replace them with your corridor prices. The H₂ breakeven follows directly from them (Chart 4).</li>
+    <li><b>Not included:</b> carbon price or FuelEU penalties, N₂O slip from ammonia combustion, and the CO₂e of vented surplus H₂. All three would shift the breakeven. None has a sourced value in this repo.</li>
+  </ul>
+  <h3>Sources</h3>
+  <ul class="caveats">
+    <li>User inputs (2026-09-24): boil-off rates 0.40 / 0.15 %/day, fuel demand 39 / 30 t/d, 40,000 m³ both ships, 95/5 NH₃/VLSFO energy split, LH₂ carrier without and NH₃ carrier with reliquefaction.</li>
+    <li><span class="cite">kawasaki-2026-questionnaire</span> KHI reply: 40,000 m³ carrier under construction; boil-off burned as fuel in a dual-fuel engine; no onboard reliquefaction; GCU burns excess boil-off.</li>
+    <li><span class="cite">data/properties/lh2-properties.csv</span> H₂ LHV 120 MJ/kg, LH₂ density 70.8 kg/m³ (tagged needs-source, pending NIST citation).</li>
+    <li><span class="cite">data/carriers/chain-energy-defaults.csv</span> NH₃ LHV 18.6 MJ/kg, NH₃ density 682 kg/m³, H₂ mass fraction in NH₃ 17.75 % (stoichiometric), all tagged estimate or assumption.</li>
+  </ul>
+</section>
+</main>
+</div>
+</div>
+
+<div class="tip" id="tip" hidden></div>
+
+<script>
+const $=id=>document.getElementById(id);
+const IDS=["vol","lhvV","pV","borL","dutyL","rhoL","fillL","lhvH","pilotL","borN","dutyN","shareN","lhvN","rhoN","pN"];
+const DEF={};IDS.forEach(k=>DEF[k]=$(k).value);
+const H2_IN_NH3=0.1775; // data/carriers/chain-energy-defaults.csv (stoichiometric, ASSUMPTION)
+const USER=[[0.20,22.42,5664.00,null],[0.25,18.28,7080.00,null],[0.30,14.13,8496.00,null],[0.35,9.99,9912.00,null],[0.40,5.84,11328.00,null],[0.45,1.70,12744.00,null],[0.46,0.87,13027.20,null],[0.47,0.04,13310.40,null],[0.48,-0.79,13593.60,268.60],[0.49,-1.62,13876.80,551.80],[0.50,-2.44,14160.00,835.00],[0.55,-6.59,15576.00,2251.00],[0.60,-10.73,16992.00,3667.00]];
+let basis="day";
+
+const f=(x,d=0)=>(x==null||!isFinite(x))?"–":x.toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d});
+function P(){const p={};IDS.forEach(k=>p[k]=parseFloat($(k).value)||0);p.pH=parseFloat($("pH").value);return p}
+
+function model(p,bor){
+  const cargoL=p.vol*p.fillL/100*p.rhoL;              // kg LH2 on board
+  const b=(bor??p.borL);
+  const bog=cargoL*b/100;                              // kg/d
+  const hFull=p.dutyL*1000*p.lhvV/p.lhvH;              // kg/d H2 to cover whole duty
+  const hCap=hFull*(1-p.pilotL/100);                   // kg/d engine can take
+  const burned=Math.min(bog,hCap), surplus=Math.max(0,bog-hCap);
+  const vlsfoSigned=p.dutyL-bog*p.lhvH/p.lhvV/1000;    // t/d, your table's convention
+  const vlsfo=p.dutyL-burned*p.lhvH/p.lhvV/1000;       // t/d actually bought
+  const borStar=hCap/cargoL*100;
+  const cargoN=p.vol*p.rhoN;                           // kg NH3 (full, reliq -> no loss)
+  const nh3Fuel=p.dutyN*p.shareN/100*p.lhvV/p.lhvN;    // t/d
+  const pilotN=p.dutyN*(1-p.shareN/100);               // t/d
+  const costN=nh3Fuel*p.pN+pilotN*p.pV;                // USD/d
+  const h2N=cargoN*H2_IN_NH3;                          // kg H2 contained
+  const scaleN=cargoL/h2N;                             // NH3 cost scaled to same H2 carried
+  const costNcmp=basis==="day"?costN:costN*scaleN;
+  const fixedL=vlsfo*p.pV;
+  const be=bog>0?(costNcmp-fixedL)/bog:NaN;            // USD/kg
+  const sw=p.pV/1000*p.lhvH/p.lhvV;                    // H2 vs VLSFO energy parity, USD/kg
+  return {cargoL,bog,hFull,hCap,burned,surplus,vlsfoSigned,vlsfo,borStar,cargoN,nh3Fuel,pilotN,costN,h2N,scaleN,costNcmp,fixedL,be,sw,bogN:cargoN*p.borN/100};
+}
+const costL=(m,P)=>m.bog*P+m.fixedL;
+
+/* ---------- tiny SVG chart kit ---------- */
+const NS="http://www.w3.org/2000/svg";
+function el(t,a,parent){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);parent&&parent.appendChild(e);return e}
+function niceTicks(lo,hi,n=5){const span=hi-lo||1;const step0=span/n;const mag=Math.pow(10,Math.floor(Math.log10(step0)));const st=[1,2,2.5,5,10].map(s=>s*mag).find(s=>span/s<=n)||mag*10;const a=Math.ceil(lo/st-1e-9)*st;const out=[];for(let v=a;v<=hi+st*1e-6;v+=st)out.push(+v.toFixed(10));return out}
+function chart(svg,o){
+  svg.innerHTML="";
+  const W=+svg.viewBox.baseVal.width,H=+svg.viewBox.baseVal.height;
+  const m={l:62,r:18,t:16,b:44};
+  const X=v=>m.l+(v-o.x0)/(o.x1-o.x0)*(W-m.l-m.r);
+  const Y=v=>H-m.b-(v-o.y0)/(o.y1-o.y0)*(H-m.t-m.b);
+  const g=el("g",{},svg);
+  niceTicks(o.y0,o.y1,o.yn||5).forEach(v=>{el("line",{x1:m.l,x2:W-m.r,y1:Y(v),y2:Y(v),stroke:v===0?"var(--muted)":"var(--grid)","stroke-width":v===0?1:1},g);const t=el("text",{x:m.l-8,y:Y(v)+4,"text-anchor":"end"},g);t.textContent=o.yf?o.yf(v):v});
+  niceTicks(o.x0,o.x1,o.xn||6).forEach(v=>{el("line",{x1:X(v),x2:X(v),y1:H-m.b,y2:H-m.b+4,stroke:"var(--muted)"},g);const t=el("text",{x:X(v),y:H-m.b+17,"text-anchor":"middle"},g);t.textContent=o.xf?o.xf(v):v});
+  el("line",{x1:m.l,x2:W-m.r,y1:H-m.b,y2:H-m.b,stroke:"var(--muted)"},g);
+  const xl=el("text",{x:(m.l+W-m.r)/2,y:H-6,"text-anchor":"middle",class:"lbl"},g);xl.textContent=o.xlabel;
+  const yl=el("text",{x:14,y:(m.t+H-m.b)/2,"text-anchor":"middle",class:"lbl",transform:`rotate(-90 14 ${(m.t+H-m.b)/2})`},g);yl.textContent=o.ylabel;
+  const clip="c"+Math.random().toString(36).slice(2);
+  const cp=el("clipPath",{id:clip},svg);el("rect",{x:m.l,y:m.t,width:W-m.l-m.r,height:H-m.t-m.b},cp);
+  const pl=el("g",{"clip-path":`url(#${clip})`},svg);
+  (o.areas||[]).forEach(a=>{let d="";a.xs.forEach((x,i)=>d+=(i?"L":"M")+X(x)+","+Y(a.top[i]));for(let i=a.xs.length-1;i>=0;i--)d+="L"+X(a.xs[i])+","+Y(a.bot[i]);el("path",{d:d+"Z",fill:a.fill,stroke:"none"},pl)});
+  (o.vlines||[]).forEach(v=>{el("line",{x1:X(v.x),x2:X(v.x),y1:m.t,y2:H-m.b,stroke:v.color||"var(--ink-2)","stroke-dasharray":v.dash||"3 3","stroke-width":1},pl)});
+  o.series.forEach(s=>{let d="";s.xs.forEach((x,i)=>{if(s.ys[i]==null)return;d+=(d?"L":"M")+X(x).toFixed(1)+","+Y(s.ys[i]).toFixed(1)});el("path",{d,fill:"none",stroke:s.color,"stroke-width":s.w||2,"stroke-dasharray":s.dash||"","stroke-linejoin":"round","stroke-linecap":"round"},pl)});
+  (o.points||[]).forEach(pt=>{el("circle",{cx:X(pt.x),cy:Y(pt.y),r:5,fill:pt.color||"var(--ink)",stroke:"var(--surface)","stroke-width":2},svg);if(pt.label){const lines=[].concat(pt.label);const anchor=pt.anchor||"start";const dx=anchor==="end"?-10:10;lines.forEach((L,i)=>{const t=el("text",{x:X(pt.x)+dx,y:Y(pt.y)+(pt.dy??-10)+i*15,"text-anchor":anchor,class:i?"lbl":"lblb"},svg);t.textContent=L})}});
+  (o.vlabels||[]).forEach(v=>{const t=el("text",{x:X(v.x)+(v.anchor==="end"?-6:6),y:m.t+12,"text-anchor":v.anchor||"start",class:"lbl"},svg);t.textContent=v.text});
+  // hover
+  const hl=el("line",{y1:m.t,y2:H-m.b,stroke:"var(--ink-2)","stroke-width":1,visibility:"hidden"},svg);
+  const hit=el("rect",{x:m.l,y:m.t,width:W-m.l-m.r,height:H-m.t-m.b,fill:"transparent"},svg);
+  const tip=$("tip"),wrap=svg.parentElement;
+  function move(ev){const r=svg.getBoundingClientRect();const cx=(ev.clientX-r.left)/r.width*W;let xv=o.x0+(cx-m.l)/(W-m.l-m.r)*(o.x1-o.x0);xv=Math.max(o.x0,Math.min(o.x1,xv));if(o.snap)xv=Math.round(xv/o.snap)*o.snap;hl.setAttribute("x1",X(xv));hl.setAttribute("x2",X(xv));hl.setAttribute("visibility","visible");tip.innerHTML=o.tip(xv);tip.hidden=false;const wr=document.body.getBoundingClientRect();let left=ev.clientX-wr.left+14;const tw=tip.offsetWidth;if(ev.clientX+tw+24>window.innerWidth)left=ev.clientX-wr.left-tw-14;tip.style.left=left+"px";tip.style.top=(ev.clientY-wr.top+14)+"px"}
+  hit.addEventListener("pointermove",move);hit.addEventListener("pointerdown",move);
+  hit.addEventListener("pointerleave",()=>{tip.hidden=true;hl.setAttribute("visibility","hidden")});
+}
+const row=(c,k,v)=>`<div class="row"><span>${c?`<span class="sw" style="background:${c}"></span>`:""}${k}</span><b>${v}</b></div>`;
+function legend(id,items){$(id).innerHTML=items.map(i=>`<span><i class="${i.cls||""}" style="border-color:${i.c};${i.cls==="box"?`background:${i.c}`:""}"></i>${i.t}</span>`).join("")}
+const tile=(k,v,n)=>`<div class="tile"><span class="k">${k}</span><span class="v">${v}</span>${n?`<span class="n">${n}</span>`:""}</div>`;
+
+function render(){
+  document.body.style.position="relative";
+  const p=P(),m=model(p);
+  $("pHout").textContent=f(p.pH,2)+" USD/kg";
+
+  /* ---- check table ---- */
+  const allMatch=USER.every(u=>{const r=model(p,u[0]);const s=r.surplus;return Math.abs(r.vlsfoSigned-u[1])<0.006&&Math.abs(r.bog-u[2])<0.01&&(u[3]==null?s<0.5:Math.abs(s-u[3])<0.5)});
+  const onUserBasis=IDS.every(k=>$(k).value===DEF[k]);
+  $("verdict").innerHTML=onUserBasis?(allMatch
+    ?`<span class="pill">Verified</span><div>Every row reproduces to the rounding you used. Your numbers imply <b>H₂ LHV 120 MJ/kg</b> and <b>VLSFO LHV ≈ 41.0 MJ/kg</b>, with 70.8 kg/m³ on the full 40,000 m³. The engine can burn at most <b>${f(m.hCap,0)} kg/d</b> of H₂ (39 t/d × 41 ÷ 120). Surplus starts at <b>${f(m.borStar,4)} %/day</b>, between your 0.47 % and 0.48 % rows. <b>At your stated 0.40 %/day there is no surplus.</b> The ship still buys ${f(m.vlsfo,2)} t/d of VLSFO.</div>`
+    :`<span class="pill">Check</span><div>Some rows differ from the recomputation. See the table.</div>`)
+    :`<span class="pill">Live</span><div>Inputs differ from your basis, so the grey columns no longer apply. Press “Reset to your basis” to re-run the check. Current crossover: <b>${f(m.borStar,4)} %/day</b>.</div>`;
+  $("formula").textContent=
+`Cargo H₂          = ${f(p.vol)} m³ × ${f(p.fillL)} % × ${p.rhoL} kg/m³           = ${f(m.cargoL)} kg
+H₂ boil-off       = cargo × BOR                                  e.g. 0.40 % → ${f(model(p,0.40).bog,0)} kg/d
+H₂ to cover duty  = ${p.dutyL} t/d × ${p.lhvV} MJ/kg ÷ ${p.lhvH} MJ/kg${p.pilotL?` × (1 − ${p.pilotL} % pilot)`:""}        = ${f(m.hCap,1)} kg/d
+VLSFO required    = ${p.dutyL} − boil-off × ${p.lhvH} ÷ ${p.lhvV} ÷ 1000        (negative = surplus)
+Surplus H₂        = boil-off − ${f(m.hCap,1)} kg/d  (if positive)
+Crossover BOR     = ${f(m.hCap,1)} ÷ ${f(m.cargoL)}                          = ${f(m.borStar,4)} %/day`;
+  let rows=`<thead><tr><th>Boil-off, %/day</th><th>VLSFO req, t/d</th><th>Yours</th><th>H₂ boil-off, kg/d</th><th>Yours</th><th>Surplus H₂, kg/d</th><th>Yours</th><th>Match</th></tr></thead><tbody>`;
+  let firstAbove=USER.find(u=>u[0]>m.borStar);
+  USER.forEach(u=>{const r=model(p,u[0]);const ok=Math.abs(r.vlsfoSigned-u[1])<0.006&&Math.abs(r.bog-u[2])<0.01&&(u[3]==null?r.surplus<0.5:Math.abs(r.surplus-u[3])<0.5);
+    rows+=`<tr class="${u===firstAbove?"cross":""}"><td>${f(u[0],2)} %</td><td>${f(r.vlsfoSigned,2)}</td><td class="neg">${f(u[1],2)}</td><td>${f(r.bog,2)}</td><td class="neg">${f(u[2],2)}</td><td>${r.surplus>0?f(r.surplus,2):"–"}</td><td class="neg">${u[3]==null?"–":f(u[3],2)}</td><td class="${onUserBasis?(ok?"ok":"bad"):"neg"}">${onUserBasis?(ok?"✓":"differs"):"n/a"}</td></tr>`});
+  $("tbl").innerHTML=rows+"</tbody>";
+
+  /* ---- chart 1: kg/d ---- */
+  const x0=0.1,x1=0.7,xs=[];for(let b=x0;b<=x1+1e-9;b+=0.005)xs.push(+b.toFixed(3));
+  const bogs=xs.map(b=>model(p,b).bog), cap=xs.map(()=>m.hCap);
+  $("crossTitle").textContent=`Boil-off covers the full fuel demand above ${f(m.borStar,3)} %/day`;
+  legend("c1leg",[{c:"var(--s1)",t:"H₂ boil-off available"},{c:"var(--ref)",t:"H₂ the engine can burn (whole fuel demand)",cls:"dash"},{c:"var(--s1-fill)",t:"Surplus: GCU or vent",cls:"box"}]);
+  const y1max=Math.max(...bogs)*1.08;
+  const cur=model(p,p.borL);
+  chart($("c1"),{x0,x1,y0:0,y1:y1max,xlabel:"LH₂ voyage boil-off rate, %/day",ylabel:"H₂, kg/day",xf:v=>v.toFixed(1),yf:v=>f(v/1000,0)+"k",snap:0.005,
+    areas:[{xs,top:bogs.map((v,i)=>Math.max(v,cap[i])),bot:cap,fill:"var(--s1-fill)"}],
+    series:[{xs,ys:cap,color:"var(--ref)",dash:"6 5",w:1.6},{xs,ys:bogs,color:"var(--s1)",w:2.5}],
+    vlines:[{x:m.borStar,color:"var(--s1)"}],
+    points:[{x:m.borStar,y:m.hCap,color:"var(--s1)",label:[`Crossover ${f(m.borStar,3)} %/d`,`${f(m.hCap,0)} kg/d H₂`],anchor:"end",dy:-26},
+            {x:p.borL,y:cur.bog,color:"var(--ink)",label:[`Your case ${f(p.borL,2)} %/d`,cur.surplus>0?`${f(cur.surplus,0)} kg/d surplus`:`${f(cur.hCap-cur.bog,0)} kg/d short`],anchor:p.borL<m.borStar?"start":"start",dy:p.borL<m.borStar?20:-26}],
+    tip:b=>{const r=model(p,b);return `<div style="margin-bottom:4px"><b>${b.toFixed(3)} %/day</b></div>${row("var(--s1)","Boil-off",f(r.bog,0)+" kg/d")}${row("var(--ref)","Engine can burn",f(r.hCap,0)+" kg/d")}${row("",r.surplus>0?"Surplus":"Shortfall",f(Math.abs(r.bog-r.hCap),0)+" kg/d")}`}});
+
+  /* ---- chart 2: VLSFO ---- */
+  legend("c2leg",[{c:"var(--s2)",t:"VLSFO bought, t/day"},{c:"var(--muted)",t:"Your table's negative VLSFO (surplus as VLSFO-eq)",cls:"dash"}]);
+  const vl=xs.map(b=>model(p,b).vlsfo), vs=xs.map(b=>{const r=model(p,b);return r.surplus>0?-r.surplus*p.lhvH/p.lhvV/1000+ (r.vlsfo):null});
+  const ymin=Math.min(0,...vs.filter(v=>v!=null))*1.1, ymax=Math.max(...vl)*1.1;
+  chart($("c2"),{x0,x1,y0:ymin,y1:ymax,yn:5,xlabel:"LH₂ voyage boil-off rate, %/day",ylabel:"VLSFO, t/day",xf:v=>v.toFixed(1),yf:v=>f(v,0),snap:0.005,
+    series:[{xs,ys:vs,color:"var(--muted)",dash:"5 4",w:1.6},{xs,ys:vl,color:"var(--s2)",w:2.5}],
+    vlines:[{x:m.borStar,color:"var(--s1)"}],
+    points:[{x:p.borL,y:cur.vlsfo,color:"var(--ink)",label:[`${f(cur.vlsfo,2)} t/d at ${f(p.borL,2)} %/d`],dy:-12}],
+    tip:b=>{const r=model(p,b);return `<div style="margin-bottom:4px"><b>${b.toFixed(3)} %/day</b></div>${row("var(--s2)","VLSFO bought",f(r.vlsfo,2)+" t/d")}${row("","Your convention",f(r.vlsfoSigned,2)+" t/d")}`}});
+
+  $("t1").innerHTML=
+    tile("Crossover boil-off rate",`${f(m.borStar,3)} <small>%/day</small>`,"Below it the ship buys VLSFO. Above it the excess H₂ does no work.")+
+    tile(`Boil-off at ${f(p.borL,2)} %/day`,`${f(cur.bog,0)} <small>kg/d</small>`,`${f(cur.bog/cur.hCap*100,0)} % of what the engine can burn`)+
+    tile("VLSFO still bought",`${f(cur.vlsfo,2)} <small>t/d</small>`,`of ${f(p.dutyL,0)} t/d total demand`)+
+    tile("Surplus H₂",`${f(cur.surplus,0)} <small>kg/d</small>`,cur.surplus>0?"Lost to GCU or vent":"None at this rate");
+
+  /* ---- chart 3: cost vs H2 price ---- */
+  const unit=basis==="day"?"USD/day":"USD/day, NH₃ scaled to LH₂ cargo";
+  const ph=[];for(let v=0;v<=10+1e-9;v+=0.05)ph.push(+v.toFixed(2));
+  const cL=ph.map(v=>costL(cur,v)), cN=ph.map(()=>cur.costNcmp);
+  const be=cur.be;
+  $("priceTitle").textContent=isFinite(be)&&be>0
+    ?`Burning boil-off beats the ammonia ship while H₂ is below USD ${f(be,2)}/kg`
+    :`The ammonia ship is cheaper at any H₂ price with these inputs`;
+  legend("c3leg",[{c:"var(--s1)",t:`LH₂ carrier: H₂ boil-off × H₂ price + ${f(cur.vlsfo,2)} t/d VLSFO`},{c:"var(--s2)",t:`NH₃ carrier: ${f(cur.nh3Fuel,1)} t/d NH₃ + ${f(cur.pilotN,1)} t/d VLSFO pilot`}]);
+  const ymx=Math.max(...cL,cur.costNcmp)*1.08;
+  const pts=[{x:p.pH,y:costL(cur,p.pH),color:"var(--s1)"}];
+  if(isFinite(be)&&be>=0&&be<=10)pts.push({x:be,y:cur.costNcmp,color:"var(--ink)",label:[`Breakeven USD ${f(be,2)}/kg`],anchor:be>7?"end":"start",dy:24});
+  chart($("c3"),{x0:0,x1:10,y0:0,y1:ymx,xlabel:"H₂ price, USD/kg",ylabel:basis==="day"?"Fuel cost, USD k/day":"USD k/day, same H₂ carried",xf:v=>v,yf:v=>f(v/1000,0)+"k",snap:0.05,
+    series:[{xs:ph,ys:cN,color:"var(--s2)",w:2.5},{xs:ph,ys:cL,color:"var(--s1)",w:2.5}],
+    vlines:[{x:m.sw,color:"var(--muted)"},{x:p.pH,color:"var(--s1)",dash:"1 3"}],
+    vlabels:[{x:m.sw,text:`H₂ = VLSFO per GJ at USD ${f(m.sw,2)}/kg`,anchor:m.sw>6?"end":"start"}],
+    points:pts,
+    tip:v=>{const a=costL(cur,v),b=cur.costNcmp;return `<div style="margin-bottom:4px"><b>H₂ USD ${f(v,2)}/kg</b></div>${row("var(--s1)","LH₂ carrier",f(a,0)+" USD/d")}${row("var(--s2)","NH₃ carrier",f(b,0)+" USD/d")}${row("",a<b?"LH₂ cheaper by":"NH₃ cheaper by",f(Math.abs(a-b),0)+" USD/d")}`}});
+
+  const dl=costL(cur,p.pH)-cur.costNcmp;
+  $("t2").innerHTML=
+    tile("Breakeven H₂ price",isFinite(be)&&be>0?`${f(be,2)} <small>USD/kg</small>`:"none",basis==="day"?"LH₂ and NH₃ ship-day fuel cost equal":"Equal cost per tonne of H₂ carried")+
+    tile(`LH₂ carrier at USD ${f(p.pH,2)}/kg`,`${f(costL(cur,p.pH)/1000,1)} <small>k USD/d</small>`,`H₂ ${f(cur.bog*p.pH/1000,1)}k + VLSFO ${f(cur.fixedL/1000,1)}k`)+
+    tile("NH₃ carrier",`${f(cur.costNcmp/1000,1)} <small>k USD/d</small>`,basis==="day"?`NH₃ ${f(cur.nh3Fuel*p.pN/1000,1)}k + pilot ${f(cur.pilotN*p.pV/1000,1)}k`:`${f(cur.costN/1000,1)}k/d × ${f(cur.scaleN,3)} cargo-H₂ ratio`)+
+    tile(dl<0?"LH₂ saves":"LH₂ costs extra",`${f(Math.abs(dl)/1000,1)} <small>k USD/d</small>`,`${f(Math.abs(dl)*365/1e6,2)} M USD per sea-year (365 laden days)`);
+
+  $("basisNote").innerHTML=basis==="day"
+    ?`<b>Per ship-day is not like-for-like on cargo.</b> Both hulls are 40,000 m³, but the NH₃ ship carries ${f(m.h2N/1000,0)} t of H₂ (as NH₃) against ${f(m.cargoL/1000,0)} t on the LH₂ ship, about ${f(1/m.scaleN,2)}× more. On a per-tonne-H₂-carried basis the breakeven falls to <b>USD ${f((m.costN*m.scaleN-m.fixedL)/m.bog,2)}/kg</b>. Switch the basis above to see it.`
+    :`<b>Per tonne H₂ carried.</b> The NH₃ ship's daily cost is scaled by ${f(m.scaleN,3)} (LH₂ cargo H₂ ÷ H₂ contained in NH₃ cargo) so both ships move the same hydrogen. This assumes the NH₃ is fully cracked back to H₂, which makes it an upper bound for ammonia. Cracking cost and losses are outside this shipping boundary.`;
+
+  /* ---- chart 4: breakeven vs NH3 price ---- */
+  const pn=[];for(let v=200;v<=1200+1e-9;v+=10)pn.push(v);
+  const beOf=(v,sc)=>{const cn=cur.nh3Fuel*v+cur.pilotN*p.pV;return ((sc?cn*cur.scaleN:cn)-cur.fixedL)/cur.bog};
+  const bd=pn.map(v=>beOf(v,false)), bh=pn.map(v=>beOf(v,true));
+  legend("c4leg",[{c:"var(--s1)",t:"Breakeven, per ship-day"},{c:"var(--s1)",t:"Breakeven, per tonne H₂ carried",cls:"dash"},{c:"var(--muted)",t:"H₂ = VLSFO per GJ (forced boil-off threshold)",cls:"dash"}]);
+  const y4=Math.max(...bd,m.sw)*1.1, y40=Math.min(0,...bh);
+  chart($("c4"),{x0:200,x1:1200,y0:y40,y1:y4,xlabel:"NH₃ fuel price, USD/t",ylabel:"Breakeven H₂, USD/kg",xf:v=>v,yf:v=>f(v,1),snap:10,
+    series:[{xs:pn,ys:pn.map(()=>m.sw),color:"var(--muted)",dash:"3 4",w:1.4},{xs:pn,ys:bh,color:"var(--s1)",dash:"6 5",w:2},{xs:pn,ys:bd,color:"var(--s1)",w:2.5}],
+    vlines:[{x:p.pN,color:"var(--s2)"}],
+    points:[{x:p.pN,y:beOf(p.pN,false),color:"var(--s1)",label:[`USD ${f(beOf(p.pN,false),2)}/kg at NH₃ USD ${f(p.pN)}/t`],anchor:p.pN>800?"end":"start",dy:-22},{x:p.pN,y:beOf(p.pN,true),color:"var(--s1)"}],
+    tip:v=>`<div style="margin-bottom:4px"><b>NH₃ USD ${f(v)}/t</b></div>${row("var(--s1)","Per ship-day","USD "+f(beOf(v,false),2)+"/kg")}${row("var(--s1)","Per t H₂ carried","USD "+f(beOf(v,true),2)+"/kg")}${row("var(--muted)","H₂ = VLSFO","USD "+f(m.sw,2)+"/kg")}`});
+
+  $("method-f").textContent=
+`LH₂ ship cost/day  = H₂ boil-off (kg/d) × H₂ price + VLSFO bought (t/d) × VLSFO price
+                    all boil-off is charged: burned or surplus, it has left the cargo
+NH₃ ship cost/day  = NH₃ fuel (t/d) × NH₃ price + pilot VLSFO (t/d) × VLSFO price
+  NH₃ fuel          = ${p.dutyN} t/d × ${p.shareN} % × ${p.lhvV} ÷ ${p.lhvN}  = ${f(m.nh3Fuel,2)} t/d
+  pilot VLSFO       = ${p.dutyN} t/d × ${f(100-p.shareN)} %              = ${f(m.pilotN,2)} t/d
+  NH₃ boil-off      = ${f(m.cargoN/1000,0)} t × ${p.borN} %  = ${f(m.bogN/1000,1)} t/d, re-liquefied to cargo
+Breakeven H₂ price = (NH₃ ship cost − LH₂ VLSFO cost) ÷ H₂ boil-off
+Forced-BOG line    = VLSFO price × ${p.lhvH} ÷ ${p.lhvV} ÷ 1000       = USD ${f(m.sw,2)}/kg
+                    below this H₂ is cheaper than VLSFO per GJ, so burning extra H₂ beyond natural boil-off pays`;
+}
+
+IDS.forEach(k=>$(k).addEventListener("input",render));
+$("pH").addEventListener("input",render);
+$("reset").addEventListener("click",()=>{IDS.forEach(k=>$(k).value=DEF[k]);render()});
+function setBasis(b){basis=b;$("bDay").setAttribute("aria-pressed",b==="day");$("bH2").setAttribute("aria-pressed",b==="h2");render()}
+$("bDay").addEventListener("click",()=>setBasis("day"));
+$("bH2").addEventListener("click",()=>setBasis("h2"));
+window.addEventListener("resize",()=>{$("tip").hidden=true});
+render();
+</script>

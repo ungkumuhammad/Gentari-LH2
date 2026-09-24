@@ -1392,3 +1392,22 @@ Node `vm` + DOM-stub harness (catches temporal-dead-zone and reference bugs
 that `node --check` cannot). The new boil-off/ammonia-fuel formulas were
 additionally checked against hand-computed physics (e.g. the ammonia mass
 ratio matched the LHV ratio 40.2/18.6 ≈ 2.161 exactly).
+
+### LH2 boil-off bunker check + H2-price breakeven vs NH3-fuelled carrier (2026-09-24)
+
+User asked (shipping only) to check their surplus table and build an artifact.
+Basis (user): 40,000 m3 both ships; LH2 BOR 0.40 %/d, no reliq, 39 t/d VLSFO-eq;
+NH3 BOR 0.15 %/d, reliq, 30 t/d VLSFO-eq, fuel 95 % NH3 / 5 % VLSFO pilot (energy).
+
+- **User's surplus column verified** — reproduces exactly with H2 LHV 120, LH2 70.8 kg/m3,
+  100 % fill and an implied **VLSFO LHV ≈ 41.0 MJ/kg** (repo's own is 40.2, ESTIMATE).
+  Engine can burn 13,325 kg/d H2; **crossover BOR = 0.4705 %/d**. At 0.40 %/d: no surplus,
+  11,328 kg/d burned, 5.84 t/d VLSFO still bought.
+- **Breakeven H2 price** (VLSFO & NH3 fuel both USD 600/t placeholders [ASSUMPTION]):
+  **USD 3.10/kg per ship-day**; **USD 1.68/kg per tonne H2 carried** (NH3 hull carries 1.71x
+  the H2, assumes full cracking). H2 = VLSFO per GJ at USD 1.76/kg (forced-BOG threshold).
+- Not modelled: pilot fuel on H2 (input, default 0), carbon price/FuelEU, N2O slip, vented-H2 CO2e.
+
+| File | Action |
+|------|--------|
+| `docs/reports/lh2-bog-bunker-breakeven.html` | Created — artifact https://claude.ai/artifact/158AMxDjHB29ttVH3nsoiM |
