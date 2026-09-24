@@ -1411,3 +1411,14 @@ NH3 BOR 0.15 %/d, reliq, 30 t/d VLSFO-eq, fuel 95 % NH3 / 5 % VLSFO pilot (energ
 | File | Action |
 |------|--------|
 | `docs/reports/lh2-bog-bunker-breakeven.html` | Created — artifact https://claude.ai/artifact/158AMxDjHB29ttVH3nsoiM |
+
+### Downstream sheet: ORV regas vs NH3 cracking per ship cargo (2026-09-24, same session)
+
+Added a "Downstream" tab to `docs/reports/lh2-bog-bunker-breakeven.html` (same artifact URL).
+- **User cracker table verified** on an implied **100,000 t/y H2** basis: NG = (7.2 − 6.5) × H2 = 70 M kg NH3-eq;
+  NH3 fuel = (6.5 − 5.6) × H2 = 90 M kg; MMBtu at 1,055.056 MJ. Both modes fire 1.6 kg NH3-eq/kg H2
+  (29.8 MJ) → 8.56 kWh/kg H2 incl. 0.29 kWh elec (25.7 % of H2 LHV). Stoich exact 5.632 (user used 5.6).
+- **Regas (ORV)**: LH2 pump 0.0168 + seawater pump 0.0138 (repo derivation, reproduces 0.031) + optional
+  import-tank BOG reliq 0.0197 kWh/kg = 0.050 kWh/kg → **142 MWh per 40k m3 cargo** (2,832 t H2).
+- **Cracker per cargo** (27,280 t NH3): NG-fired 4,197 t H2, 35,929 MWh; clean fuel 3,789 t H2, 32,437 MWh
+  → ~252x regas. Caveat: fuel LHV + electricity summed (not primary energy); same send-out pressure assumed.
