@@ -1458,3 +1458,6 @@ fuel tonnages (new "Ship fuel burned per year" table) and, when fuel is taken fr
 At 100 ktpa, 20 d: DF bunkered 29,937 t/y NH3 + 715 t/y VLSFO (NG-fired); VLSFO only 14,296 t/y;
 DF from cargo: 1,256 t NH3 per voyage → 4,004 t H2/cargo, 25.0 cargoes, 1,149 GWh/y (vs 1,136).
 CO2 not computed (no sourced VLSFO emission factor in repo).
+- (same day) NH3 vessel fuel toggle moved into Full Chain (shared state kFuel/kSrc; buttons on Full Chain and Case
+  Study stay in sync). Full Chain per cargo, DF fuel from cargo: NG-fired 4,004 t H2, 11.49 kWh/kg (vs 11.36 bunkered);
+  clean fuel 3,614 t, 11.81 kWh/kg. Mass-balance column renamed "Burned as ship fuel, t H2(-eq)".
