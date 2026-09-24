@@ -1422,3 +1422,13 @@ Added a "Downstream" tab to `docs/reports/lh2-bog-bunker-breakeven.html` (same a
   import-tank BOG reliq 0.0197 kWh/kg = 0.050 kWh/kg → **142 MWh per 40k m3 cargo** (2,832 t H2).
 - **Cracker per cargo** (27,280 t NH3): NG-fired 4,197 t H2, 35,929 MWh; clean fuel 3,789 t H2, 32,437 MWh
   → ~252x regas. Caveat: fuel LHV + electricity summed (not primary energy); same send-out pressure assumed.
+
+### Upstream sheet: liquefaction vs Haber-Bosch per ship cargo (2026-09-24, same session)
+
+Added an "Upstream" tab (tabs now Upstream | Shipping | Downstream, same artifact URL).
+User basis: liquefaction 9 kWh/kg H2; Haber-Bosch 1 kWh/kg H2 (= 0.18 kWh/kg NH3 — well below the repo's
+0.5–0.7 kWh/kg NH3 ESTIMATE; asked user whether it includes the ASU); export tank 60,000 m3, BOR 0.1 %/d LH2,
+0.05 %/d NH3; production sized to one ship cargo.
+- LH2: 2,832 t H2 × 9 = 25,488 MWh + tank reliq 4,248 kg/d × 5 d × 3.94 = 83.7 MWh → 25,572 MWh.
+- NH3: 27,280 t ÷ 5.6 = 4,871 t H2 × 1 = 4,871 MWh + tank reliq 20,460 kg/d × 5 d × 0.25 = 25.6 MWh → 4,897 MWh.
+- 5.2x per cargo, ~9x per kg H2. Assumptions: full tank inventory, 5 storage days per cargo, no HB heat credit.

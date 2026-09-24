@@ -117,7 +117,91 @@ ul.caveats{margin:0;padding-left:18px;display:grid;gap:6px;font-size:13.5px;colo
 </style>
 
 <div class="wrap">
-<nav class="topbar"><span class="study">40,000 m³ LH₂ vs NH₃ carrier study</span><div class="tabs" role="tablist"><button type="button" role="tab" id="tabShip" aria-selected="true">Shipping</button><button type="button" role="tab" id="tabDown" aria-selected="false">Downstream</button></div></nav>
+<nav class="topbar"><span class="study">40,000 m³ LH₂ vs NH₃ carrier study</span><div class="tabs" role="tablist"><button type="button" role="tab" id="tabUp" aria-selected="false">Upstream</button><button type="button" role="tab" id="tabShip" aria-selected="true">Shipping</button><button type="button" role="tab" id="tabDown" aria-selected="false">Downstream</button></div></nav>
+<div id="sheet-up" hidden>
+<header>
+  <span class="eyebrow">Upstream · gaseous H₂ at battery limit → cargo in export tank</span>
+  <h1>Liquefaction vs Haber-Bosch</h1>
+  <p class="lede">How much energy does it take to make one ship's cargo: liquefying H₂ for the LH₂ carrier, or synthesising NH₃ for the ammonia carrier, including reliquefaction of boil-off in a 60,000 m³ export tank?</p>
+  <div class="boundary">
+    <span><b>Boundary</b> GH₂ from electrolysis (excluded) → cargo ready to load</span>
+    <span><b>Basis</b> one full 40,000 m³ cargo, or per kg H₂</span>
+    <span><b>Energy</b> MWh, electricity as delivered kWh</span>
+  </div>
+</header>
+<div class="layout">
+<aside aria-label="Upstream inputs">
+  <p class="basisline" id="uBasis"></p>
+  <fieldset>
+    <legend style="color:var(--s1)">LH₂ · liquefaction</legend>
+    <div class="field"><label for="uSecL">Liquefaction, kWh/kg H₂<small>user · KHI 8–9</small></label><input id="uSecL" type="number" step="0.1" value="9"></div>
+    <div class="field"><label for="uBorL">Export tank BOR, %/day<small>user · KHI 0.1</small></label><input id="uBorL" type="number" step="0.01" value="0.1"></div>
+    <div class="field"><label for="uRlqL">BOG reliq, kWh/kg BOG<small>repo assumption</small></label><input id="uRlqL" type="number" step="0.01" value="3.94"></div>
+  </fieldset>
+  <div class="hr"></div>
+  <fieldset>
+    <legend style="color:var(--s2)">NH₃ · Haber-Bosch</legend>
+    <div class="field"><label for="uSecN">Haber-Bosch, kWh/kg H₂<small>user</small></label><input id="uSecN" type="number" step="0.1" value="1"></div>
+    <div class="field"><label for="uStoich">Stoichiometric NH₃, kg/kg H₂<small>user · exact 5.632</small></label><input id="uStoich" type="number" step="0.01" value="5.6"></div>
+    <div class="field"><label for="uLoss">H₂ lost in synthesis loop, %<small>0 = none assumed</small></label><input id="uLoss" type="number" step="0.5" value="0"></div>
+    <div class="field"><label for="uBorN">Export tank BOR, %/day<small>user</small></label><input id="uBorN" type="number" step="0.01" value="0.05"></div>
+    <div class="field"><label for="uRlqN">BOG reliq, kWh/kg BOG<small>repo · estimate</small></label><input id="uRlqN" type="number" step="0.01" value="0.25"></div>
+  </fieldset>
+  <div class="hr"></div>
+  <fieldset>
+    <legend>Export tank · both</legend>
+    <div class="field"><label for="uTank">Tank size, m³<small>user</small></label><input id="uTank" type="number" step="1000" value="60000"></div>
+    <div class="field"><label for="uFill">Average inventory, % of tank<small>100 = full, conservative</small></label><input id="uFill" type="number" step="5" value="100"></div>
+    <div class="field"><label for="uDays">Storage days per cargo<small>assumption · edit</small></label><input id="uDays" type="number" step="1" value="5"></div>
+  </fieldset>
+  <button class="reset" id="uReset" type="button">Reset upstream inputs</button>
+</aside>
+<main>
+<section>
+  <span class="eyebrow">Production basis · what each ship needs</span>
+  <h2>How much each plant makes per cargo</h2>
+  <div class="tbl"><table id="uTbl"></table></div>
+  <div class="formula" id="uFormula"></div>
+</section>
+<section>
+  <span class="eyebrow">Chart 7 · energy to make one cargo</span>
+  <h2 id="uTitle">Liquefaction takes more energy than Haber-Bosch</h2>
+  <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+    <span class="note">Show</span>
+    <div class="seg" role="group" aria-label="Upstream basis">
+      <button type="button" id="ubShip" aria-pressed="true">Per ship cargo, MWh</button>
+      <button type="button" id="ubKg" aria-pressed="false">Per kg H₂, kWh</button>
+    </div>
+  </div>
+  <div class="tiles" id="uTiles"></div>
+  <div class="card chart">
+    <div class="legend" id="c7leg"></div>
+    <svg id="c7" viewBox="0 0 720 200" role="img" aria-label="Stacked energy for liquefaction and Haber-Bosch per cargo"></svg>
+  </div>
+  <h3>Export tank boil-off, per day</h3>
+  <div class="tbl"><table id="uTank2"></table></div>
+</section>
+<section>
+  <span class="eyebrow">Method, assumptions and gaps</span>
+  <h2>What the upstream numbers rest on</h2>
+  <ul class="caveats">
+    <li><b>Production follows the ship.</b> The liquefier makes one LH₂ cargo: 40,000 m³ × 70.8 kg/m³ at the Shipping sheet's fill. The ammonia plant makes one NH₃ cargo: 40,000 m³ × 682 kg/m³. Its H₂ feed is cargo ÷ stoichiometric ratio, so the NH₃ route consumes more H₂ per cargo.</li>
+    <li><b>Haber-Bosch at 1 kWh/kg H₂</b> is your figure, equal to 0.18 kWh/kg NH₃. The repo's placeholder is 0.5–0.7 kWh/kg NH₃, about 2.8–3.9 kWh/kg H₂, and includes the air separation unit (ASU) for N₂, syngas compression and refrigeration <span class="tag">[ESTIMATE]</span>. Check whether your 1 kWh/kg includes the ASU. If not, the NH₃ bar is understated.</li>
+    <li><b>No synthesis heat credit.</b> Ammonia synthesis is exothermic and can raise steam. That credit is excluded, as agreed for the chain study.</li>
+    <li><b>Tank boil-off.</b> Taken on the full 60,000 m³ tank for the storage days per cargo, linear in days. BOR applies to the inventory held, not to the cargo size. LH₂ boil-off is re-liquefied at 3.94 kWh/kg, a condensation-only duty derived in the repo <span class="tag">[ASSUMPTION]</span>. Set it to 9 to charge full liquefaction. NH₃ reliq at 0.25 kWh/kg is a repo placeholder <span class="tag">[ESTIMATE]</span>.</li>
+    <li><b>Storage days per cargo</b> depends on plant output and ship schedule, neither of which is fixed yet. Five days is the repo's placeholder <span class="tag">[ASSUMPTION]</span>.</li>
+    <li><b>Not included:</b> electrolysis (same GH₂ feed on both sides, but the NH₃ route needs more of it per cargo), loading pumps and arms, flare or vent losses.</li>
+  </ul>
+  <h3>Sources</h3>
+  <ul class="caveats">
+    <li>User inputs (2026-09-24): liquefaction 9 kWh/kg H₂, Haber-Bosch 1 kWh/kg H₂, export tank BOR 0.1 % (LH₂) and 0.05 % (NH₃) per day, 60,000 m³ storage, production sized to one ship cargo.</li>
+    <li><span class="cite">kawasaki-2026-questionnaire</span> liquefaction SEC 8–9 kWh/kg H₂; terminal BOG re-liquefied. <span class="cite">kawasaki-2026-supplemental</span> export tank BOR 0.1 %/day, 64,000 m³ tanks.</li>
+    <li><span class="cite">data/carriers/chain-energy-defaults.csv</span> LH₂ BOG reliq 3.94 kWh/kg, NH₃ BOG reliq 0.25 kWh/kg, Haber-Bosch 0.5–0.7 kWh/kg NH₃ placeholder.</li>
+  </ul>
+</section>
+</main>
+</div>
+</div>
 <div id="sheet-ship">
 <header>
   <span class="eyebrow">Shipping segment only · 40,000 m³ LH₂ vs NH₃ carrier</span>
@@ -642,10 +726,60 @@ function setDBasis(b){dBasis=b;$("dbShip").setAttribute("aria-pressed",b==="ship
 $("dbShip").addEventListener("click",()=>setDBasis("ship"));
 $("dbKg").addEventListener("click",()=>setDBasis("kg"));
 IDS.forEach(k=>$(k).addEventListener("input",renderDown));
-function showSheet(w){const dn=w==="downstream";$("sheet-ship").hidden=dn;$("sheet-down").hidden=!dn;$("tabShip").setAttribute("aria-selected",!dn);$("tabDown").setAttribute("aria-selected",dn);$("tip").hidden=true;try{localStorage.setItem("sheet",w)}catch(e){}}
+function showSheet(w){const map={upstream:"sheet-up",shipping:"sheet-ship",downstream:"sheet-down"},tabs={upstream:"tabUp",shipping:"tabShip",downstream:"tabDown"};for(const k in map){$(map[k]).hidden=k!==w;$(tabs[k]).setAttribute("aria-selected",k===w)}$("tip").hidden=true;try{localStorage.setItem("sheet",w)}catch(e){}}
 $("tabShip").addEventListener("click",()=>showSheet("shipping"));
 $("tabDown").addEventListener("click",()=>showSheet("downstream"));
 renderDown();
-{let w=location.hash==="#downstream"?"downstream":location.hash==="#shipping"?"shipping":null;if(!w){try{w=localStorage.getItem("sheet")}catch(e){}}showSheet(w||"shipping")}
+
+
+/* ================= UPSTREAM ================= */
+const UIDS=["uSecL","uBorL","uRlqL","uSecN","uStoich","uLoss","uBorN","uRlqN","uTank","uFill","uDays"];
+const UDEF={};UIDS.forEach(k=>UDEF[k]=$(k).value);
+let uBasis="ship";
+function renderUp(){
+  const s=P(),u={};UIDS.forEach(k=>u[k]=parseFloat($(k).value)||0);
+  const cargoL=s.vol*s.fillL/100*s.rhoL, cargoN=s.vol*s.rhoN;
+  const h2N=cargoN/u.uStoich/(1-u.uLoss/100);                // kg H2 fed to HB
+  const invL=u.uTank*u.uFill/100*s.rhoL, invN=u.uTank*u.uFill/100*s.rhoN;
+  const bogL=invL*u.uBorL/100, bogN=invN*u.uBorN/100;         // kg/d
+  const liq=cargoL*u.uSecL, rlL=bogL*u.uDays*u.uRlqL;
+  const hb=h2N*u.uSecN, rlN=bogN*u.uDays*u.uRlqN;
+  $("uBasis").innerHTML=`Cargo basis from the Shipping sheet: ${f(s.vol)} m³ · LH₂ ${s.rhoL} kg/m³ at ${f(s.fillL)} % fill · NH₃ ${s.rhoN} kg/m³.`;
+  $("uTbl").innerHTML=`<thead><tr><th>Route</th><th>Cargo made</th><th>H₂ used, kg</th><th>H₂ in cargo, kg</th><th>Export tank inventory</th></tr></thead><tbody>
+    <tr><td>LH₂ · liquefaction</td><td>${f(cargoL)} kg LH₂</td><td>${f(cargoL)}</td><td>${f(cargoL)}</td><td>${f(invL)} kg LH₂</td></tr>
+    <tr><td>NH₃ · Haber-Bosch</td><td>${f(cargoN)} kg NH₃</td><td>${f(h2N)}</td><td>${f(cargoN/u.uStoich)}</td><td>${f(invN)} kg NH₃</td></tr></tbody>`;
+  $("uFormula").textContent=
+`Liquefaction   = ${f(cargoL)} kg H₂ × ${u.uSecL} kWh/kg                         = ${f(liq/1000,0)} MWh
+LH₂ tank reliq = ${f(invL)} kg × ${u.uBorL} %/d × ${u.uDays} d × ${u.uRlqL} kWh/kg     = ${f(rlL/1000,1)} MWh
+Haber-Bosch    = ${f(cargoN)} kg NH₃ ÷ ${u.uStoich}${u.uLoss?` ÷ (1 − ${u.uLoss} %)`:""} = ${f(h2N)} kg H₂ × ${u.uSecN} kWh/kg = ${f(hb/1000,0)} MWh
+NH₃ tank reliq = ${f(invN)} kg × ${u.uBorN} %/d × ${u.uDays} d × ${u.uRlqN} kWh/kg    = ${f(rlN/1000,1)} MWh`;
+  const perKg=uBasis==="kg", unit=perKg?"kWh/kg H₂":"MWh";
+  const bars=[
+    {name:"LH₂ · liquefaction",h2:cargoL,segs:[{k:"Liquefaction",v:liq,c:"var(--c1)"},{k:"Export-tank BOG reliq",v:rlL,c:"var(--c6)"}]},
+    {name:"NH₃ · Haber-Bosch",h2:h2N,segs:[{k:"Haber-Bosch",v:hb,c:"var(--c2)"},{k:"Export-tank BOG reliq",v:rlN,c:"var(--c6)"}]}]
+    .map(b=>{const d=perKg?b.h2:1000;const segs=b.segs.map(z=>({...z,v:z.v/d}));return {...b,segs,tot:segs.reduce((a,z)=>a+z.v,0)}});
+  const vf=v=>perKg?(v<0.1?f(v,3):f(v,2)):(v<100?f(v,1):f(v,0));
+  const [L,N]=bars;
+  $("uTitle").textContent=`Liquefaction takes about ${f(L.tot/N.tot,1)}× the energy of Haber-Bosch${perKg?" per kg H₂":" per cargo"}`;
+  legend("c7leg",[{t:"Liquefaction",c:"var(--c1)",cls:"box"},{t:"Haber-Bosch",c:"var(--c2)",cls:"box"},{t:"Export-tank BOG reliq",c:"var(--c6)",cls:"box"}]);
+  hbars($("c7"),bars,{max:Math.max(L.tot,N.tot)*1.02,xlabel:perKg?"Energy, kWh per kg H₂":"Energy per 40,000 m³ cargo, MWh",xf:v=>perKg?f(v,0):f(v/1000,0)+"k",vf,unit,inlbl:true,ml:170,bh:40});
+  $("uTiles").innerHTML=
+    tile("H₂ used per cargo",`${f(cargoL/1000,0)} <small>t LH₂ route</small>`,`NH₃ route ${f(h2N/1000,0)} t, ${f(h2N/cargoL,2)}× more`)+
+    tile("LH₂ route",`${vf(L.tot)} <small>${unit}</small>`,`reliq ${vf(L.segs[1].v)} of it`)+
+    tile("NH₃ route",`${vf(N.tot)} <small>${unit}</small>`,`reliq ${vf(N.segs[1].v)} of it`)+
+    tile("LH₂ ÷ NH₃",`${f(L.tot/N.tot,1)}<small>×</small>`,perKg?"per kg H₂":"per cargo; the NH₃ cargo carries more H₂");
+  $("uTank2").innerHTML=`<thead><tr><th>Export tank</th><th>Inventory, kg</th><th>BOR, %/day</th><th>Boil-off, kg/day</th><th>Reliq, kWh/kg</th><th>Reliq energy, MWh/day</th><th>Per cargo (${u.uDays} d), MWh</th></tr></thead><tbody>
+    <tr><td>LH₂, ${f(u.uTank)} m³</td><td>${f(invL)}</td><td>${u.uBorL}</td><td>${f(bogL)}</td><td>${u.uRlqL}</td><td>${f(bogL*u.uRlqL/1000,2)}</td><td>${f(rlL/1000,1)}</td></tr>
+    <tr><td>NH₃, ${f(u.uTank)} m³</td><td>${f(invN)}</td><td>${u.uBorN}</td><td>${f(bogN)}</td><td>${u.uRlqN}</td><td>${f(bogN*u.uRlqN/1000,2)}</td><td>${f(rlN/1000,1)}</td></tr></tbody>`;
+}
+UIDS.forEach(k=>$(k).addEventListener("input",renderUp));
+IDS.forEach(k=>$(k).addEventListener("input",renderUp));
+$("uReset").addEventListener("click",()=>{UIDS.forEach(k=>$(k).value=UDEF[k]);renderUp()});
+function setUBasis(b){uBasis=b;$("ubShip").setAttribute("aria-pressed",b==="ship");$("ubKg").setAttribute("aria-pressed",b==="kg");renderUp()}
+$("ubShip").addEventListener("click",()=>setUBasis("ship"));
+$("ubKg").addEventListener("click",()=>setUBasis("kg"));
+$("tabUp").addEventListener("click",()=>showSheet("upstream"));
+renderUp();
+{let w=location.hash.slice(1);if(!["upstream","shipping","downstream"].includes(w)){try{w=localStorage.getItem("sheet")}catch(e){}}showSheet(["upstream","shipping","downstream"].includes(w)?w:"shipping")}
 
 </script>
