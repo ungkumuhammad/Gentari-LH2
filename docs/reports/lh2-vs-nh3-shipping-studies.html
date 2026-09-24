@@ -306,11 +306,11 @@ footer code{font-family:var(--mono);font-size:11.5px;color:var(--ink-2)}
 <h2 style="font-size:19px;margin:26px 0 10px">Shipping — LH₂ vs NH₃ at sea</h2>
 <section class="controls" aria-label="Shipping-only inputs">
   <div class="grid-in">
-    <div class="field"><label for="i-dist">One-way distance, km <span class="tag est">EST</span></label><input type="number" id="i-dist" value="21200" min="200" max="30000" step="100"></div>
+    <div class="field"><label for="i-dist">NH₃ one-way distance, km <span class="tag est">EST</span></label><input type="number" id="i-dist" value="21200" min="200" max="30000" step="100"></div>
     <div class="field">
-      <label for="i-lh2bor">LH₂ voyage boil-off, %/day <span class="tag est">EST</span></label>
-      <input type="number" id="i-lh2bor" value="0.2" min="0" max="5" step="0.05">
-      <input type="range" id="r-lh2bor" value="0.2" min="0" max="4" step="0.05" aria-label="LH2 voyage boil-off rate">
+      <label for="i-lh2bor">LH₂ voyage boil-off, %/day <span class="tag cit">USER</span></label>
+      <input type="number" id="i-lh2bor" value="0.4" min="0" max="5" step="0.05">
+      <input type="range" id="r-lh2bor" value="0.4" min="0" max="4" step="0.05" aria-label="LH2 voyage boil-off rate">
     </div>
     <div class="field">
       <label for="i-bunker">NH₃ propulsion fuel, t/day <span class="tag est">USER</span></label>
@@ -318,20 +318,27 @@ footer code{font-family:var(--mono);font-size:11.5px;color:var(--ink-2)}
       <div class="hint" id="hint-nh3duty"></div>
     </div>
     <div class="field">
-      <label for="i-lh2bunker">LH₂ propulsion fuel, t/day <span class="tag est">CHECK</span></label>
-      <input type="number" id="i-lh2bunker" value="25" min="1" max="300" step="1">
-      <input type="range" id="r-lh2bunker" value="25" min="10" max="200" step="5" aria-label="LH2 propulsion fuel rate">
+      <label for="i-lh2bunker">LH₂ bunker, sea t/day VLSFO <span class="tag cit">USER</span></label>
+      <input type="number" id="i-lh2bunker" value="39" min="1" max="300" step="1">
+      <input type="range" id="r-lh2bunker" value="39" min="10" max="200" step="5" aria-label="LH2 propulsion fuel rate, sea">
       <div class="hint" id="hint-lh2duty"></div>
     </div>
+    <div class="field"><label for="i-lh2bunkerport">LH₂ bunker, port t/day VLSFO <span class="tag cit">USER</span></label><input type="number" id="i-lh2bunkerport" value="20" min="1" max="200" step="1"></div>
     <div class="field">
       <label for="i-h2price">Hydrogen value, USD/kg <span class="tag est">SET IT</span></label>
       <input type="number" id="i-h2price" value="5" min="0" max="20" step="0.25">
       <input type="range" id="r-h2price" value="5" min="0" max="12" step="0.1" aria-label="Hydrogen price">
     </div>
-    <div class="field"><label for="i-vlsfoprice">VLSFO price, USD/t <span class="tag est">SET IT</span></label><input type="number" id="i-vlsfoprice" value="600" min="100" max="2000" step="25"></div>
+    <div class="field"><label for="i-vlsfoprice">VLSFO price, USD/t <span class="tag cit">USER</span></label><input type="number" id="i-vlsfoprice" value="553" min="100" max="2000" step="1"></div>
     <div class="field"><label for="i-nh3sec">NH₃ reliq. energy, kWh/kg BOG <span class="tag est">EST</span></label><input type="number" id="i-nh3sec" value="0.25" min="0" max="8" step="0.05"></div>
     <div class="field"><label for="i-lh2cap">LH₂ capacity, m³ <span class="tag cit">KHI</span></label><input type="number" id="i-lh2cap" value="160000" min="1000" max="300000" step="5000"></div>
-    <div class="field"><label for="i-lh2speed">LH₂ speed, km/h <span class="tag cit">KHI</span></label><input type="number" id="i-lh2speed" value="29.6" min="10" max="45" step="0.4"></div>
+    <div class="field"><label for="i-lh2vol">LH₂ loadable volume, kg H₂ <span class="tag cit">USER</span></label><input type="number" id="i-lh2vol" value="9390742" min="1000000" max="20000000" step="1000"></div>
+    <div class="field"><label for="i-lh2heel">LH₂ heel retained, % <span class="tag cit">USER</span></label><input type="number" id="i-lh2heel" value="5" min="0" max="20" step="0.5"></div>
+    <div class="field"><label for="i-lh2chr">LH₂ charter hire rate, USD/day <span class="tag cit">USER</span></label><input type="number" id="i-lh2chr" value="131000" min="10000" max="500000" step="1000"></div>
+    <div class="field"><label for="i-lh2rtd">LH₂ round-voyage days (fixed) <span class="tag cit">USER</span></label><input type="number" id="i-lh2rtd" value="35" min="5" max="90" step="1"></div>
+    <div class="field"><label for="i-lh2portcost1">Kakinada port cost, USD/call <span class="tag cit">USER</span></label><input type="number" id="i-lh2portcost1" value="125308" min="0" max="1000000" step="1000"></div>
+    <div class="field"><label for="i-lh2portcost2">Chiba port cost, USD/call <span class="tag cit">USER</span></label><input type="number" id="i-lh2portcost2" value="75944" min="0" max="1000000" step="1000"></div>
+    <div class="field"><label for="i-lh2speed">LH₂ speed, knots <span class="tag cit">USER</span></label><input type="number" id="i-lh2speed" value="13" min="5" max="35" step="0.5"></div>
     <div class="field"><label for="i-lh2port">LH₂ port days / call <span class="tag cit">KHI</span></label><input type="number" id="i-lh2port" value="1.25" min="0.25" max="6" step="0.25"></div>
     <div class="field"><label for="i-nh3cap">NH₃ capacity, m³ <span class="tag est">USER</span></label><input type="number" id="i-nh3cap" value="24000" min="5000" max="120000" step="1000"></div>
     <div class="field"><label for="i-nh3speed">NH₃ speed, knots <span class="tag est">USER</span></label><input type="number" id="i-nh3speed" value="13" min="6" max="24" step="0.5"></div>
@@ -435,7 +442,7 @@ footer code{font-family:var(--mono);font-size:11.5px;color:var(--ink-2)}
   <h1>LH<span style="font-size:.62em;vertical-align:-.08em">2</span> vs Ammonia at Sea</h1>
   <p class="deck">Both ships have to move themselves as well as their cargo. The ammonia carrier burns <b>25 t/day of VLSFO</b> and re-liquefies its boil-off. The hydrogen carrier burns its own cargo instead — so the real question is whether that boil-off <b>covers the fuel bill, falls short of it, or overshoots it</b>, and what the hydrogen given up is worth.</p>
   <div class="spec">
-    <span><b>Corridor</b> Kakinada → Hamburg</span>
+    <span><b>Corridor</b> LH₂: Kakinada, India → Chiba, Japan (real charter, fixed 35-day round trip) · NH₃: illustrative distance-driven route (below, default Kakinada → Hamburg)</span>
     <span><b>Boundary</b> shipping only · propulsion fuel charged over the laden leg, both vessels alike</span>
     <span><b>Vessels</b> <span id="spec-vessels">LH₂ 160,000 m³ · NH₃ 24,000 m³ fully refrigerated</span></span>
     <span><b>Duty basis</b> propulsion fuel set per carrier — see the caveat below</span>
@@ -575,10 +582,11 @@ footer code{font-family:var(--mono);font-size:11.5px;color:var(--ink-2)}
     <div class="legend">
       <span><i class="sw" style="background:var(--lh2)"></i>LH₂ carrier</span>
       <span><i class="sw" style="background:var(--nh3)"></i>NH₃ carrier</span>
-      <span style="color:var(--ink-3)">Dashed verticals: the two Kakinada→Hamburg routings</span>
+      <span style="color:var(--ink-3)">Dashed verticals: the two illustrative NH₃ routings. LH₂ is now flat — see note below</span>
       <span class="axes">X · one-way distance (km)<br>Y · annual H₂-equivalent delivered per vessel (ktpa H₂)</span>
     </div>
     <div class="chart-scroll"><svg class="chart" id="c5" viewBox="0 0 880 350" role="img" aria-label="Annual hydrogen-equivalent delivered per vessel against distance"></svg><div class="tip" id="t5"></div></div>
+    <p class="intro" style="font-size:12.5px;color:var(--ink-3)">[NOTE] LH₂ is on the real, fixed Kakinada→Chiba charter (35-day round trip) — its throughput no longer depends on this chart's distance axis, so its line is now a flat reference at the real-charter value, not a distance response. Only the NH₃ curve responds to the swept distance.</p>
     <div class="readout" id="r5"></div>
   </div>
 </section>
@@ -962,6 +970,20 @@ footer code{font-family:var(--mono);font-size:11.5px;color:var(--ink-2)}
 </section>
 
 <section class="study">
+  <div class="study-head"><h2>Energy by segment, in MJ — LH₂ and NH₃ side by side</h2><span class="lever">At current inputs, MJ and MJ/kg H₂ (this study's own units — the rest of this sheet stays on kWh/kg)</span></div>
+  <p class="intro">Two separate tables, one per route, each in both absolute MJ (annualised at the shared ktpa basis for upstream/downstream, per voyage for shipping) and MJ per kg H₂ delivered. Upstream splits liquefaction/synthesis electricity from terminal boil-off re-liquefaction electricity; shipping shows bunker fuel plus, for LH₂, any surplus (vented) hydrogen as its own separate line rather than summed in; downstream splits electricity, natural gas, and self-fuelled ammonia (NH₃ side) as three distinct quantities.</p>
+  <div class="panel">
+    <div class="panel-pad"><div class="eyebrow">LH₂ route — energy by segment</div></div>
+    <div class="tbl-scroll"><table id="ov-mj-lh2"></table></div>
+  </div>
+  <div class="panel" style="margin-top:14px">
+    <div class="panel-pad"><div class="eyebrow">NH₃ route — energy by segment</div></div>
+    <div class="tbl-scroll"><table id="ov-mj-nh3"></table></div>
+  </div>
+  <div class="readout" id="ovr-mj"></div>
+</section>
+
+<section class="study">
   <div class="study-head"><h2>Where does the electricity go, end to end?</h2><span class="lever">At current inputs</span></div>
   <p class="intro">Upstream (liquefaction or Haber–Bosch) and downstream (regas or cracking) both draw grid electricity, in the same unit, at the same 100 ktpa basis — so these two segments genuinely add up. Shipping is deliberately absent from this chart: its energy is bunker fuel combusted at sea, a different carrier entirely, shown in the cost comparison instead.</p>
   <div class="panel">
@@ -978,15 +1000,16 @@ footer code{font-family:var(--mono);font-size:11.5px;color:var(--ink-2)}
 
 <section class="study">
   <div class="study-head"><h2>What does each segment cost, side by side?</h2><span class="lever">At current inputs</span></div>
-  <p class="intro">Shown deliberately as three separate bars per route, not stacked into one total. Shipping's cost basis (boil-off only, or full leg — your toggle on the Shipping sheet) and downstream's (electricity + NG + ammonia) answer different questions at different points in the chain; upstream answers none, because Kawasaki never disclosed a liquefaction CapEx or OpEx figure.</p>
+  <p class="intro">Upstream is scoped to <b>electricity cost only</b> (not full CapEx/OpEx — Kawasaki never disclosed liquefaction CapEx/OpEx, and Haber–Bosch has no cost figure either), so it can now sit alongside the other segments as a comparable USD/kg H₂ bar. Shipping's LH₂ bar is the <b>real charter's total voyage cash cost</b> — charter hire + port dues + VLSFO purchased, using the %BOR input to size how much boil-off substitutes for bunker fuel and the H₂ price to value any surplus (shown as its own separate stack, not folded into the cash total); NH₃'s shipping bar stays on today's fuel-only model — there is no equivalent NH₃ charter-hire or port-cost data, and that gap is flagged, not filled. Downstream is electricity + NG + ammonia. Because every segment now has a defensible (if partial) cost figure, a "Full stack" group sums them per route — clearly labelled as electricity-only for upstream, so it is not mistaken for a complete CapEx-inclusive total.</p>
   <div class="panel">
     <div class="panel-pad"><div class="eyebrow">Cost, USD per kg H₂ delivered, by segment</div></div>
     <div class="legend">
       <span><i class="sq" style="background:var(--lh2)"></i>LH₂ route</span>
       <span><i class="sq" style="background:var(--nh3)"></i>NH₃ route</span>
-      <span class="axes">Groups · Upstream (no figure) / Shipping / Downstream<br>Y · cost (USD/kg H₂)</span>
+      <span class="sq hatch"></span><span>LH₂ surplus H₂ value (separate stack, not in the cash total)</span>
+      <span class="axes">Groups · Upstream (electricity only) / Shipping / Downstream / Full stack<br>Y · cost (USD/kg H₂)</span>
     </div>
-    <div class="chart-scroll"><svg class="chart" id="ovc2" viewBox="0 0 880 340" role="img" aria-label="Cost per kilogram of hydrogen by segment and route"></svg><div class="tip" id="ovt2"></div></div>
+    <div class="chart-scroll"><svg class="chart" id="ovc2" viewBox="0 0 1360 380" role="img" aria-label="Cost per kilogram of hydrogen by segment and route, including a full-stack total"></svg><div class="tip" id="ovt2"></div></div>
     <div class="readout" id="ovr2"></div>
   </div>
 </section>
@@ -1002,7 +1025,7 @@ footer code{font-family:var(--mono);font-size:11.5px;color:var(--ink-2)}
 <section class="gaps">
   <h3>What this summary can and can't tell you</h3>
   <ol>
-    <li><b>There is no honest total chain cost.</b> Kawasaki declined to disclose liquefaction CapEx or OpEx ("Feasibility Study necessary") and the ammonia synthesis side has no cost figure either — only its electrical energy is modelled. Summing shipping and downstream cost while silently omitting upstream would understate whichever route has the larger hidden upstream cost; this sheet shows the two disclosed cost segments side by side instead and says plainly that upstream's piece is missing from both.</li>
+    <li><b>The "full stack" cost total is electricity-only for upstream, not CapEx-complete.</b> Kawasaki declined to disclose liquefaction CapEx or OpEx ("Feasibility Study necessary") and the ammonia synthesis side has no cost figure either — only its electrical energy is modelled. Scoping upstream to electricity cost alone (at the shared USD/MWh input) makes a full-stack total newly defensible without fabricating a CapEx/OpEx figure this repository does not have — but it still understates both routes' true upstream cost by whatever that undisclosed CapEx/OpEx would add, and it does so roughly equally on both sides only to the extent their capital intensity is similar, which is not verified. Read the full-stack bars as "everything we can currently price," not as a complete lifecycle cost.</li>
     <li><b>Two different energy totals live on this sheet, on purpose.</b> The "electrical energy" chart further down counts grid electricity only, upstream + downstream, because that is the one energy carrier genuinely common to both segments. The "total energy required" chart at the top of this sheet is broader and answers a different question — it adds electricity, purchased VLSFO, and hydrogen the LH₂ carrier burns or vents from its own cargo, all converted to kWh (this artifact's standard energy unit throughout), because for an <em>energy-only</em> comparison (not a cost or emissions one) it is legitimate to sum different energy carriers on a common heat-value basis. Do not read the two charts as disagreeing; they are scoped differently and say so in their own headings.</li>
     <li><b>The total-energy chart rescales upstream for the LH₂ route, not the NH₃ route, and says why.</b> Producing 1 kg of hydrogen that actually survives the voyage requires liquefying slightly more than 1 kg, because some of what leaves the liquefier boils off and never reaches the customer — the Shipping sheet's own boil-off physics (evaluate()'s loss fraction) is used to scale upstream's LH₂ figure up by that same amount. The ammonia route needs no equivalent correction because its boil-off is re-liquefied and returned to the cargo (mass conserved) — the cost this imposes instead is the VLSFO its genset burns, already counted in its shipping bar. This chart does <em>not</em> apply an analogous correction to ammonia's upstream figure for the extra ammonia the cracker burns as fuel beyond the pure stoichiometric ratio (KBR's disclosed feed ratios run above 5.632 t/t) — Haber–Bosch's own sheet is sized only to the stoichiometric requirement, so that fuel-ammonia's own upstream production energy is not represented anywhere on this sheet. This likely understates the ammonia route's true total somewhat; by how much depends on the firing mode selected on the Inputs sheet.</li>
     <li><b>Ambient heat is deliberately excluded.</b> LH₂ regasification's heat duty (<code>id-regasheat</code>, shown in the ledger for reference) comes free from ambient seawater and draws no primary energy, unlike the cracker's purchased natural gas or self-fuelled ammonia — including it in the "energy required" total would overstate what the LH₂ route actually has to produce or buy.</li>
@@ -1027,11 +1050,14 @@ const H2_LHV = 120.0;     // MJ/kg
 const KN = 1.852;         // km/h per knot
 const GWP_H2 = 11.6;      // [ESTIMATE] CO2e per kg of VENTED H2, 100-yr
 
-const DEFAULTS = {dist:21200, lh2bor:0.2, bunker:25, lh2bunker:25, h2price:5, vlsfoprice:600, nh3sec:0.25,
-  lh2cap:160000, lh2speed:29.6, lh2port:1.25, lh2rho:70.8,
+const DEFAULTS = {dist:21200, lh2bor:0.4, bunker:25, lh2bunker:39, h2price:5, vlsfoprice:553, nh3sec:0.25,
+  lh2cap:160000, lh2speed:13, lh2port:1.25, lh2rho:70.8,
   nh3cap:24000, nh3speed:13, nh3port:1.5, nh3rho:682, nh3bor:0.15,
   vlsfolhv:40.2, engratio:1, genset:45, fill:98, avail:90, demand:100,
-  vlsfoequiv38:38, nh3pilot:5};
+  vlsfoequiv38:38, nh3pilot:5,
+  /* Real LH2 charter assumptions (Kakinada, India -> Chiba, Japan), user-supplied 2026-09-24 */
+  lh2chr:131000, lh2vol:9390742, lh2heel:5, lh2rtd:35, lh2bunkerport:20,
+  lh2portcost1:125308, lh2portcost2:75944};
 /* Shared-Inputs-sheet id overrides: these DEFAULTS keys read from the
    canonical s-* fields on the Inputs sheet instead of their own i-<key>
    element, which no longer exists. Every other key keeps the i-<key> pattern. */
@@ -1047,22 +1073,46 @@ function readInputs(){
   for (const k of Object.keys(DEFAULTS)){ const e = $(shipId(k)); V[k] = e ? parseFloat(e.value) : DEFAULTS[k]; if (!isFinite(V[k])) V[k] = DEFAULTS[k]; }
 }
 
+/* LH2 branch replaced 2026-09-24 with the real Kakinada->Chiba charter: fixed
+   35-day round trip; cargo from the vessel's loadable H2 volume less heel,
+   not capacity*rho*fill; boil-off compounds over the derived one-way SEA days
+   only. NH3 branch is untouched -- still the distance/speed-derived model.
+   Port days/call (i-lh2port) x2 gives the LH2 round trip's total port days;
+   the remainder of the fixed round trip is sea days, split evenly
+   outbound/return since no day-by-day log was supplied. */
 function evaluate(isNH3, dist, o){
   o = o || {};
-  const cap   = o.cap   !== undefined ? o.cap   : (isNH3 ? V.nh3cap : V.lh2cap);
-  const rho   = o.rho   !== undefined ? o.rho   : (isNH3 ? V.nh3rho : V.lh2rho);
-  const speed = o.speed !== undefined ? o.speed : (isNH3 ? V.nh3speed*KN : V.lh2speed);
   const port  = o.port  !== undefined ? o.port  : (isNH3 ? V.nh3port : V.lh2port);
   const bor   = o.bor   !== undefined ? o.bor   : (isNH3 ? V.nh3bor : V.lh2bor);
-  const fill = V.fill/100, avail = V.avail/100;
+  const avail = V.avail/100;
+  if (!isNH3){
+    const rtd = V.lh2rtd;
+    const portDays = 2*port;
+    const seaDaysTotal = Math.max(0, rtd - portDays);
+    const oneWay = seaDaysTotal/2;                // one-way (laden) sea transit days
+    const heelFrac = V.lh2heel/100;
+    const cargo = V.lh2vol*(1-heelFrac);          // deliverable cargo after heel retained, kg H2
+    const bogFrac = 1 - Math.pow(1 - bor/100, oneWay);
+    const lossFrac = bogFrac;
+    const delivered = cargo*(1-lossFrac);
+    const trips = 365/rtd*avail;
+    const annualCargo = delivered*trips;
+    const annualH2e = annualCargo;
+    return {oneWay, rtd, cargo, bogFrac, lossFrac, delivered, trips, annualCargo, annualH2e,
+            fleet: Math.ceil(V.demand*1e6/annualH2e), portDays, seaDaysTotal};
+  }
+  const cap = o.cap !== undefined ? o.cap : V.nh3cap;
+  const rho = o.rho !== undefined ? o.rho : V.nh3rho;
+  const speed = o.speed !== undefined ? o.speed : V.nh3speed*KN;
+  const fill = V.fill/100;
   const oneWay = dist/speed/24, rtd = 2*oneWay + 2*port;
   const cargo = cap*rho*fill;
   const bogFrac = 1 - Math.pow(1 - bor/100, oneWay);       // compounding over the laden leg
-  const lossFrac = isNH3 ? 0 : bogFrac;                     // NH3 re-liquefies: mass conserved
+  const lossFrac = 0;                                       // NH3 re-liquefies: mass conserved
   const delivered = cargo*(1-lossFrac);
   const trips = 365/rtd*avail;
   const annualCargo = delivered*trips;
-  const annualH2e = isNH3 ? annualCargo/RATIO : annualCargo;
+  const annualH2e = annualCargo/RATIO;
   return {oneWay, rtd, cargo, bogFrac, lossFrac, delivered, trips, annualCargo, annualH2e,
           fleet: Math.ceil(V.demand*1e6/annualH2e)};
 }
@@ -1073,27 +1123,50 @@ function evaluate(isNH3, dist, o){
 function fuelBalance(isNH3, dist, o){
   o = o || {};
   const r = evaluate(isNH3, dist, o);
-  const days = r.oneWay;
-  const duty = isNH3 ? V.bunker : V.lh2bunker;
-  const demandMJ = duty*1000*days*V.vlsfolhv;
-  const bogKg = r.cargo*r.bogFrac;
   if (isNH3){
+    const days = r.oneWay;
+    const duty = V.bunker;
+    const demandMJ = duty*1000*days*V.vlsfolhv;
+    const bogKg = r.cargo*r.bogFrac;
     const reliqKwh = bogKg*V.nh3sec;
     const reliqT = reliqKwh*3.6/(V.vlsfolhv*(V.genset/100))/1000;
     return {days, demandMJ, bogKg, usefulKg:0, surplusKg:0, covered:0,
             propT:duty*days, reliqT, totalT:duty*days + reliqT, displacedT:0,
             cargoLostKg:0, deliveredH2e:r.delivered/RATIO};
   }
+  /* LH2 branch replaced 2026-09-24 with the real charter's two-phase bunker
+     consumption (sea vs port, both VLSFO, USD 553/MT) plus charter-hire and
+     port-cost cash lines, none of which existed in the prior model. Boil-off
+     gas is generated over the laden one-way leg (evaluate()'s bogKg) and is
+     applied, [ASSUMPTION], against the WHOLE round trip's propulsion+hotel
+     demand (heel continues to boil off gently on the ballast return too, but
+     that return-leg BOG is not separately modelled -- flagged, not fabricated).
+     "Total cost of the voyage" is a CASH figure: CHR + port dues + VLSFO
+     purchased. Surplus (vented) H2 is valued separately and kept OUT of that
+     cash total -- it is an opportunity-cost stack, not an outlay. */
+  const portDays = r.portDays, seaDaysTotal = r.seaDaysTotal;
+  const bunkerMT = seaDaysTotal*V.lh2bunker + portDays*V.lh2bunkerport;
+  const demandMJ = bunkerMT*1000*V.vlsfolhv;
+  const days = r.oneWay;
+  const bogKg = r.cargo*r.bogFrac;
   const perKg = H2_LHV*V.engratio;
   const bogE = bogKg*perKg;
   const useful = Math.min(bogE, demandMJ), surplus = Math.max(0, bogE-demandMJ);
   const shortfall = Math.max(0, demandMJ-bogE);
   const topupT = shortfall/V.vlsfolhv/1000;
-  return {days, demandMJ, bogKg, usefulKg:useful/perKg, surplusKg:surplus/perKg,
+  const displacedT = useful/V.vlsfolhv/1000;
+  const chrCost = V.lh2chr*r.rtd;
+  const portCost = V.lh2portcost1 + V.lh2portcost2;
+  const fuelCost = topupT*V.vlsfoprice;
+  const totalVoyageCost = chrCost + portCost + fuelCost;
+  const surplusKg = surplus/perKg;
+  const h2SurplusValue = surplusKg*V.h2price;
+  return {days, demandMJ, bogKg, usefulKg:useful/perKg, surplusKg,
           covered: demandMJ>0 ? bogE/demandMJ : Infinity,
-          displacedT: useful/V.vlsfolhv/1000,
-          propT:topupT, reliqT:0, totalT:topupT,
-          cargoLostKg:bogKg, deliveredH2e:r.delivered};
+          displacedT, propT:topupT, reliqT:0, totalT:topupT,
+          cargoLostKg:bogKg, deliveredH2e:r.delivered,
+          chrCost, portCost, fuelCost, totalVoyageCost, h2SurplusValue,
+          seaDaysTotal, portDays, bunkerMT};
 }
 
 /* Two framings.
@@ -1789,10 +1862,16 @@ function render(){
     ["Disposition", "burned as fuel — cargo lost", "re-liquefied — cargo kept"],
     ["Burned usefully for propulsion", nf(lfb.usefulKg/1000,1)+" t H₂", "—"],
     ["Surplus "+(VENT?"vented":"burned in GCU"), nf(lfb.surplusKg/1000,1)+" t H₂"+(VENT&&lfb.surplusKg>0?" ≈ "+nf(co2e,0)+" t CO₂e":""), "—"],
-    ["g","Bunker fuel, laden leg"],
-    ["Propulsion demand", nf(V.bunker*lfb.days,0)+" t VLSFO-eq", nf(V.bunker*nfb.days,0)+" t VLSFO-eq"],
+    ["g","Bunker fuel"],
+    ["Propulsion+hotel demand", nf(lfb.bunkerMT,0)+" t VLSFO-eq ("+nf(lfb.seaDaysTotal,1)+" d sea @ "+nf(V.lh2bunker)+" t/d + "+nf(lfb.portDays,2)+" d port @ "+nf(V.lh2bunkerport)+" t/d)", nf(V.bunker*nfb.days,0)+" t VLSFO-eq"],
     ["Covered by boil-off", nf(lfb.covered*100,0)+" % ("+nf(lfb.displacedT,0)+" t displaced)", "0 %"],
     ["VLSFO purchased", nf(lfb.propT,0)+" t", nf(nfb.propT,0)+" t + "+nf(nfb.reliqT,1)+" t reliq = "+nf(nfb.totalT,0)+" t"],
+    ["g","Voyage cash cost (LH₂ real charter · NH₃ fuel-only, flagged)"],
+    ["Charter hire ("+nf(V.lh2chr,0)+"/day × "+nf(lh2.rtd,0)+" d)", "$"+nf(lfb.chrCost,0), "[GAP] no equivalent NH₃ CHR data"],
+    ["Port cost (Kakinada + Chiba)", "$"+nf(lfb.portCost,0), "[GAP] no equivalent NH₃ port-cost data"],
+    ["VLSFO purchased @ $"+nf(V.vlsfoprice,0)+"/t", "$"+nf(lfb.fuelCost,0), "$"+nf((nfb.propT+nfb.reliqT)*V.vlsfoprice,0)],
+    ["Total voyage cash cost", "<b>$"+nf(lfb.totalVoyageCost,0)+"</b>", "<b>fuel-only — see gap above</b>"],
+    ["Surplus H₂ value @ $"+nf(V.h2price,2)+"/kg (separate — not in cash total)", "$"+nf(lfb.h2SurplusValue,0)+" ("+nf(lfb.surplusKg/1000,1)+" t)", "—"],
     ["g","Cost of the leg, per kg H₂ delivered"],
     ["Hydrogen given up @ $"+nf(V.h2price,2)+"/kg", "$"+nf(lc.cargoPerKg,3), "$0.000"],
     [(MODE==="boiloff"?"Bunker fuel, net of displacement":"Bunker fuel")+" @ $"+nf(V.vlsfoprice,0)+"/t",
@@ -2791,6 +2870,16 @@ function renderDown(){
    Row = [label, lh2, nh3] or [label, lh2, nh3, detailRows] where detailRows
    is [[sublabel, lh2, nh3], ...]. Rows with a 4th element get a clickable
    chevron that reveals the breakdown as indented sub-rows. */
+/* Same row shape as ledgerHTML but with custom column headers (used for the
+   MJ / MJ-per-kg energy tables, whose two columns are units, not routes). */
+function unitTableHTML(rows, colA, colB){
+  let html = '<thead><tr><th>Metric</th><th>'+colA+'</th><th>'+colB+'</th></tr></thead><tbody>';
+  rows.forEach(r=>{
+    if (r[0]==="g"){ html += '<tr class="group"><td colspan="3">'+r[1]+'</td></tr>'; return; }
+    html += '<tr><td>'+r[0]+'</td><td class="n">'+r[1]+'</td><td class="n">'+r[2]+'</td></tr>';
+  });
+  return html+'</tbody>';
+}
 function ledgerHTML(rows, idPrefix){
   let html = '<thead><tr><th>Metric</th><th>LH₂ route</th><th>NH₃ route</th></tr></thead><tbody>';
   rows.forEach((r,i)=>{
@@ -2910,6 +2999,53 @@ function renderOverall(){
   const totalKwh_L = upConvL_ov+upTermL_ov+shipFuelL+shipLossL+downElecL;
   const totalKwh_N = upConvN+upTermN+shipFuelN+downElecN+downNgN+downNh3FuelN;
 
+  /* --- New 2026-09-24: MJ / MJ-per-kg energy tables, LH2 and NH3 side by side.
+     Kept in MJ deliberately (user direction) -- the kWh/kg chart above is left
+     untouched, so the two views are not required to numerically reconcile at
+     a glance; they are the same physics in two coexisting, clearly-scoped units.
+     Upstream/downstream MJ is annualised at the shared ktpa basis; shipping's
+     MJ is per voyage (per trip), per the request -- both routes also get a
+     MJ/kg H2 delivered column. */
+  const annualKgOv = U.h2ktpa*1e6;
+  const KWH2MJ = 3.6;
+  const mjTable = (rows, id) => { $(id).innerHTML = unitTableHTML(rows, "MJ", "MJ/kg H₂ delivered"); };
+  mjTable([
+    ["g","Upstream — annual, at "+nf(U.h2ktpa)+" ktpa H₂ basis (scaled for voyage boil-off loss)"],
+    ["Liquefaction electricity", nf(upConvL_ov*KWH2MJ*annualKgOv/1e9,1)+" GJ×10³/y", nf(upConvL_ov*KWH2MJ,2)+" MJ/kg"],
+    ["Terminal re-liq. of BOG electricity", nf(upTermL_ov*KWH2MJ*annualKgOv/1e9,1)+" GJ×10³/y", nf(upTermL_ov*KWH2MJ,2)+" MJ/kg"],
+    ["g","Shipping — per voyage ("+nf(sL.rtd||V.lh2rtd,0)+"-day round trip)"],
+    ["Bunker fuel (H2 burned + VLSFO top-up)", nf(shipFuelL*KWH2MJ*sL.deliveredH2e/1e6,2)+" TJ/voyage", nf(shipFuelL*KWH2MJ,2)+" MJ/kg"],
+    ["Surplus H2 released (separate stack — vented/GCU, not fuel)", nf(shipLossL*KWH2MJ*sL.deliveredH2e/1e6,2)+" TJ/voyage", nf(shipLossL*KWH2MJ,2)+" MJ/kg"],
+    ["g","Downstream — annual, at "+nf(U.h2ktpa)+" ktpa H₂ basis"],
+    ["Electricity required", nf(downElecL*KWH2MJ*annualKgOv/1e9,1)+" GJ×10³/y", nf(downElecL*KWH2MJ,2)+" MJ/kg"]
+  ], "ov-mj-lh2");
+  mjTable([
+    ["g","Upstream — annual, at "+nf(U.h2ktpa)+" ktpa H₂ basis"],
+    ["Haber–Bosch electricity", nf(upConvN*KWH2MJ*annualKgOv/1e9,1)+" GJ×10³/y", nf(upConvN*KWH2MJ,2)+" MJ/kg"],
+    ["Terminal re-liq. of BOG electricity", nf(upTermN*KWH2MJ*annualKgOv/1e9,1)+" GJ×10³/y", nf(upTermN*KWH2MJ,2)+" MJ/kg"],
+    ["g","Shipping — per voyage (illustrative "+nf(sDist)+" km route)"],
+    ["Bunker fuel (VLSFO, propulsion + re-liq.)", nf(shipFuelN*KWH2MJ*sN.deliveredH2e/1e6,2)+" TJ/voyage", nf(shipFuelN*KWH2MJ,2)+" MJ/kg"],
+    ["g","Downstream — annual, at "+nf(U.h2ktpa)+" ktpa H₂ basis"],
+    ["Electricity needed", nf(downElecN*KWH2MJ*annualKgOv/1e9,1)+" GJ×10³/y", nf(downElecN*KWH2MJ,2)+" MJ/kg"],
+    ["Natural gas needed", nf(downNgN*KWH2MJ*annualKgOv/1e9,1)+" GJ×10³/y", nf(downNgN*KWH2MJ,2)+" MJ/kg"],
+    ["Ammonia needed (self-fuelled, thermal)", nf(downNh3FuelN*KWH2MJ*annualKgOv/1e9,1)+" GJ×10³/y", nf(downNh3FuelN*KWH2MJ,2)+" MJ/kg"]
+  ], "ov-mj-nh3");
+  $("ovr-mj").innerHTML = "Same physics as the kWh/kg chart above, re-expressed in MJ per the requested units for this study. "+
+    "LH₂'s shipping surplus line ("+nf(shipLossL*KWH2MJ,2)+" MJ/kg, "+nf(sL.surplusKg/1000,1)+" t H₂/voyage) is vented or GCU-burned — "+
+    "no propulsion work done — and is kept as its own row rather than summed into the bunker-fuel line above it.";
+
+  /* --- New 2026-09-24: cost comparison, all four segments plus a full-stack
+     total. Upstream is scoped to ELECTRICITY COST ONLY (not full CapEx/OpEx --
+     still undisclosed for both routes), which is what makes a full-stack total
+     newly defensible: every segment now has a real, if partial, cost figure. */
+  const upCostL = (upConvL_ov+upTermL_ov)*D.elecprice/1000;
+  const upCostN = (upConvN+upTermN)*D.elecprice/1000;
+  const lh2ShipCashPerKg = sL.totalVoyageCost/sL.deliveredH2e;
+  const lh2ShipSurplusPerKg = sL.h2SurplusValue/sL.deliveredH2e;
+  const nh3ShipCashPerKg = costPerKg(sN,0,V.vlsfoprice,"full").perKg;
+  const fullStackL = upCostL + lh2ShipCashPerKg + dCost.lh2;
+  const fullStackN = upCostN + nh3ShipCashPerKg + dCost.nh3;
+
   $("ov-spec-basis").textContent = nf(U.h2ktpa)+" ktpa H₂, shared across all three segments";
 
   const wins = {lh2:0, nh3:0};
@@ -3002,21 +3138,35 @@ function renderOverall(){
 
   balanceChart("ovc2","ovt2",{
     yLabel:"Cost, USD/kg H₂", fmtY:v=>"$"+nf(v,2), fmtSeg:v=>"$"+nf(Math.abs(v),3), fmtTip:v=>"$"+nf(v,3)+"/kg",
+    hatchColor:C.lh2,
     cols:[
-      {label:"LH₂ · shipping", sub:"boil-off basis, "+nf(sDist)+" km", color:C.lh2, net:sCostL,
-       segs:[{label:"Shipping",v:Math.max(0,sCostL),fill:C.lh2,tip:C.lh2}]},
-      {label:"NH₃ · shipping", sub:"re-liquefaction only", color:C.nh3, net:sCostN,
-       segs:[{label:"Shipping",v:Math.max(0,sCostN),fill:C.nh3,tip:C.nh3}]},
+      {label:"LH₂ · upstream", sub:"electricity only", color:C.lh2, net:upCostL,
+       segs:[{label:"Upstream electricity",v:upCostL,fill:C.lh2,tip:C.lh2}]},
+      {label:"NH₃ · upstream", sub:"electricity only", color:C.nh3, net:upCostN,
+       segs:[{label:"Upstream electricity",v:upCostN,fill:C.nh3,tip:C.nh3}]},
+      {label:"LH₂ · shipping", sub:"real charter — CHR + port + VLSFO, net of BOR-covered fuel", color:C.lh2, net:lh2ShipCashPerKg,
+       segs:[{label:"Shipping — voyage cash cost",v:Math.max(0,lh2ShipCashPerKg),fill:C.lh2,tip:C.lh2},
+             {label:"Surplus H2 value (not in cash total)",v:lh2ShipSurplusPerKg,fill:"url(#hatch-ovc2)",tip:C.lh2}]},
+      {label:"NH₃ · shipping", sub:"fuel-only — [GAP] no equivalent CHR/port data", color:C.nh3, net:nh3ShipCashPerKg,
+       segs:[{label:"Shipping — fuel only",v:Math.max(0,nh3ShipCashPerKg),fill:C.nh3,tip:C.nh3}]},
       {label:"LH₂ · downstream", sub:"electricity only", color:C.lh2, net:dCost.lh2,
        segs:[{label:"Downstream",v:dCost.lh2,fill:C.lh2,tip:C.lh2}]},
       {label:"NH₃ · downstream", sub:"electricity + NG + ammonia", color:C.nh3, net:dCost.nh3,
-       segs:[{label:"Downstream",v:dCost.nh3,fill:C.nh3,tip:C.nh3}]}
+       segs:[{label:"Downstream",v:dCost.nh3,fill:C.nh3,tip:C.nh3}]},
+      {label:"LH₂ · full stack", sub:"upstream elec. + shipping cash + downstream — not CapEx-complete", color:C.lh2, net:fullStackL,
+       segs:[{label:"Upstream",v:upCostL,fill:C.lh2,tip:C.lh2},{label:"Shipping",v:Math.max(0,lh2ShipCashPerKg),fill:C.lh2,op:.75,tip:C.lh2},
+             {label:"Downstream",v:dCost.lh2,fill:C.lh2,op:.5,tip:C.lh2}]},
+      {label:"NH₃ · full stack", sub:"upstream elec. + shipping fuel + downstream — not CapEx-complete", color:C.nh3, net:fullStackN,
+       segs:[{label:"Upstream",v:upCostN,fill:C.nh3,tip:C.nh3},{label:"Shipping",v:Math.max(0,nh3ShipCashPerKg),fill:C.nh3,op:.75,tip:C.nh3},
+             {label:"Downstream",v:dCost.nh3,fill:C.nh3,op:.5,tip:C.nh3}]}
     ]});
   $("ovr2").innerHTML =
-    "<b>These four bars are not meant to be added together.</b> Shipping's "+usd(sCostL,3)+" (LH₂) and "+usd(sCostN,3)+
-    " (NH₃) price only the boil-off management burden of one voyage; downstream's "+usd(dCost.lh2,3)+" and "+usd(dCost.nh3,3)+
-    " price a full year of regas or cracking operating cost. <b>Neither includes upstream</b> — liquefaction and Haber–Bosch CapEx/OpEx are not in this repository at all. "+
-    "Read each bar as what it is: a partial, segment-level cost, not a piece of a chain total that will ever be complete without new data.";
+    "<b>Upstream, shipping and downstream are each their own bar — and, new as of this revision, a full-stack total per route.</b> Upstream is "+usd(upCostL,3)+" (LH₂) and "+usd(upCostN,3)+
+    " (NH₃), electricity only at "+nf(D.elecprice,0)+" USD/MWh — liquefaction and Haber–Bosch CapEx/OpEx are still not in this repository, so this is a partial upstream figure, not a full one. "+
+    "Shipping is now the real Kakinada→Chiba charter's total voyage cash cost for LH₂ ("+usd(lh2ShipCashPerKg,3)+"/kg — charter hire, port dues and VLSFO purchased, credited for boil-off that substituted for bunker fuel; its "+
+    usd(lh2ShipSurplusPerKg,3)+"/kg of surplus/vented hydrogen is shown as a separate hatched stack, not folded into that cash figure) against NH₃'s fuel-only "+usd(nh3ShipCashPerKg,3)+
+    "/kg, which still lacks equivalent charter-hire or port-cost data — that gap is flagged, not filled. Downstream stays electricity + NG + ammonia. "+
+    "<b>The full-stack bars ("+usd(fullStackL,3)+" LH₂ vs "+usd(fullStackN,3)+" NH₃) are a legitimate grand total only because upstream is scoped to electricity cost</b> — they are not, and should not be read as, a CapEx-inclusive whole-chain cost.";
 
   const ovrows=[
     ["g","Upstream (per kg H₂ at the export tank)"],

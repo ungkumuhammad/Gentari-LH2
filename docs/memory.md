@@ -4,7 +4,7 @@
 > Updated every session. `CLAUDE.md` points here — read this at the start of
 > any session where the user references prior work or continuing a task.
 >
-> Last updated: 2026-09-22
+> Last updated: 2026-09-24
 
 ---
 
@@ -1392,3 +1392,81 @@ Node `vm` + DOM-stub harness (catches temporal-dead-zone and reference bugs
 that `node --check` cannot). The new boil-off/ammonia-fuel formulas were
 additionally checked against hand-computed physics (e.g. the ammonia mass
 ratio matched the LHV ratio 40.2/18.6 ≈ 2.161 exactly).
+
+---
+
+## 2026-09-24 — Real LH2 charter data replaces the distance-derived LH2 voyage model; new MJ energy tables and full-stack cost graph on the Overall sheet
+
+User supplied a real LH2 charter data set (Kakinada, India → Chiba, Japan;
+CHR USD 131k/day; loadable volume 9,390,742 kg H2; heel 5%; BOR 0.4%/day;
+13 knots; fixed 35-day round trip; VLSFO bunker 39 t/day sea / 20 t/day port
+at USD 553/t; port costs Kakinada USD 125,308 / Chiba USD 75,944) and asked
+for the "Whole Value Chain" (Overall) sheet's graphs to be rebuilt around it.
+Three scope decisions were asked and locked before implementation:
+
+1. **LH2 voyage model: replaced, not added alongside.** `evaluate()`'s and
+   `fuelBalance()`'s LH2 branches now use the fixed 35-day round trip,
+   loadable-volume-less-heel cargo, and a two-phase (sea/port) bunker
+   consumption model, instead of the old distance/speed-derived formula.
+   The **NH3 branch is completely untouched** — still distance/speed-driven
+   on the Inputs-sheet `i-dist` field. This means LH2 no longer responds to
+   the Shipping sheet's distance-sweep studies (e.g. "Does distance change
+   who delivers more?") — those now render LH2 as a flat reference line at
+   the real-charter value; a note was added to that chart saying so rather
+   than leaving it to look like a bug.
+2. **NH3 shipping cost: gap flagged, not filled.** There is no equivalent
+   NH3 charter-hire-rate or port-cost data in this repository, so NH3 stays
+   on today's fuel-only cost model. Every new NH3 cost line explicitly says
+   `[GAP] no equivalent NH₃ CHR/port-cost data` rather than inventing a
+   symmetric figure — per CLAUDE.md §4, this is a tagged gap, not a fabricated
+   number.
+3. **New MJ energy tables use MJ / MJ per kg H2**, per explicit request —
+   the existing kWh/kg total-energy chart elsewhere on the Overall sheet
+   was left untouched. The two are not required to numerically reconcile at
+   a glance; they are the same underlying physics in two separately-scoped
+   units, each labelled as such.
+
+**10 new Inputs-sheet fields**, all auto-wired through the existing generic
+`DEFAULTS`/`renderAll()` machinery (no bespoke wiring needed): `i-lh2chr`,
+`i-lh2vol`, `i-lh2heel`, `i-lh2rtd`, `i-lh2bunkerport`, `i-lh2portcost1`,
+`i-lh2portcost2`, plus changed defaults on `i-lh2bor` (0.2→0.4 %/day),
+`i-lh2bunker` (25→39 t/day, relabelled "sea"), `i-vlsfoprice` (600→553
+USD/t), and `i-lh2speed` (29.6 km/h→13 knots, now display-only — no longer
+drives the fixed-round-trip model).
+
+**`fuelBalance()`'s LH2 branch** now also returns `chrCost`, `portCost`,
+`fuelCost`, `totalVoyageCost` (cash: CHR + port dues + VLSFO purchased —
+**deliberately excludes** the value of surplus/vented H2, which is an
+opportunity cost, not a cash outlay), `h2SurplusValue`, `seaDaysTotal`,
+`portDays`, `bunkerMT`. The pre-existing fields (`propT`, `totalT`,
+`displacedT`, `cargoLostKg`, `deliveredH2e`) were kept with the same
+meaning so every downstream consumer (`costPerKg()`, `coverBOR()`,
+`breakevenH2Price()`, `breakevenVLSFOPrice()`, the sweet-spot maps) kept
+working unmodified — verified by executing them in the DOM-stub harness,
+not just `node --check`.
+
+**Overall sheet additions:**
+- Two new side-by-side HTML tables (`ov-mj-lh2`, `ov-mj-nh3`, via a new
+  `unitTableHTML()` helper with custom MJ/MJ-per-kg column headers, since
+  the existing `ledgerHTML()` hardcodes "LH₂ route"/"NH₃ route" headers) —
+  upstream (liquefaction/HB electricity split from terminal re-liq
+  electricity), shipping (bunker fuel per voyage, LH2's surplus H2 as its
+  own row, not summed in), downstream (electricity for LH2; electricity +
+  NG + self-fuelled ammonia as three distinct rows for NH3).
+- The existing cost-comparison chart (`ovc2`) extended from 4 bars
+  (LH2/NH3 shipping, LH2/NH3 downstream) to 8: added **Upstream**
+  (electricity cost only, USD/kg, at the shared `s-elecprice` input) for
+  both routes, and a **Full stack** grand total per route (upstream
+  electricity + shipping cash cost + downstream). LH2 shipping's bar now
+  shows the real voyage cash cost with a separate hatched stack for surplus
+  H2 value (not folded into the cash total); NH3 shipping stays fuel-only,
+  flagged. The chart's `viewBox` was widened 880→1360 to fit 8 bars.
+- The sheet's own gaps note (previously "there is no honest total chain
+  cost") was rewritten to explain that the new full-stack total is
+  legitimate specifically because upstream is scoped to electricity cost
+  only — not a claim of CapEx-complete parity — so it can't be
+  over-read as a complete lifecycle cost.
+
+Published to the same artifact
+(https://claude.ai/artifact/2CqBBj9ozNr65hN1uXaBEq, version 22) and merged
+to `docs/reports/lh2-vs-nh3-shipping-studies.html` in this repo.
