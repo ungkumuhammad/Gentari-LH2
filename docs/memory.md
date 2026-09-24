@@ -1441,3 +1441,11 @@ Defaults (20 laden days, no electrolysis): LH2 13.27 kWh/kg delivered (2,605 t; 
 burned 2.90, VLSFO 0.51, regas 0.05); NH3 NG-fired cracker 11.36 (4,197 t; cracker 8.56, ship fuel 1.63, HB 1.16);
 NH3 clean fuel 11.66 (3,789 t). NH3 ship fuel assumed bunkered, not from cargo. With electrolysis on, LH2 wins
 (it loses less H2: 92 % delivered vs 86 % / 78 %). HB 1 kWh/kg H2 (ASU?) remains the swing input.
+
+### Case Study sheet: contracted annual volume (2026-09-24, same session)
+
+Added a "Case Study" tab (last). Input: H2 delivered ktpa (default 100); fleet: port days 1.25 (KHI midpoint),
+availability 90 % (ASSUMPTION); round trip = 2 × sea days + 2 × port days. Scales Full Chain per-kg results.
+At 100 ktpa, 20 sea days: LH2 38.4 cargoes, 5 ships (4.97 — marginal), 108.7 ktpa H2 in, 1,327 GWh/y (152 MW avg);
+NH3 NG-fired 23.8 cargoes, 4 ships (3.08), 650 ktpa NH3, 1,136 GWh/y; NH3 clean 26.4 cargoes, 4 ships, 720 ktpa NH3,
+1,166 GWh/y. Export-tank BOG scales per cargo (tank farm not sized).
