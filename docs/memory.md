@@ -1288,3 +1288,107 @@ should be retired in favour of the downstream sheet's more specific figures
 (`$140/MWh` KBR-cited, `0.1%/day` matched to LH₂ at user direction) once
 inputs are unified, per the same "flag the disagreement, don't silently
 pick one" principle used elsewhere in this repo.
+
+---
+
+## Inputs + Overall Value Chain sheets built; wiring bug fixed; two new shipping studies (2026-09-23/24)
+
+Finished the restructuring flagged as "in progress but not finished" in the
+previous entry. `docs/reports/lh2-vs-nh3-shipping-studies.html` now has all
+**five** sheets: Inputs, Upstream, Shipping, Downstream, Overall Value Chain.
+
+**Inputs sheet.** Every field from all three segment sheets now lives here in
+one place — shared parameters (H₂ capacity, electricity price, grid CI,
+LH₂/NH₃ density, terminal tank basis/volume, BOR, BOG re-liquefaction SEC)
+consolidated into single canonical `s-*` fields, resolved per sheet via
+`SHIP_ID_MAP`/`UP_ID_MAP`/`DOWN_ID_MAP` override tables so each render
+pipeline reads the one shared element instead of duplicating it. All
+"quick scenario" preset/toggle button blocks (vessel size, disposal choice,
+firing mode, liquefaction-SEC presets, etc.) were also moved here from their
+respective segment sheets, at the user's explicit follow-up request, leaving
+those sheets with just their explanatory notes and study content.
+
+**Overall Value Chain sheet.** New closing sheet, built honestly against the
+repo's no-fabrication rule: it does **not** sum a chain-wide cost total,
+because upstream CapEx/OpEx was never disclosed by Kawasaki — cost is shown
+side by side by segment instead, explicitly labelled as not summable. Three
+charts: (1) "How much energy does each pathway use, end to end?" — a stacked
+kWh/kg-H₂ chart chaining Upstream → Shipping → Downstream, deliberately
+scaling the **LH2 route's upstream slice by 1/(voyage yield)** to reflect that
+hydrogen lost to boil-off in shipping never reaches the customer, so producing
+1 kg that survives the voyage costs slightly more than 1 kg fed into the
+liquefier — no equivalent correction is applied to the ammonia route's
+upstream side for the extra ammonia its cracker burns as fuel, an explicitly
+flagged gap; (2) an electricity-only chart (upstream + downstream, since
+that's the one carrier genuinely common to both segments — kept deliberately
+separate from chart 1's broader multi-carrier scope, with both charts'
+headings saying so to avoid the two looking like they disagree); (3) a
+cost-per-segment chart. This sheet was originally built in MJ/kg, then
+changed to **kWh/kg** at user request to standardise the energy unit across
+the whole artifact.
+
+**Real bug found and fixed.** While building the Overall sheet, discovered
+that essentially every preset/toggle button and several slider-pair inputs
+on the three segment sheets called only their own sheet's render function
+(`render()`/`renderUp()`/`renderDown()`), never `renderAll()` — so a change
+on, say, the Upstream sheet's liquefaction-SEC preset silently never reached
+the Overall sheet until the user happened to also touch a field the ID-map
+tables recognised as "shared." Fixed by routing every input listener and
+every preset/toggle handler through `renderAll()` uniformly. This also
+exposed a real mislabelling bug in the new Overall energy chart: a "Natural
+gas (thermal)" ledger row was silently summing NG **and** self-fuelled
+ammonia together (their sum is fixed by the cracker's standardised
+thermal-duty model, so switching firing modes wasn't visibly changing
+anything) — split into two correctly labelled rows/segments.
+
+**Steam-turbine credit excluded, chain-wide, by user direction.** The
+Haber–Bosch route's exothermic-reaction credit — previously a live
+Counted/Excluded toggle, default Counted — is now permanently excluded
+(`const UCREDIT = false`) from every number on the Upstream sheet, the
+Overall sheet, and the ledger. The toggle UI was removed; the "How much can
+the steam turbine claw back?" sensitivity study was kept as an explicit
+standalone hypothetical (it still sweeps the credit for its own chart, via
+an explicit `{on:true,...}` override, but feeds nothing else on the page).
+A now-redundant "net vs gross" comparison on the liquefaction-SEC study
+(the two lines would have been identical once gross became the only mode)
+was simplified to one line.
+
+**NH₃ terminal BOR default revised 0.1% → 0.05%/day**, at user direction —
+no longer matched to LH₂'s 0.1%/day (an earlier revision had deliberately
+matched them; this reverses that). Updated in the HTML default, both JS
+fallback-default objects (`UDEF`, `DDEF`), and every narrative passage that
+referenced the old "matched to LH₂" framing, including a downstream-sheet
+sentence that would otherwise have kept asserting "matched boil-off rates"
+once the two diverged.
+
+**Two new Shipping-sheet studies**, added after "Where does the boiled-off
+hydrogen actually go?":
+1. *At what boil-off rate does LH₂ become surplus, against a fixed VLSFO
+   duty?* — sweeps LH₂ voyage boil-off rate against a new, dedicated
+   **"Fixed propulsion demand" input (default 38 t/day VLSFO-equivalent)**,
+   separate from the existing 25 t/day duty (which is derived from the
+   ammonia vessel and used everywhere else on the page). Marks the boil-off
+   rate at which boil-off, converted to its VLSFO-energy-equivalent, crosses
+   from shortfall (still buying VLSFO) to surplus (excess vented/GCU-burned,
+   no work done).
+2. *LH₂ boil-off vs. ammonia as a lower-CI marine fuel* — models the ammonia
+   carrier running its engine on 100% cargo ammonia instead of VLSFO, with a
+   new **pilot-fuel input (default 5% of energy, still real VLSFO)** since
+   ammonia combustion needs a pilot flame. Both ammonia's own energy share
+   and the pilot fuel are expressed in VLSFO-equivalent tonnes/day so they
+   plot directly against LH₂'s boil-off curve. Readout states the real
+   physical ammonia bunker mass (~2.16× the VLSFO tonnage it replaces, per
+   the LHV ratio) and is explicit that no sourced ammonia-combustion CO₂e
+   figure exists in this repository (N₂O slip is real and unmodelled) rather
+   than inventing one — chemistry alone (no carbon atom in NH₃) is the only
+   claim made.
+
+**Testing discipline carried forward and reinforced:** every change this
+session was verified via `node --check` (syntax), a duplicate-ID scan, a
+`comm -23` dangling-`$("...")`-reference scan against actual `id="..."`
+attributes, a section-tag depth-balance scan, and — critically — actually
+executing `render()`/`renderUp()`/`renderDown()`/`renderOverall()` against a
+Node `vm` + DOM-stub harness (catches temporal-dead-zone and reference bugs
+that `node --check` cannot). The new boil-off/ammonia-fuel formulas were
+additionally checked against hand-computed physics (e.g. the ammonia mass
+ratio matched the LHV ratio 40.2/18.6 ≈ 2.161 exactly).
