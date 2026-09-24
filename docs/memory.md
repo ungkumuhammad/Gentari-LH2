@@ -1461,3 +1461,12 @@ CO2 not computed (no sourced VLSFO emission factor in repo).
 - (same day) NH3 vessel fuel toggle moved into Full Chain (shared state kFuel/kSrc; buttons on Full Chain and Case
   Study stay in sync). Full Chain per cargo, DF fuel from cargo: NG-fired 4,004 t H2, 11.49 kWh/kg (vs 11.36 bunkered);
   clean fuel 3,614 t, 11.81 kWh/kg. Mass-balance column renamed "Burned as ship fuel, t H2(-eq)".
+
+### Economics sheet: energy cost only (2026-09-24, same session)
+
+Added "Economics" tab (after Case Study). Energy cost only (no charter/CapEx/OpEx). User prices: upstream elec 140 USD/MWh,
+VLSFO 553 USD/t, NG 13 USD/MMBtu (applied to LHV demand, no HHV adjustment — user choice), NH3 700 USD/t, H2 slider.
+User chose "losses only" costing (LH2 boil-off at H2 price; NH3 burned on ship + in cracker at NH3 price; H2 feed not charged)
+and a separate import-terminal electricity price — **value not yet given, placeholder 140**.
+Defaults (100 ktpa, 20 d, H2 4 USD/kg): LH2 1.754 USD/kg (1.406 + 0.087 kg H2/kg × P); NH3 NG-fired 1.208; clean 1.579.
+LH2 never beats NG-fired on energy cost; beats clean-fuel below H2 USD 1.99/kg. Liquefaction power (1.37 USD/kg) dominates LH2.
