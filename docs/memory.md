@@ -1449,3 +1449,12 @@ availability 90 % (ASSUMPTION); round trip = 2 × sea days + 2 × port days. Sca
 At 100 ktpa, 20 sea days: LH2 38.4 cargoes, 5 ships (4.97 — marginal), 108.7 ktpa H2 in, 1,327 GWh/y (152 MW avg);
 NH3 NG-fired 23.8 cargoes, 4 ships (3.08), 650 ktpa NH3, 1,136 GWh/y; NH3 clean 26.4 cargoes, 4 ships, 720 ktpa NH3,
 1,166 GWh/y. Export-tank BOG scales per cargo (tank farm not sized).
+
+### Case Study: NH3 vessel fuel toggle (2026-09-24, same session)
+
+Added to Case Study: NH3 vessel fuel = Dual fuel (Shipping sheet 95 % NH3 + 5 % VLSFO pilot, energy basis) | VLSFO only;
+ammonia fuel source = Bunkered (default) | Cargo. Energy/ship-day identical across fuels (30 t/d VLSFO-eq); toggle changes
+fuel tonnages (new "Ship fuel burned per year" table) and, when fuel is taken from cargo, H2 delivered per cargo.
+At 100 ktpa, 20 d: DF bunkered 29,937 t/y NH3 + 715 t/y VLSFO (NG-fired); VLSFO only 14,296 t/y;
+DF from cargo: 1,256 t NH3 per voyage → 4,004 t H2/cargo, 25.0 cargoes, 1,149 GWh/y (vs 1,136).
+CO2 not computed (no sourced VLSFO emission factor in repo).

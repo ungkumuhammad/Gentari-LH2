@@ -518,6 +518,20 @@ ul.caveats{margin:0;padding-left:18px;display:grid;gap:6px;font-size:13.5px;colo
   </fieldset>
   <div class="hr"></div>
   <fieldset>
+    <legend style="color:var(--s2)">NH₃ vessel fuel</legend>
+    <div class="seg" role="group" aria-label="NH3 vessel fuel" style="display:grid;grid-template-columns:1fr 1fr">
+      <button type="button" id="kDF" aria-pressed="true">Dual fuel NH₃/VLSFO</button>
+      <button type="button" id="kVL" aria-pressed="false">VLSFO only</button>
+    </div>
+    <p class="basisline" id="kDFnote"></p>
+    <span class="basisline">Ammonia fuel taken from</span>
+    <div class="seg" role="group" aria-label="Ammonia fuel source" style="display:grid;grid-template-columns:1fr 1fr">
+      <button type="button" id="kSrcB" aria-pressed="true">Bunkered</button>
+      <button type="button" id="kSrcC" aria-pressed="false">Cargo</button>
+    </div>
+  </fieldset>
+  <div class="hr"></div>
+  <fieldset>
     <legend>Fleet</legend>
     <div class="field"><label for="kPort">Port days per call<small>KHI 1–1.5 · midpoint</small></label><input id="kPort" type="number" step="0.25" value="1.25"></div>
     <div class="field"><label for="kAvail">Fleet availability, %<small>repo assumption</small></label><input id="kAvail" type="number" step="1" value="90"></div>
@@ -540,6 +554,9 @@ ul.caveats{margin:0;padding-left:18px;display:grid;gap:6px;font-size:13.5px;colo
     <svg id="c9" viewBox="0 0 720 250" role="img" aria-label="Annual stacked energy by segment for each chain"></svg>
   </div>
   <div class="tbl"><table id="kLines"></table></div>
+  <h3>Ship fuel burned per year</h3>
+  <div class="tbl"><table id="kFuel"></table></div>
+  <p class="note">Energy per ship-day is the same whichever fuel the NH₃ ship burns: the 95/5 split is on an energy basis, 30 t/d VLSFO-equivalent either way. The fuel choice changes tonnes burned, which fuel is bought, and whether cargo is consumed. CO₂ is not calculated: no sourced VLSFO emission factor is held in this repo.</p>
 </section>
 <section>
   <span class="eyebrow">Method, assumptions and gaps</span>
@@ -547,6 +564,7 @@ ul.caveats{margin:0;padding-left:18px;display:grid;gap:6px;font-size:13.5px;colo
   <ul class="caveats">
     <li><b>Scaling.</b> Annual energy = Full Chain energy per kg H₂ delivered × contracted volume. Cargoes per year = contract ÷ H₂ delivered per cargo, kept fractional for energy. A part cargo is treated as part of a year-round flow.</li>
     <li><b>Fleet.</b> Round trip = 2 × sea days + 2 × port days. The ballast leg is assumed to take as long as the laden leg, whether or not its fuel is charged on the Full Chain sheet. Voyages per ship per year = 365 × availability ÷ round trip. Ships = cargoes per year ÷ voyages per ship, rounded up. The 40,000 m³ hull is used for both chains. Port days are the KHI 1–1.5-day midpoint <span class="cite">kawasaki-2026-questionnaire</span>. Availability 90 % is a repo assumption <span class="tag">[ASSUMPTION]</span>.</li>
+    <li><b>NH₃ vessel fuel.</b> Dual fuel burns the Shipping sheet's NH₃ share (95 %) of the 30 t/d VLSFO-equivalent demand as ammonia, and the rest as VLSFO pilot. VLSFO only burns the full demand as VLSFO. When ammonia fuel is taken from cargo, the ship arrives with less NH₃. Cracking energy then scales down with the smaller cargo, H₂ delivered per cargo falls, and more cargoes are needed. The plant still makes a full cargo. Heel and boil-off are not modelled.</li>
     <li><b>Export tank boil-off</b> is charged per cargo (storage days per cargo on the Upstream sheet) and scales with cargoes per year. A tank farm holding inventory all year would boil off more. Tank count is not sized here.</li>
     <li><b>Plant capacity</b> is annual output ÷ 365 at 100 % utilisation. A real plant needs margin for availability and turndown <span class="tag">[ASSUMPTION]</span>.</li>
     <li>Every caveat on the Full Chain, Upstream, Shipping and Downstream sheets carries over. That includes the Haber-Bosch 1 kWh/kg H₂ question, 20 placeholder sea days, and mixed energy quality on an LHV basis.</li>
@@ -966,7 +984,7 @@ function renderChain(){
   $("cLines").innerHTML=`<thead><tr><th>Line item</th>${short.map(n=>`<th>${n}, MWh</th><th>kWh/kg</th>`).join("")}</tr></thead><tbody>`+
     names.map((a,i)=>`<tr><td>${a}</td>${chains.map(c=>`<td>${c.lines[i][1]?f(c.lines[i][1]/1000,0):"–"}</td><td>${c.lines[i][1]?f(c.lines[i][1]/c.del,2):"–"}</td>`).join("")}</tr>`).join("")+
     `<tr class="cross"><td><b>Total</b></td>${chains.map(c=>`<td><b>${f(c.tot/1000,0)}</b></td><td><b>${f(c.tot/c.del,2)}</b></td>`).join("")}</tr></tbody>`;
-  lastChain={chains,stages,stageOf,days,cargoL,cargoN};
+  lastChain={chains,stages,stageOf,days,cargoL,cargoN,m,s,ball,kV,kN,crNG,crCl,nh3Ship,pilotN};
   if(typeof renderCase==="function")renderCase();
 }
 [...IDS,...DIDS,...UIDS,...CIDS].forEach(k=>$(k).addEventListener("input",renderChain));
@@ -981,10 +999,25 @@ renderChain();
 
 /* ================= CASE STUDY ================= */
 const KIDS=["kTarget","kPort","kAvail"];const KDEF={};KIDS.forEach(k=>KDEF[k]=$(k).value);
-var lastChain=null;
+var lastChain=null;var kFuel="df",kSrc="bunker";
 function renderCase(){
   if(!lastChain)return;
-  const {chains,stages,stageOf,days,cargoL,cargoN,stoich}=lastChain;
+  const {stages,stageOf,days,cargoL,cargoN,m,s,ball,kV,kN,crNG,crCl}=lastChain;
+  const df=kFuel==="df", fromCargo=df&&kSrc==="cargo";
+  $("kSrcB").disabled=!df;$("kSrcC").disabled=!df;
+  $("kDFnote").textContent=df?`${f(s.shareN)} % ammonia + ${f(100-s.shareN)} % VLSFO pilot (energy), from the Shipping sheet.`:`100 % VLSFO, ${f(s.dutyN)} t/d. Ammonia fuel source does not apply.`;
+  const ballV=ball?s.dutyN*days:0;                                   // t VLSFO on ballast leg
+  const nh3FuelT=df?m.nh3Fuel*days:0;                                 // t NH3 per laden voyage
+  const vlsfoNT=(df?m.pilotN*days:s.dutyN*days)+ballV;                // t VLSFO per voyage
+  const vlsfoLT=m.vlsfo*days+(ball?s.dutyL*days:0);
+  const arrN=cargoN-(fromCargo?nh3FuelT*1000:0), sc=arrN/cargoN;
+  const chains=lastChain.chains.map((c,i)=>{if(i===0)return c;
+    const cr=i===1?crNG:crCl, lines=c.lines.map(l=>[...l]);
+    lines[3][1]=vlsfoNT*1000*kV+(fromCargo?0:nh3FuelT*1000*kN);
+    lines[4][1]=fromCargo?nh3FuelT*1000*kN:0; lines[4][0]="Cargo NH₃ burned";
+    lines[5][1]=cr.tot*sc;
+    const del=cr.h2*sc;return {...c,lines,del,tot:lines.reduce((a,l)=>a+l[1],0),fuel:{v:vlsfoNT,n:nh3FuelT,h:0}}});
+  chains[0]={...chains[0],fuel:{v:vlsfoLT,n:0,h:m.bog*days/1000}};
   const T=(parseFloat($("kTarget").value)||0)*1e6, port=parseFloat($("kPort").value)||0, av=(parseFloat($("kAvail").value)||0)/100;
   const rt=2*days+2*port, vps=rt>0?365*av/rt:0;
   const rows=chains.map(c=>{const n=T/c.del, ships=vps>0?Math.ceil(n/vps-1e-9):0, h2in=T*c.h2in/c.del;
@@ -1002,14 +1035,21 @@ function renderCase(){
   $("kTitle").textContent=`${best.name.replace(" chain","")} needs the least: ${f(best.tot,0)} GWh/y, ${f(worst.tot-best.tot,0)} GWh/y less than ${worst.name.replace(" chain","")}`;
   $("kTiles").innerHTML=bars.map(b=>tile(b.name,`${f(b.tot,0)} <small>GWh/y</small>`,`≈ ${f(b.tot/8.76,0)} MW average, around the clock`)).join("")+
     tile("LH₂ vs NH₃ (NG-fired)",`${bars[0].tot>=bars[1].tot?"+":"−"}${f(Math.abs(bars[0].tot-bars[1].tot),0)} <small>GWh/y</small>`,`${f(bars[0].tot/bars[1].tot,2)}× on the same delivered H₂`);
-  const names=["Electrolysis","Liquefaction / Haber-Bosch","Export-tank BOG reliq","Ship fuel bought","Cargo H₂ burned","Regas / cracking"];
+  const names=["Electrolysis","Liquefaction / Haber-Bosch","Export-tank BOG reliq","Ship fuel bought","Cargo burned as ship fuel (H₂ or NH₃)","Regas / cracking"];
   const short=["LH₂","NH₃ NG-fired","NH₃ clean fuel"];
+  $("kFuel").innerHTML=`<thead><tr><th>Chain</th><th>VLSFO, t/y</th><th>NH₃ fuel, t/y</th><th>H₂ burned, t/y</th><th>NH₃ fuel from</th></tr></thead><tbody>`+
+    rows.map((r,i)=>`<tr><td>${short[i]}</td><td>${f(r.fuel.v*r.n,0)}</td><td>${r.fuel.n?f(r.fuel.n*r.n,0):"–"}</td><td>${r.fuel.h?f(r.fuel.h*r.n,0):"–"}</td><td>${i===0?"–":(df?(fromCargo?"cargo":"bunkers"):"–")}</td></tr>`).join("")+`</tbody>`;
   $("kLines").innerHTML=`<thead><tr><th>Line item</th>${short.map(n=>`<th>${n}, GWh/y</th><th>MW avg</th>`).join("")}</tr></thead><tbody>`+
     names.map((a,i)=>`<tr><td>${a}</td>${rows.map(r=>{const g=r.lines[i][1]/r.del*T/1e6;return `<td>${g?f(g,g<10?1:0):"–"}</td><td>${g?f(g/8.76,g/8.76<10?1:0):"–"}</td>`}).join("")}</tr>`).join("")+
     `<tr class="cross"><td><b>Total</b></td>${rows.map(r=>`<td><b>${f(r.E/1e6,0)}</b></td><td><b>${f(r.E/1e6/8.76,0)}</b></td>`).join("")}</tr></tbody>`;
 }
 KIDS.forEach(k=>$(k).addEventListener("input",renderCase));
-$("kReset").addEventListener("click",()=>{KIDS.forEach(k=>$(k).value=KDEF[k]);renderCase()});
+function setK(fu,src){kFuel=fu;kSrc=src;$("kDF").setAttribute("aria-pressed",fu==="df");$("kVL").setAttribute("aria-pressed",fu==="vl");$("kSrcB").setAttribute("aria-pressed",src==="bunker");$("kSrcC").setAttribute("aria-pressed",src==="cargo");renderCase()}
+$("kDF").addEventListener("click",()=>setK("df",kSrc));
+$("kVL").addEventListener("click",()=>setK("vl",kSrc));
+$("kSrcB").addEventListener("click",()=>setK(kFuel,"bunker"));
+$("kSrcC").addEventListener("click",()=>setK(kFuel,"cargo"));
+$("kReset").addEventListener("click",()=>{KIDS.forEach(k=>$(k).value=KDEF[k]);setK("df","bunker")});
 $("tabCase").addEventListener("click",()=>showSheet("case"));
 renderChain();
 {const all=["upstream","shipping","downstream","chain","case"];let w=location.hash.slice(1);if(!all.includes(w)){try{w=localStorage.getItem("sheet")}catch(e){}}showSheet(all.includes(w)?w:"shipping")}
