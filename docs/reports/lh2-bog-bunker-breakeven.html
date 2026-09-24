@@ -117,7 +117,7 @@ ul.caveats{margin:0;padding-left:18px;display:grid;gap:6px;font-size:13.5px;colo
 </style>
 
 <div class="wrap">
-<nav class="topbar"><span class="study">40,000 m³ LH₂ vs NH₃ carrier study</span><div class="tabs" role="tablist"><button type="button" role="tab" id="tabUp" aria-selected="false">Upstream</button><button type="button" role="tab" id="tabShip" aria-selected="true">Shipping</button><button type="button" role="tab" id="tabDown" aria-selected="false">Downstream</button></div></nav>
+<nav class="topbar"><span class="study">40,000 m³ LH₂ vs NH₃ carrier study</span><div class="tabs" role="tablist"><button type="button" role="tab" id="tabUp" aria-selected="false">Upstream</button><button type="button" role="tab" id="tabShip" aria-selected="true">Shipping</button><button type="button" role="tab" id="tabDown" aria-selected="false">Downstream</button><button type="button" role="tab" id="tabChain" aria-selected="false">Full Chain</button></div></nav>
 <div id="sheet-up" hidden>
 <header>
   <span class="eyebrow">Upstream · gaseous H₂ at battery limit → cargo in export tank</span>
@@ -431,6 +431,73 @@ ul.caveats{margin:0;padding-left:18px;display:grid;gap:6px;font-size:13.5px;colo
 </main>
 </div>
 </div>
+<div id="sheet-chain" hidden>
+<header>
+  <span class="eyebrow">Full chain · GH₂ at battery limit → gaseous H₂ at send-out</span>
+  <h1>End-to-End Energy</h1>
+  <p class="lede">Total energy to move hydrogen from the export plant to gaseous H₂ at the import terminal, for one 40,000 m³ cargo. The chain pulls every number live from the Upstream, Shipping and Downstream sheets.</p>
+  <div class="boundary">
+    <span><b>Boundary</b> Upstream + Shipping + Downstream, electrolysis optional</span>
+    <span><b>Basis</b> one cargo, or per kg H₂ delivered</span>
+    <span><b>Energy</b> MWh; fuels and H₂ burned on LHV, electricity as delivered kWh</span>
+  </div>
+</header>
+<div class="layout">
+<aside aria-label="Chain inputs">
+  <p class="basisline">Everything else comes from the other sheets. Change an input there and this sheet updates.</p>
+  <fieldset>
+    <legend>Voyage</legend>
+    <div class="field"><label for="cDays">Sea days charged per cargo<small>assumption · laden leg</small></label><input id="cDays" type="number" step="1" value="20"></div>
+    <label class="chk"><input id="cBallast" type="checkbox"> Also charge the ballast leg (same days, VLSFO only)</label>
+  </fieldset>
+  <div class="hr"></div>
+  <fieldset>
+    <legend>Electrolysis</legend>
+    <label class="chk"><input id="cElz" type="checkbox"> Include electrolysis of the H₂ each route consumes</label>
+    <div class="field"><label for="cElzSec">Electrolyser, kWh/kg H₂<small>repo · user assumption</small></label><input id="cElzSec" type="number" step="1" value="60"></div>
+  </fieldset>
+  <button class="reset" id="cReset" type="button">Reset chain inputs</button>
+</aside>
+<main>
+<section>
+  <span class="eyebrow">Hydrogen mass balance · one cargo</span>
+  <h2>Where the hydrogen goes</h2>
+  <div class="tbl"><table id="cMass"></table></div>
+</section>
+<section>
+  <span class="eyebrow">Chart 8 · end-to-end energy</span>
+  <h2 id="cTitle">End-to-end energy per kg H₂ delivered</h2>
+  <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+    <span class="note">Show</span>
+    <div class="seg" role="group" aria-label="Chain basis">
+      <button type="button" id="cbKg" aria-pressed="true">Per kg H₂ delivered, kWh</button>
+      <button type="button" id="cbShip" aria-pressed="false">Per cargo, MWh</button>
+    </div>
+  </div>
+  <div class="tiles" id="cTiles"></div>
+  <div class="card chart">
+    <div class="legend" id="c8leg"></div>
+    <svg id="c8" viewBox="0 0 720 250" role="img" aria-label="End-to-end stacked energy by segment for the LH2 and NH3 chains"></svg>
+  </div>
+  <div class="tbl"><table id="cLines"></table></div>
+</section>
+<section>
+  <span class="eyebrow">Method, assumptions and gaps</span>
+  <h2>What the chain numbers rest on</h2>
+  <ul class="caveats">
+    <li><b>Per kg H₂ delivered</b> divides total chain energy by the gaseous H₂ that leaves the import terminal. For LH₂ that is cargo less voyage boil-off. For NH₃ it is cargo ÷ cracker feed rate (6.5 or 7.2 kg NH₃/kg H₂).</li>
+    <li><b>Voyage.</b> Sea days × the Shipping sheet's daily figures, linear in days as on that sheet. Twenty laden days is a placeholder <span class="tag">[ASSUMPTION]</span>. No corridor is fixed yet. The ballast leg is off by default. When on, each ship burns its full daily demand as VLSFO for the same number of days, and heel boil-off is ignored <span class="tag">[ASSUMPTION]</span>.</li>
+    <li><b>Hydrogen burned on the LH₂ ship counts as energy used.</b> It is cargo H₂ at 120 MJ/kg, whether the engine burns it or, above the crossover rate, the GCU does.</li>
+    <li><b>NH₃ ship fuel is bunkered separately</b>, not drawn from cargo, so the NH₃ cargo arrives whole (boil-off re-liquefied) <span class="tag">[ASSUMPTION]</span>. Drawing it from cargo would move the same energy from the fuel line into lost cargo.</li>
+    <li><b>Downstream on the delivered cargo.</b> Regas is charged on the LH₂ that arrives, so it is slightly lower here than on the Downstream sheet, which uses the full cargo.</li>
+    <li><b>Energy quality is mixed.</b> Electricity, fuel heat and burned hydrogen are added on an LHV basis. This is quantity of energy, not primary energy or exergy. Electricity-heavy segments (liquefaction) would weigh more on a primary-energy basis.</li>
+    <li><b>Electrolysis</b> is off by default because both chains start from the same GH₂. Switch it on to charge the H₂ each chain consumes, which penalises the route that loses more hydrogen per kg delivered. 60 kWh/kg is the repo's user-set placeholder <span class="tag">[ASSUMPTION]</span>.</li>
+    <li>All upstream, shipping and downstream caveats on the other sheets carry over, notably the Haber-Bosch 1 kWh/kg H₂ question (ASU included?) and the placeholder reliquefaction and storage-day values.</li>
+  </ul>
+</section>
+</main>
+</div>
+</div>
 </div>
 
 <div class="tip" id="tip" hidden></div>
@@ -726,7 +793,7 @@ function setDBasis(b){dBasis=b;$("dbShip").setAttribute("aria-pressed",b==="ship
 $("dbShip").addEventListener("click",()=>setDBasis("ship"));
 $("dbKg").addEventListener("click",()=>setDBasis("kg"));
 IDS.forEach(k=>$(k).addEventListener("input",renderDown));
-function showSheet(w){const map={upstream:"sheet-up",shipping:"sheet-ship",downstream:"sheet-down"},tabs={upstream:"tabUp",shipping:"tabShip",downstream:"tabDown"};for(const k in map){$(map[k]).hidden=k!==w;$(tabs[k]).setAttribute("aria-selected",k===w)}$("tip").hidden=true;try{localStorage.setItem("sheet",w)}catch(e){}}
+function showSheet(w){const map={upstream:"sheet-up",shipping:"sheet-ship",downstream:"sheet-down",chain:"sheet-chain"},tabs={upstream:"tabUp",shipping:"tabShip",downstream:"tabDown",chain:"tabChain"};for(const k in map){$(map[k]).hidden=k!==w;$(tabs[k]).setAttribute("aria-selected",k===w)}$("tip").hidden=true;try{localStorage.setItem("sheet",w)}catch(e){}}
 $("tabShip").addEventListener("click",()=>showSheet("shipping"));
 $("tabDown").addEventListener("click",()=>showSheet("downstream"));
 renderDown();
@@ -780,6 +847,78 @@ $("ubShip").addEventListener("click",()=>setUBasis("ship"));
 $("ubKg").addEventListener("click",()=>setUBasis("kg"));
 $("tabUp").addEventListener("click",()=>showSheet("upstream"));
 renderUp();
-{let w=location.hash.slice(1);if(!["upstream","shipping","downstream"].includes(w)){try{w=localStorage.getItem("sheet")}catch(e){}}showSheet(["upstream","shipping","downstream"].includes(w)?w:"shipping")}
+
+/* ================= FULL CHAIN ================= */
+const CIDS=["cDays","cElzSec"];const CDEF={};CIDS.forEach(k=>CDEF[k]=$(k).value);
+let cBasis="kg";
+function renderChain(){
+  const s=P(),m=model(s),D=downModel(),u={};UIDS.forEach(k=>u[k]=parseFloat($(k).value)||0);
+  const days=parseFloat($("cDays").value)||0, ball=$("cBallast").checked, elz=$("cElz").checked, elzSec=parseFloat($("cElzSec").value)||0;
+  const kV=s.lhvV/3.6, kH=s.lhvH/3.6, kN=s.lhvN/3.6; // MWh per t  (= kWh/kg)
+  // upstream (same formulas as Upstream sheet)
+  const cargoL=m.cargoL, cargoN=m.cargoN;
+  const h2InN=cargoN/u.uStoich/(1-u.uLoss/100);
+  const liq=cargoL*u.uSecL, rlL=u.uTank*u.uFill/100*s.rhoL*u.uBorL/100*u.uDays*u.uRlqL;
+  const hb=h2InN*u.uSecN, rlN=u.uTank*u.uFill/100*s.rhoN*u.uBorN/100*u.uDays*u.uRlqN;
+  // shipping (Shipping sheet daily figures × days), kWh
+  const bogKg=m.bog*days, burnedKg=m.burned*days, surplusKg=m.surplus*days;
+  const vlsfoL=(m.vlsfo*days+(ball?s.dutyL*days:0))*1000*kV;
+  const h2Ship=bogKg*kH;
+  const nh3Ship=m.nh3Fuel*days*1000*kN, pilotN=(m.pilotN*days+(ball?s.dutyN*days:0))*1000*kV;
+  // downstream
+  const delL=cargoL-bogKg;
+  const regasPerKg=D.pumpL+D.pumpSW+D.tankL;
+  const [,crNG,crCl]=D.bars;
+  const elzL=elz?cargoL*elzSec:0, elzN=elz?h2InN*elzSec:0;
+  const chains=[
+    {name:"LH₂ chain",del:delL,h2in:cargoL,lines:[
+      ["Electrolysis",elzL,"var(--c5)","el"],["Liquefaction",liq,"var(--c1)","up"],["Export-tank BOG reliq",rlL,"var(--c1)","up"],
+      ["VLSFO burned",vlsfoL,"var(--c2)","ship"],["Cargo H₂ burned / GCU",h2Ship,"var(--c4)","ship"],
+      ["Regas pumps + import tank",regasPerKg*delL,"var(--c3)","down"]]},
+    {name:"NH₃ chain · NG-fired cracker",del:crNG.h2,h2in:h2InN,lines:[
+      ["Electrolysis",elzN,"var(--c5)","el"],["Haber-Bosch",hb,"var(--c1)","up"],["Export-tank BOG reliq",rlN,"var(--c1)","up"],
+      ["NH₃ fuel + VLSFO pilot",nh3Ship+pilotN,"var(--c2)","ship"],["Cargo H₂ burned / GCU",0,"var(--c4)","ship"],
+      ["Cracker (fuel + NG + power) + import tank",crNG.tot,"var(--c3)","down"]]},
+    {name:"NH₃ chain · clean-fuel cracker",del:crCl.h2,h2in:h2InN,lines:[
+      ["Electrolysis",elzN,"var(--c5)","el"],["Haber-Bosch",hb,"var(--c1)","up"],["Export-tank BOG reliq",rlN,"var(--c1)","up"],
+      ["NH₃ fuel + VLSFO pilot",nh3Ship+pilotN,"var(--c2)","ship"],["Cargo H₂ burned / GCU",0,"var(--c4)","ship"],
+      ["Cracker (fuel + power) + import tank",crCl.tot,"var(--c3)","down"]]}];
+  chains.forEach(c=>{c.tot=c.lines.reduce((a,l)=>a+l[1],0)});
+  /* mass balance */
+  $("cMass").innerHTML=`<thead><tr><th>Chain</th><th>H₂ into plant, t</th><th>H₂ in cargo loaded, t</th><th>Lost on voyage, t</th><th>Burned in cracker, t H₂-eq</th><th>H₂ delivered, t</th><th>Delivered ÷ H₂ in</th></tr></thead><tbody>`+
+    `<tr><td>LH₂</td><td>${f(cargoL/1000,0)}</td><td>${f(cargoL/1000,0)}</td><td>${f(bogKg/1000,0)}${surplusKg>0?` (${f(surplusKg/1000,0)} to GCU)`:""}</td><td>–</td><td>${f(delL/1000,0)}</td><td>${f(delL/cargoL*100,1)} %</td></tr>`+
+    [[crNG,"NH₃ · NG-fired"],[crCl,"NH₃ · clean fuel"]].map(([c,n])=>`<tr><td>${n}</td><td>${f(h2InN/1000,0)}</td><td>${f(cargoN/u.uStoich/1000,0)}</td><td>0 (reliq)</td><td>${f((cargoN/u.uStoich-c.h2)/1000,0)}</td><td>${f(c.h2/1000,0)}</td><td>${f(c.h2/h2InN*100,1)} %</td></tr>`).join("")+`</tbody>`;
+  /* chart */
+  const perKg=cBasis==="kg", unit=perKg?"kWh/kg H₂":"MWh";
+  const stages=[["el","Electrolysis","var(--c5)"],["up","Upstream (liquefaction / Haber-Bosch + tank)","var(--c1)"],["ship","Shipping fuel","var(--c2)"],["shipH","Shipping: cargo H₂ burned","var(--c4)"],["down","Downstream (regas / cracking)","var(--c3)"]];
+  const stageOf=l=>l[0]==="Cargo H₂ burned / GCU"?"shipH":l[3];
+  const vf=v=>perKg?(v<0.1?f(v,3):f(v,2)):(v<100?f(v,1):f(v,0));
+  const bars=chains.map(c=>{const d=perKg?c.del:1000;const segs=stages.map(([k,t,col])=>({k:t,c:col,v:c.lines.filter(l=>stageOf(l)===k).reduce((a,l)=>a+l[1],0)/d}));return {name:c.name,segs,tot:segs.reduce((a,z)=>a+z.v,0)}});
+  legend("c8leg",stages.filter(([k])=>bars.some(b=>b.segs.find(z=>z.k===stages.find(x=>x[0]===k)[1]).v>0)).map(([,t,c])=>({t,c,cls:"box"})));
+  hbars($("c8"),bars,{max:Math.max(...bars.map(b=>b.tot))*1.02,xlabel:perKg?"Energy, kWh per kg H₂ delivered":"Energy per 40,000 m³ cargo, MWh",xf:v=>perKg?f(v,0):f(v/1000,0)+"k",vf,unit,inlbl:true,ml:210});
+  const [L,NG,CL]=bars, best=bars.reduce((a,b)=>b.tot<a.tot?b:a);
+  $("cTitle").textContent=perKg
+    ?`End to end, the ${best.name.replace(" chain","").replace(" · "," with ")} uses the least energy per kg H₂ delivered`
+    :`End-to-end energy per 40,000 m³ cargo`;
+  const pct=(c,b)=>perKg?b.tot/kH*100:c.tot/c.del/kH*100;
+  $("cTiles").innerHTML=chains.map((c,i)=>tile(c.name,`${vf(bars[i].tot)} <small>${unit}</small>`,`${f(c.del/1000,0)} t H₂ delivered · energy = ${f(pct(c,bars[i]),0)} % of its LHV`)).join("")+
+    tile("LH₂ vs NH₃ (NG-fired)",`${f(L.tot/NG.tot,2)}<small>×</small>`,perKg?"per kg H₂ delivered":"per cargo, cargoes differ in H₂");
+  /* line-item table */
+  const names=["Electrolysis","Liquefaction / Haber-Bosch","Export-tank BOG reliq","Ship fuel bought","Cargo H₂ burned","Regas / cracking"];
+  const short=["LH₂","NH₃ NG-fired","NH₃ clean fuel"];
+  $("cLines").innerHTML=`<thead><tr><th>Line item</th>${short.map(n=>`<th>${n}, MWh</th><th>kWh/kg</th>`).join("")}</tr></thead><tbody>`+
+    names.map((a,i)=>`<tr><td>${a}</td>${chains.map(c=>`<td>${c.lines[i][1]?f(c.lines[i][1]/1000,0):"–"}</td><td>${c.lines[i][1]?f(c.lines[i][1]/c.del,2):"–"}</td>`).join("")}</tr>`).join("")+
+    `<tr class="cross"><td><b>Total</b></td>${chains.map(c=>`<td><b>${f(c.tot/1000,0)}</b></td><td><b>${f(c.tot/c.del,2)}</b></td>`).join("")}</tr></tbody>`;
+}
+[...IDS,...DIDS,...UIDS,...CIDS].forEach(k=>$(k).addEventListener("input",renderChain));
+["dTank","cBallast","cElz"].forEach(k=>$(k).addEventListener("change",renderChain));
+["reset","dReset","uReset"].forEach(k=>$(k).addEventListener("click",renderChain));
+$("cReset").addEventListener("click",()=>{CIDS.forEach(k=>$(k).value=CDEF[k]);$("cBallast").checked=false;$("cElz").checked=false;renderChain()});
+function setCBasis(b){cBasis=b;$("cbKg").setAttribute("aria-pressed",b==="kg");$("cbShip").setAttribute("aria-pressed",b==="ship");renderChain()}
+$("cbKg").addEventListener("click",()=>setCBasis("kg"));
+$("cbShip").addEventListener("click",()=>setCBasis("ship"));
+$("tabChain").addEventListener("click",()=>showSheet("chain"));
+renderChain();
+{let w=location.hash.slice(1);if(!["upstream","shipping","downstream","chain"].includes(w)){try{w=localStorage.getItem("sheet")}catch(e){}}showSheet(["upstream","shipping","downstream","chain"].includes(w)?w:"shipping")}
 
 </script>

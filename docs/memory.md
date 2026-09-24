@@ -1432,3 +1432,12 @@ User basis: liquefaction 9 kWh/kg H2; Haber-Bosch 1 kWh/kg H2 (= 0.18 kWh/kg NH3
 - LH2: 2,832 t H2 × 9 = 25,488 MWh + tank reliq 4,248 kg/d × 5 d × 3.94 = 83.7 MWh → 25,572 MWh.
 - NH3: 27,280 t ÷ 5.6 = 4,871 t H2 × 1 = 4,871 MWh + tank reliq 20,460 kg/d × 5 d × 0.25 = 25.6 MWh → 4,897 MWh.
 - 5.2x per cargo, ~9x per kg H2. Assumptions: full tank inventory, 5 storage days per cargo, no HB heat credit.
+
+### Full Chain sheet: end-to-end energy per kg H2 delivered (2026-09-24, same session)
+
+Added a "Full Chain" tab (Upstream | Shipping | Downstream | Full Chain). Pulls live from the other three
+sheets; own inputs: sea days per cargo (20, ASSUMPTION), optional ballast leg, optional electrolysis (60 kWh/kg).
+Defaults (20 laden days, no electrolysis): LH2 13.27 kWh/kg delivered (2,605 t; liquefaction 9.78, cargo H2
+burned 2.90, VLSFO 0.51, regas 0.05); NH3 NG-fired cracker 11.36 (4,197 t; cracker 8.56, ship fuel 1.63, HB 1.16);
+NH3 clean fuel 11.66 (3,789 t). NH3 ship fuel assumed bunkered, not from cargo. With electrolysis on, LH2 wins
+(it loses less H2: 92 % delivered vs 86 % / 78 %). HB 1 kWh/kg H2 (ASU?) remains the swing input.
