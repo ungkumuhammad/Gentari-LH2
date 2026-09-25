@@ -1487,3 +1487,4 @@ On this basis LH2 never beats either NH3 chain (clean-fuel breakeven disappears)
   At 100 ktpa: 1,327 / 1,136 / 1,166 GWh/y (152 / 130 / 133 MW avg), matching the Case Study.
 - (same day) User couldn't find the GWh/y view behind the toggle → replaced toggle with an always-visible Chart 11c
   (GWh/y + MW avg table) under Chart 11b on the Economics sheet. Lesson: user prefers views shown, not hidden behind switches.
+- (same day) Downstream: added live explanatory callout under Chart 5 (per-cargo gap between cracker modes = feed-rate ratio 7.2/6.5, not efficiency; ~170x regas per kg in both modes). User asked this twice.

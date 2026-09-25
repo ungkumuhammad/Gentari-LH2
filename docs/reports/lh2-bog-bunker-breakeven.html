@@ -398,6 +398,7 @@ ul.caveats{margin:0;padding-left:18px;display:grid;gap:6px;font-size:13.5px;colo
     <svg id="c5" viewBox="0 0 720 250" role="img" aria-label="Stacked energy for LH2 regas and NH3 cracking in two firing modes"></svg>
   </div>
   <p class="note">All three bars share one scale, so the regas bar is only a sliver. Chart 6 zooms in on it.</p>
+  <div class="callout" id="dModeNote"></div>
 </section>
 <section>
   <span class="eyebrow">Chart 6 · LH₂ regas, zoomed</span>
@@ -1034,6 +1035,8 @@ Seawater flow = ${d.dDuty} MJ/kg ÷ (${d.dCp} kJ/kg·K × ${d.dDT} K)           
 Seawater pump = ${f(M.swKg,0)} kg × 9.81 × ${d.dHead} m ÷ ${d.dEtaSW} %                  = ${f(M.pumpSW,4)} kWh/kg
 Tank BOG      = (1 − (1 − ${d.dBorL} %)^${d.dHold} d) × ${d.dSecL} kWh/kg             = ${f(M.tankL,4)} kWh/kg${d.tank?"":"  (excluded)"}
 Total         = ${f(M.pumpL+M.pumpSW+M.tankL,4)} kWh/kg × ${f(M.cargoL/1000,0)} t = ${f((M.pumpL+M.pumpSW+M.tankL)*M.cargoL/1000,1)} MWh per cargo`;
+  {const d2=DP(),s2=P(),[,a,b]=M.bars,fa=(d2.dFeedCl-d2.dStoich)*s2.lhvN;
+   $("dModeNote").innerHTML=`<b>Why the two cracker bars differ per cargo.</b> Per kg H₂ both modes fire the same ${f(d2.dFeedCl-d2.dStoich,1)} kg NH₃-eq = ${f(fa,1)} MJ. Natural-gas-fired: ${f(d2.dFeedNG-d2.dStoich,1)} kg NH₃ + ${f(d2.dFeedCl-d2.dFeedNG,1)} kg-eq gas. Clean fuel: ${f(d2.dFeedCl-d2.dStoich,1)} kg NH₃. But the clean-fuel mode burns more of the cargo itself, so the same ${f(M.cargoN/1000,0)} t NH₃ yields ${f(b.h2/1000,0)} t H₂ instead of ${f(a.h2/1000,0)} t. Less H₂ made means less fuel fired in total. The gap is the feed-rate ratio ${d2.dFeedCl} ÷ ${d2.dFeedNG} = ${f(d2.dFeedCl/d2.dFeedNG,3)}, not an efficiency gain. Switch to "Per kg H₂" for the like-for-like view: cracking is about ${f(a.tot/a.h2/(M.bars[0].tot/M.bars[0].h2),0)}× regas in both modes.`;}
 }
 DIDS.forEach(k=>$(k).addEventListener("input",renderDown));
 $("dTank").addEventListener("change",renderDown);
