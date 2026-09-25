@@ -117,7 +117,7 @@ ul.caveats{margin:0;padding-left:18px;display:grid;gap:6px;font-size:13.5px;colo
 </style>
 
 <div class="wrap">
-<nav class="topbar"><span class="study">40,000 m³ LH₂ vs NH₃ carrier study</span><div class="tabs" role="tablist"><button type="button" role="tab" id="tabUp" aria-selected="false">Upstream</button><button type="button" role="tab" id="tabShip" aria-selected="true">Shipping</button><button type="button" role="tab" id="tabDown" aria-selected="false">Downstream</button><button type="button" role="tab" id="tabChain" aria-selected="false">Full Chain</button><button type="button" role="tab" id="tabCase" aria-selected="false">Case Study</button><button type="button" role="tab" id="tabEcon" aria-selected="false">Economics</button></div></nav>
+<nav class="topbar"><span class="study">40,000 m³ LH₂ vs NH₃ carrier study</span><div class="tabs" role="tablist"><button type="button" role="tab" id="tabUp" aria-selected="false">Upstream</button><button type="button" role="tab" id="tabShip" aria-selected="true">Shipping</button><button type="button" role="tab" id="tabDown" aria-selected="false">Downstream</button><button type="button" role="tab" id="tabChain" aria-selected="false">Full Chain</button><button type="button" role="tab" id="tabCase" aria-selected="false">Case Study</button><button type="button" role="tab" id="tabEcon" aria-selected="false">Economics</button><button type="button" role="tab" id="tabEconO" aria-selected="false">Economic Origin</button></div></nav>
 <div id="sheet-up" hidden>
 <header>
   <span class="eyebrow">Upstream · gaseous H₂ at battery limit → cargo in export tank</span>
@@ -657,7 +657,67 @@ ul.caveats{margin:0;padding-left:18px;display:grid;gap:6px;font-size:13.5px;colo
 </main>
 </div>
 </div>
+<div id="sheet-econo" hidden>
+<header>
+  <span class="eyebrow">Economic origin · energy cost per kg H₂ produced at the electrolyser</span>
+  <h1>Energy Cost at Origin</h1>
+  <p class="lede">The same annual energy bill as the Economics sheet, divided by the hydrogen the electrolyser plant produces instead of the hydrogen delivered. This reads each chain's cost against the H₂ you make, not the H₂ you sell.</p>
+  <div class="boundary">
+    <span><b>Boundary</b> same as Full Chain and Case Study</span>
+    <span><b>Basis</b> USD per kg H₂ produced at the electrolyser, and USD M per year</span>
+    <span><b>Currency</b> USD; prices are user inputs, no cost year stated</span>
+  </div>
+</header>
+<div class="layout">
+<aside aria-label="Origin basis">
+  <p class="basisline" id="oBasis"></p>
+  <p class="basisline">Energy prices are set on the Economics sheet. The H₂ slider is linked to that sheet's slider.</p>
+</aside>
+<main>
+<section>
+  <span class="eyebrow">Hydrogen price</span>
+  <h2 id="oTitle">Energy cost per kg H₂ delivered</h2>
+  <div class="card" style="display:grid;gap:14px">
+    <div class="slider">
+      <label for="oH">H₂ price</label>
+      <input id="oH" type="range" min="0" max="10" step="0.05" value="4">
+      <output id="oHout" for="oH">4.00 USD/kg</output>
+    </div>
+    <p class="note">The H₂ price only affects the LH₂ chain, through the cargo H₂ its ship burns as boil-off. The NH₃ chains burn ammonia instead, charged at the ammonia price.</p>
+  </div>
+  <div class="tiles" id="oTiles"></div>
+</section>
+<section>
+  <span class="eyebrow">Chart 12 · where the H₂ price tips the answer</span>
+  <h2 id="o12Title">LH₂ chain energy cost against H₂ price</h2>
+  <div class="card chart">
+    <div class="legend" id="c12leg"></div>
+    <svg id="c12" viewBox="0 0 720 320" role="img" aria-label="Energy cost per kg H2 delivered versus H2 price for each chain"></svg>
+  </div>
+</section>
+<section>
+  <span class="eyebrow">Chart 13 · what the money goes on</span>
+  <h2>Energy cost by carrier, per kg H₂ produced</h2>
+  <div class="card chart">
+    <div class="legend" id="c13leg"></div>
+    <svg id="c13" viewBox="0 0 720 250" role="img" aria-label="Stacked energy cost by carrier for each chain"></svg>
+  </div>
+  <div class="tbl"><table id="oLines"></table></div>
+</section>
+<section>
+  <span class="eyebrow">Method, assumptions and gaps</span>
+  <h2>What the cost numbers rest on</h2>
+  <ul class="caveats">
+    <li><b>Denominator.</b> Annual energy cost ÷ H₂ produced by the electrolyser. That is the H₂ into the liquefier or the Haber-Bosch loop: 2,832 t per LH₂ cargo, and NH₃ cargo ÷ stoichiometric ratio per NH₃ cargo. The Economics sheet divides the same annual bill by H₂ delivered instead.</li>
+    <li><b>Same money, different yardstick.</b> USD M per year is identical on both sheets. Only the per-kg figure changes. The route that loses more H₂ between electrolyser and delivery looks relatively cheaper here, because its bill is spread over more kilograms produced.</li>
+    <li><b>Volume.</b> The electrolyser output is whatever the Case Study's delivered volume requires: contract × H₂ in ÷ H₂ delivered for each chain.</li>
+    <li>All costing choices from the Economics sheet carry over: energy only, losses only, H₂ feed not charged, natural gas on LHV, and the import-terminal electricity placeholder.</li>
+  </ul>
+</section>
+</main>
 </div>
+</div>
+</div></div>
 
 <div class="tip" id="tip" hidden></div>
 
@@ -952,7 +1012,7 @@ function setDBasis(b){dBasis=b;$("dbShip").setAttribute("aria-pressed",b==="ship
 $("dbShip").addEventListener("click",()=>setDBasis("ship"));
 $("dbKg").addEventListener("click",()=>setDBasis("kg"));
 IDS.forEach(k=>$(k).addEventListener("input",renderDown));
-function showSheet(w){const map={upstream:"sheet-up",shipping:"sheet-ship",downstream:"sheet-down",chain:"sheet-chain",case:"sheet-case",econ:"sheet-econ"},tabs={upstream:"tabUp",shipping:"tabShip",downstream:"tabDown",chain:"tabChain",case:"tabCase",econ:"tabEcon"};for(const k in map){$(map[k]).hidden=k!==w;$(tabs[k]).setAttribute("aria-selected",k===w)}$("tip").hidden=true;try{localStorage.setItem("sheet",w)}catch(e){}}
+function showSheet(w){const map={upstream:"sheet-up",shipping:"sheet-ship",downstream:"sheet-down",chain:"sheet-chain",case:"sheet-case",econ:"sheet-econ",econo:"sheet-econo"},tabs={upstream:"tabUp",shipping:"tabShip",downstream:"tabDown",chain:"tabChain",case:"tabCase",econ:"tabEcon",econo:"tabEconO"};for(const k in map){$(map[k]).hidden=k!==w;$(tabs[k]).setAttribute("aria-selected",k===w)}$("tip").hidden=true;try{localStorage.setItem("sheet",w)}catch(e){}}
 $("tabShip").addEventListener("click",()=>showSheet("shipping"));
 $("tabDown").addEventListener("click",()=>showSheet("downstream"));
 renderDown();
@@ -1143,7 +1203,7 @@ renderChain();
 
 /* ================= ECONOMICS ================= */
 const EIDS=["eUp","eDn","eV","eNG","eN"];const EDEF={};EIDS.forEach(k=>EDEF[k]=$(k).value);
-function econModel(){
+function econModel(basis){
   const s=P(),m=model(s),D=downModel(),d=D.d,u={};UIDS.forEach(k=>u[k]=parseFloat($(k).value)||0);
   const pr={};EIDS.forEach(k=>pr[k]=parseFloat($(k).value)||0);
   const days=parseFloat($("cDays").value)||0, ball=$("cBallast").checked, elz=$("cElz").checked, elzSec=parseFloat($("cElzSec").value)||0;
@@ -1157,7 +1217,7 @@ function econModel(){
   const h2B=m.bog*days;                                                                   // kg
   const delL=cargoL-h2B;
   const dnL=(D.pumpL+D.pumpSW+D.tankL)*delL/1000;                                         // MWh
-  const L={name:"LH₂ chain",del:delL,fixed:[
+  const L={name:"LH₂ chain",del:delL,hin:cargoL,fixed:[
     ["Upstream electricity",upL,"MWh",pr.eUp,"var(--c1)"],["VLSFO",vL,"t",pr.eV,"var(--c2)"],
     ["Ammonia fuel",0,"t",pr.eN,"var(--c5)"],["Natural gas",0,"MMBtu",pr.eNG,"var(--c3)"],
     ["Import-terminal electricity",dnL,"MWh",pr.eDn,"var(--c6)"]],h2kg:h2B};
@@ -1168,16 +1228,16 @@ function econModel(){
   const upN=((elz?h2InN*elzSec:0)+h2InN*u.uSecN+invN*u.uBorN/100*u.uDays*u.uRlqN)/1000;
   const nh3=(name,feed,ng)=>{const h2=cargoN/feed*sc;
     const crNH3=(feed-d.dStoich)*h2/1000, ngMMBtu=ng?(d.dFeedCl-feed)*h2*s.lhvN/MMBTU:0, dn=(d.dElec*h2+tankN*sc)/1000;
-    return {name,del:h2,h2kg:0,fixed:[["Upstream electricity",upN,"MWh",pr.eUp,"var(--c1)"],["VLSFO",vN,"t",pr.eV,"var(--c2)"],
+    return {name,del:h2,hin:h2InN,h2kg:0,fixed:[["Upstream electricity",upN,"MWh",pr.eUp,"var(--c1)"],["VLSFO",vN,"t",pr.eV,"var(--c2)"],
       ["Ammonia fuel",nh3ShipT+crNH3,"t",pr.eN,"var(--c5)"],["Natural gas",ngMMBtu,"MMBtu",pr.eNG,"var(--c3)"],
       ["Import-terminal electricity",dn,"MWh",pr.eDn,"var(--c6)"]],nh3Split:[nh3ShipT,crNH3]}};
   const chains=[L,nh3("NH₃ · NG-fired cracker",d.dFeedNG,true),nh3("NH₃ · clean-fuel cracker",d.dFeedCl,false)];
-  chains.forEach(c=>{c.a=c.fixed.reduce((a,x)=>a+x[1]*x[3],0)/c.del; c.b=c.h2kg/c.del});   // USD/kg = a + b·P
   const T=(parseFloat($("kTarget").value)||0)*1e6;
+  chains.forEach(c=>{c.den=basis==="origin"?c.hin:c.del; c.Q=T*c.den/c.del; c.a=c.fixed.reduce((a,x)=>a+x[1]*x[3],0)/c.den; c.b=c.h2kg/c.den});   // USD/kg = a + b·P; Q = annual kg on this basis
   return {chains,T,pr,df,fromCargo};
 }
 function renderEcon(){
-  const E=econModel(),{chains,T,pr}=E, P2=parseFloat($("eH").value);
+  const E=econModel("del"),{chains,T,pr}=E, P2=parseFloat($("eH").value);
   $("eHout").textContent=f(P2,2)+" USD/kg";
   $("eBasis").innerHTML=`Volume from the Case Study: <b>${f(T/1e6,0)} ktpa</b> H₂ delivered. NH₃ vessel: ${E.df?"dual fuel, NH₃ from "+(E.fromCargo?"cargo":"bunkers"):"VLSFO only"}. Sea days, ballast and electrolysis from the Full Chain sheet.`;
   const cost=(c,P)=>c.a+c.b*P;
@@ -1188,8 +1248,8 @@ function renderEcon(){
     :(bNG<=0)?`LH₂ beats clean-fuel cracking below H₂ USD ${f(bCL,2)}/kg, but never beats NG-fired cracking`
     :(bCL<=0)?`LH₂ beats NG-fired cracking below H₂ USD ${f(bNG,2)}/kg, but never beats clean-fuel cracking`
     :`LH₂ has the lower energy cost below H₂ USD ${f(bNG,2)}/kg (vs NG-fired) and USD ${f(bCL,2)}/kg (vs clean fuel)`;
-  $("eTiles").innerHTML=chains.map(c=>tile(c.name,`${f(cost(c,P2),3)} <small>USD/kg H₂</small>`,`USD ${f(cost(c,P2)*T/1e6,1)} M/y at ${f(T/1e6,0)} ktpa`)).join("")+
-    tile("LH₂ − NH₃ (NG-fired)",`${cost(L,P2)>=cost(NG,P2)?"+":"−"}${f(Math.abs(cost(L,P2)-cost(NG,P2)),3)} <small>USD/kg</small>`,`USD ${f((cost(L,P2)-cost(NG,P2))*T/1e6,1)} M/y`);
+  $("eTiles").innerHTML=chains.map(c=>tile(c.name,`${f(cost(c,P2),3)} <small>USD/kg H₂</small>`,`USD ${f(cost(c,P2)*c.Q/1e6,1)} M/y at ${f(T/1e6,0)} ktpa`)).join("")+
+    tile("LH₂ − NH₃ (NG-fired)",`${cost(L,P2)>=cost(NG,P2)?"+":"−"}${f(Math.abs(cost(L,P2)-cost(NG,P2)),3)} <small>USD/kg</small>`,`USD ${f((cost(L,P2)*L.Q-cost(NG,P2)*NG.Q)/1e6,1)} M/y`);
   /* chart 10 */
   const xs=[];for(let v=0;v<=10+1e-9;v+=0.05)xs.push(+v.toFixed(2));
   legend("c10leg",[{c:"var(--s1)",t:"LH₂ chain (rises with H₂ price)"},{c:"var(--s2)",t:"NH₃ · NG-fired cracker"},{c:"var(--s2)",t:"NH₃ · clean-fuel cracker",cls:"dash"}]);
@@ -1203,7 +1263,7 @@ function renderEcon(){
     tip:v=>`<div style="margin-bottom:4px"><b>H₂ USD ${f(v,2)}/kg</b></div>${row("var(--s1)","LH₂ chain",f(cost(L,v),3)+" USD/kg")}${row("var(--s2)","NH₃ NG-fired",f(cost(NG,v),3)+" USD/kg")}${row("var(--s2)","NH₃ clean fuel",f(cost(CL,v),3)+" USD/kg")}`});
   $("e10Title").textContent=bNG>0?`LH₂ matches the NG-fired NH₃ chain at H₂ USD ${f(bNG,2)}/kg`:`The NG-fired NH₃ chain is cheaper on energy at any H₂ price`;
   /* chart 11 */
-  const bars=chains.map(c=>{const segs=c.fixed.map(x=>({k:x[0],v:x[1]*x[3]/c.del,c:x[4]}));segs.splice(3,0,{k:"Cargo H₂ burned",v:c.b*P2,c:"var(--c4)"});return {name:c.name,segs,tot:segs.reduce((a,z)=>a+z.v,0)}});
+  const bars=chains.map(c=>{const segs=c.fixed.map(x=>({k:x[0],v:x[1]*x[3]/c.den,c:x[4]}));segs.splice(3,0,{k:"Cargo H₂ burned",v:c.b*P2,c:"var(--c4)"});return {name:c.name,segs,tot:segs.reduce((a,z)=>a+z.v,0)}});
   const cats=bars[0].segs.map(z=>[z.k,z.c]).filter(([k])=>bars.some(b=>b.segs.find(z=>z.k===k).v>0));
   legend("c11leg",cats.map(([t,c])=>({t,c,cls:"box"})));
   hbars($("c11"),bars,{max:Math.max(...bars.map(b=>b.tot))*1.02,xlabel:"Energy cost, USD per kg H₂ delivered",xf:v=>f(v,2),vf:v=>f(v,3),unit:"USD/kg",inlbl:true,ml:210});
@@ -1211,16 +1271,58 @@ function renderEcon(){
   const qf=(q,u)=>u==="MMBtu"?f(q,0):u==="t"?f(q,1):f(q,0);
   let rowsH=`<thead><tr><th>Energy line (per cargo)</th><th>Price</th>${chains.map(c=>`<th>${c.name.replace(" chain","")}<br>qty</th><th>USD/kg H₂</th><th>USD M/y</th>`).join("")}</tr></thead><tbody>`;
   const lines=[...chains[0].fixed.map((x,i)=>({k:x[0],unit:x[2],price:x[3],get:c=>c.fixed[i]})),{k:"Cargo H₂ burned",unit:"kg",price:P2,get:c=>["",c.h2kg,"kg",P2]}];
-  lines.forEach(l=>{rowsH+=`<tr><td>${l.k}</td><td>${f(l.price,l.unit==="kg"?2:0)} USD/${l.unit==="kg"?"kg":l.unit}</td>`+chains.map(c=>{const x=l.get(c),q=x[1],usd=q*x[3];return q?`<td>${qf(q,x[2])} ${x[2]}</td><td>${f(usd/c.del,3)}</td><td>${f(usd/c.del*T/1e6,1)}</td>`:`<td>–</td><td>–</td><td>–</td>`}).join("")+`</tr>`});
-  rowsH+=`<tr class="cross"><td><b>Total</b></td><td></td>`+chains.map(c=>`<td></td><td><b>${f(cost(c,P2),3)}</b></td><td><b>${f(cost(c,P2)*T/1e6,1)}</b></td>`).join("")+`</tr></tbody>`;
+  lines.forEach(l=>{rowsH+=`<tr><td>${l.k}</td><td>${f(l.price,l.unit==="kg"?2:0)} USD/${l.unit==="kg"?"kg":l.unit}</td>`+chains.map(c=>{const x=l.get(c),q=x[1],usd=q*x[3];return q?`<td>${qf(q,x[2])} ${x[2]}</td><td>${f(usd/c.den,3)}</td><td>${f(usd/c.den*c.Q/1e6,1)}</td>`:`<td>–</td><td>–</td><td>–</td>`}).join("")+`</tr>`});
+  rowsH+=`<tr class="cross"><td><b>Total</b></td><td></td>`+chains.map(c=>`<td></td><td><b>${f(cost(c,P2),3)}</b></td><td><b>${f(cost(c,P2)*c.Q/1e6,1)}</b></td>`).join("")+`</tr></tbody>`;
   $("eLines").innerHTML=rowsH;
 }
-[...EIDS,...IDS,...DIDS,...UIDS,...CIDS,...KIDS,"eH"].forEach(k=>$(k).addEventListener("input",renderEcon));
-["dTank","cBallast","cElz"].forEach(k=>$(k).addEventListener("change",renderEcon));
-["cDF","cVL","cSrcB","cSrcC","kDF","kVL","kSrcB","kSrcC","reset","dReset","uReset","cReset","kReset"].forEach(k=>$(k).addEventListener("click",renderEcon));
-$("eReset").addEventListener("click",()=>{EIDS.forEach(k=>$(k).value=EDEF[k]);$("eH").value=4;renderEcon()});
+function renderEconO(){
+  const E=econModel("origin"),{chains,T,pr}=E, P2=parseFloat($("oH").value);
+  $("oHout").textContent=f(P2,2)+" USD/kg";
+  $("oBasis").innerHTML=`Volume from the Case Study: <b>${f(T/1e6,0)} ktpa</b> H₂ delivered, so the electrolysers make ${chains.map(c=>f(c.Q/1e6,1)).join(" / ")} ktpa (LH₂ / NH₃ NG-fired / NH₃ clean fuel). Prices and H₂ price are shared with the Economics sheet. NH₃ vessel: ${E.df?"dual fuel, NH₃ from "+(E.fromCargo?"cargo":"bunkers"):"VLSFO only"}. Sea days, ballast and electrolysis from the Full Chain sheet.`;
+  const cost=(c,P)=>c.a+c.b*P;
+  const [L,NG,CL]=chains;
+  const be=c=>L.b>0?(cost(c,0)-L.a)/L.b:NaN;
+  const bNG=be(NG), bCL=be(CL);
+  $("oTitle").textContent=(bNG<=0&&bCL<=0)?"Both NH₃ chains have a lower energy cost than LH₂ at any H₂ price"
+    :(bNG<=0)?`LH₂ beats clean-fuel cracking below H₂ USD ${f(bCL,2)}/kg, but never beats NG-fired cracking`
+    :(bCL<=0)?`LH₂ beats NG-fired cracking below H₂ USD ${f(bNG,2)}/kg, but never beats clean-fuel cracking`
+    :`LH₂ has the lower energy cost below H₂ USD ${f(bNG,2)}/kg (vs NG-fired) and USD ${f(bCL,2)}/kg (vs clean fuel)`;
+  $("oTiles").innerHTML=chains.map(c=>tile(c.name,`${f(cost(c,P2),3)} <small>USD/kg H₂</small>`,`${f(c.Q/1e6,1)} ktpa produced · USD ${f(cost(c,P2)*c.Q/1e6,1)} M/y`)).join("")+
+    tile("LH₂ − NH₃ (NG-fired)",`${cost(L,P2)>=cost(NG,P2)?"+":"−"}${f(Math.abs(cost(L,P2)-cost(NG,P2)),3)} <small>USD/kg</small>`,`USD ${f((cost(L,P2)*L.Q-cost(NG,P2)*NG.Q)/1e6,1)} M/y`);
+  /* chart 10 */
+  const xs=[];for(let v=0;v<=10+1e-9;v+=0.05)xs.push(+v.toFixed(2));
+  legend("c12leg",[{c:"var(--s1)",t:"LH₂ chain (rises with H₂ price)"},{c:"var(--s2)",t:"NH₃ · NG-fired cracker"},{c:"var(--s2)",t:"NH₃ · clean-fuel cracker",cls:"dash"}]);
+  const ymax=Math.max(cost(L,10),cost(NG,0),cost(CL,0))*1.08;
+  const pts=[{x:P2,y:cost(L,P2),color:"var(--s1)"}];
+  if(bNG>=0&&bNG<=10)pts.push({x:bNG,y:cost(NG,0),color:"var(--ink)",label:[`USD ${f(bNG,2)}/kg vs NG-fired`],anchor:bNG>6?"end":"start",dy:24});
+  if(bCL>=0&&bCL<=10)pts.push({x:bCL,y:cost(CL,0),color:"var(--ink)",label:[`USD ${f(bCL,2)}/kg vs clean fuel`],anchor:bCL>6?"end":"start",dy:26});
+  chart($("c12"),{x0:0,x1:10,y0:0,y1:ymax,xlabel:"H₂ price, USD/kg",ylabel:"Energy cost, USD/kg H₂ produced",xf:v=>v,yf:v=>f(v,2),snap:0.05,
+    series:[{xs,ys:xs.map(()=>cost(CL,0)),color:"var(--s2)",dash:"6 5",w:2},{xs,ys:xs.map(()=>cost(NG,0)),color:"var(--s2)",w:2.5},{xs,ys:xs.map(v=>cost(L,v)),color:"var(--s1)",w:2.5}],
+    vlines:[{x:P2,color:"var(--s1)",dash:"1 3"}],points:pts,
+    tip:v=>`<div style="margin-bottom:4px"><b>H₂ USD ${f(v,2)}/kg</b></div>${row("var(--s1)","LH₂ chain",f(cost(L,v),3)+" USD/kg")}${row("var(--s2)","NH₃ NG-fired",f(cost(NG,v),3)+" USD/kg")}${row("var(--s2)","NH₃ clean fuel",f(cost(CL,v),3)+" USD/kg")}`});
+  $("o12Title").textContent=bNG>0?`LH₂ matches the NG-fired NH₃ chain at H₂ USD ${f(bNG,2)}/kg`:`The NG-fired NH₃ chain is cheaper on energy at any H₂ price`;
+  /* chart 11 */
+  const bars=chains.map(c=>{const segs=c.fixed.map(x=>({k:x[0],v:x[1]*x[3]/c.den,c:x[4]}));segs.splice(3,0,{k:"Cargo H₂ burned",v:c.b*P2,c:"var(--c4)"});return {name:c.name,segs,tot:segs.reduce((a,z)=>a+z.v,0)}});
+  const cats=bars[0].segs.map(z=>[z.k,z.c]).filter(([k])=>bars.some(b=>b.segs.find(z=>z.k===k).v>0));
+  legend("c13leg",cats.map(([t,c])=>({t,c,cls:"box"})));
+  hbars($("c13"),bars,{max:Math.max(...bars.map(b=>b.tot))*1.02,xlabel:"Energy cost, USD per kg H₂ produced",xf:v=>f(v,2),vf:v=>f(v,3),unit:"USD/kg",inlbl:true,ml:210});
+  /* table */
+  const qf=(q,u)=>u==="MMBtu"?f(q,0):u==="t"?f(q,1):f(q,0);
+  let rowsH=`<thead><tr><th>Energy line (per cargo)</th><th>Price</th>${chains.map(c=>`<th>${c.name.replace(" chain","")}<br>qty</th><th>USD/kg H₂</th><th>USD M/y</th>`).join("")}</tr></thead><tbody>`;
+  const lines=[...chains[0].fixed.map((x,i)=>({k:x[0],unit:x[2],price:x[3],get:c=>c.fixed[i]})),{k:"Cargo H₂ burned",unit:"kg",price:P2,get:c=>["",c.h2kg,"kg",P2]}];
+  lines.forEach(l=>{rowsH+=`<tr><td>${l.k}</td><td>${f(l.price,l.unit==="kg"?2:0)} USD/${l.unit==="kg"?"kg":l.unit}</td>`+chains.map(c=>{const x=l.get(c),q=x[1],usd=q*x[3];return q?`<td>${qf(q,x[2])} ${x[2]}</td><td>${f(usd/c.den,3)}</td><td>${f(usd/c.den*c.Q/1e6,1)}</td>`:`<td>–</td><td>–</td><td>–</td>`}).join("")+`</tr>`});
+  rowsH+=`<tr class="cross"><td><b>Total</b></td><td></td>`+chains.map(c=>`<td></td><td><b>${f(cost(c,P2),3)}</b></td><td><b>${f(cost(c,P2)*c.Q/1e6,1)}</b></td>`).join("")+`</tr></tbody>`;
+  $("oLines").innerHTML=rowsH;
+}
+[...EIDS,...IDS,...DIDS,...UIDS,...CIDS,...KIDS,"eH"].forEach(k=>$(k).addEventListener("input",()=>{renderEcon();renderEconO()}));
+$("eH").addEventListener("input",()=>{$("oH").value=$("eH").value;renderEconO()});
+$("oH").addEventListener("input",()=>{$("eH").value=$("oH").value;renderEcon();renderEconO()});
+["dTank","cBallast","cElz"].forEach(k=>$(k).addEventListener("change",()=>{renderEcon();renderEconO()}));
+["cDF","cVL","cSrcB","cSrcC","kDF","kVL","kSrcB","kSrcC","reset","dReset","uReset","cReset","kReset"].forEach(k=>$(k).addEventListener("click",()=>{renderEcon();renderEconO()}));
+$("eReset").addEventListener("click",()=>{EIDS.forEach(k=>$(k).value=EDEF[k]);$("eH").value=4;$("oH").value=4;renderEcon();renderEconO()});
+$("tabEconO").addEventListener("click",()=>showSheet("econo"));
 $("tabEcon").addEventListener("click",()=>showSheet("econ"));
-renderEcon();
-{const all=["upstream","shipping","downstream","chain","case","econ"];let w=location.hash.slice(1);if(!all.includes(w)){try{w=localStorage.getItem("sheet")}catch(e){}}showSheet(all.includes(w)?w:"shipping")}
+renderEcon();renderEconO();
+{const all=["upstream","shipping","downstream","chain","case","econ","econo"];let w=location.hash.slice(1);if(!all.includes(w)){try{w=localStorage.getItem("sheet")}catch(e){}}showSheet(all.includes(w)?w:"shipping")}
 
 </script>

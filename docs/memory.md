@@ -1470,3 +1470,11 @@ User chose "losses only" costing (LH2 boil-off at H2 price; NH3 burned on ship +
 and a separate import-terminal electricity price — **value not yet given, placeholder 140**.
 Defaults (100 ktpa, 20 d, H2 4 USD/kg): LH2 1.754 USD/kg (1.406 + 0.087 kg H2/kg × P); NH3 NG-fired 1.208; clean 1.579.
 LH2 never beats NG-fired on energy cost; beats clean-fuel below H2 USD 1.99/kg. Liquefaction power (1.37 USD/kg) dominates LH2.
+
+### Economic Origin sheet (2026-09-25)
+
+Added "Economic Origin" tab: same annual energy bill as Economics, divided by H2 produced at the electrolyser
+(H2 into liquefier / HB loop) instead of H2 delivered. Prices shared with Economics; H2 slider synced both ways.
+At 100 ktpa delivered (108.7 / 116.1 / 128.6 ktpa produced), H2 4 USD/kg: LH2 1.613, NH3 NG-fired 1.041,
+NH3 clean 1.228 USD/kg produced (vs 1.754 / 1.208 / 1.579 per kg delivered). Annual USD M identical.
+On this basis LH2 never beats either NH3 chain (clean-fuel breakeven disappears).
