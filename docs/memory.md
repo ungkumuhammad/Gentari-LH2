@@ -1488,3 +1488,20 @@ On this basis LH2 never beats either NH3 chain (clean-fuel breakeven disappears)
 - (same day) User couldn't find the GWh/y view behind the toggle → replaced toggle with an always-visible Chart 11c
   (GWh/y + MW avg table) under Chart 11b on the Economics sheet. Lesson: user prefers views shown, not hidden behind switches.
 - (same day) Downstream: added live explanatory callout under Chart 5 (per-cargo gap between cracker modes = feed-rate ratio 7.2/6.5, not efficiency; ~170x regas per kg in both modes). User asked this twice.
+
+---
+
+## ➡️ NEXT SESSION: "LH2 vs Ammonia Energy Value Chain" artifact (handoff 2026-09-25)
+
+- **Artifact:** https://claude.ai/artifact/158AMxDjHB29ttVH3nsoiM — renamed from "LH₂ Boil-off Bunker Check".
+- **Source file:** `docs/reports/lh2-vs-ammonia-energy-value-chain.html` (renamed from `lh2-bog-bunker-breakeven.html`;
+  older entries above use the old path). To update from a new session: edit this file, then publish with
+  `url` = the artifact link above (read it first) so the link is kept.
+- **Sheets (tabs):** Upstream · Shipping · Downstream · Full Chain · Case Study · Economics · Economic Origin.
+  Every sheet reads live from the others (single HTML, vanilla JS, SVG charts; shared `hbars()`/`chart()` helpers).
+- **Open items for the user:**
+  1. Import-terminal electricity price (Economics) — still a 140 USD/MWh placeholder.
+  2. Does Haber-Bosch 1 kWh/kg H2 include the ASU? NH3 stays ahead on energy only below ~2.65 kWh/kg H2.
+  3. Sea days per cargo (20, placeholder) — no corridor fixed.
+  4. CO2: needs a sourced VLSFO emission factor (and N2O slip) before it can be shown.
+  5. Rename "Lost on voyage" was done ("Burned as ship fuel"); consider per-kg as default view on Downstream Chart 5.
