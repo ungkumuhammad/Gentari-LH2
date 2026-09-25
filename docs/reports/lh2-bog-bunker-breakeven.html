@@ -643,6 +643,16 @@ ul.caveats{margin:0;padding-left:18px;display:grid;gap:6px;font-size:13.5px;colo
   <div class="tbl"><table id="eLines"></table></div>
 </section>
 <section>
+  <span class="eyebrow">Chart 11b · energy intensity, delivered basis</span>
+  <h2 id="e11bTitle">Energy per kg H₂ delivered</h2>
+  <div class="card chart">
+    <div class="legend" id="c11bleg"></div>
+    <svg id="c11b" viewBox="0 0 720 250" role="img" aria-label="Stacked chain energy in kWh per kg H2 delivered"></svg>
+  </div>
+  <div class="tbl"><table id="eKwh"></table></div>
+  <p class="note">Energy lines come from the Full Chain sheet, per cargo, divided by the H₂ delivered from that cargo. These are the same figures as the Full Chain sheet. Fuels and burned H₂ or NH₃ are on LHV and electricity is as delivered, so this is quantity of energy, not primary energy. The last row shows the per-kg-produced figure from the Economic Origin sheet for reference.</p>
+</section>
+<section>
   <span class="eyebrow">Method, assumptions and gaps</span>
   <h2>What the cost numbers rest on</h2>
   <ul class="caveats">
@@ -1284,23 +1294,25 @@ function renderEcon(){
   lines.forEach(l=>{rowsH+=`<tr><td>${l.k}</td><td>${f(l.price,l.unit==="kg"?2:0)} USD/${l.unit==="kg"?"kg":l.unit}</td>`+chains.map(c=>{const x=l.get(c),q=x[1],usd=q*x[3];return q?`<td>${qf(q,x[2])} ${x[2]}</td><td>${f(usd/c.den,3)}</td><td>${f(usd/c.den*c.Q/1e6,1)}</td>`:`<td>–</td><td>–</td><td>–</td>`}).join("")+`</tr>`});
   rowsH+=`<tr class="cross"><td><b>Total</b></td><td></td>`+chains.map(c=>`<td></td><td><b>${f(cost(c,P2),3)}</b></td><td><b>${f(cost(c,P2)*c.Q/1e6,1)}</b></td>`).join("")+`</tr></tbody>`;
   $("eLines").innerHTML=rowsH;
+  renderKwh("del");
 }
 
-function renderOriginKwh(){
+function renderKwh(basis){
+  const O=basis==="origin", den=c=>O?c.h2in:c.del, id=O?{leg:"c14leg",svg:"c14",t:"o14Title",tbl:"oKwh"}:{leg:"c11bleg",svg:"c11b",t:"e11bTitle",tbl:"eKwh"}, word=O?"produced":"delivered";
   if(!lastChain)return;
   const {chains,stages,stageOf}=lastChain;
-  const bars=chains.map(c=>{const segs=stages.map(([k,t,col])=>({k:t,c:col,v:c.lines.filter(l=>stageOf(l)===k).reduce((a,l)=>a+l[1],0)/c.h2in}));return {name:c.name,segs,tot:segs.reduce((a,z)=>a+z.v,0)}});
-  legend("c14leg",stages.filter(([,t])=>bars.some(b=>b.segs.find(z=>z.k===t).v>0)).map(([,t,c])=>({t,c,cls:"box"})));
-  hbars($("c14"),bars,{max:Math.max(...bars.map(b=>b.tot))*1.02,xlabel:"Energy, kWh per kg H₂ produced at the electrolyser",xf:v=>f(v,0),vf:v=>v<0.1?f(v,3):f(v,2),unit:"kWh/kg",inlbl:true,ml:210});
+  const bars=chains.map(c=>{const segs=stages.map(([k,t,col])=>({k:t,c:col,v:c.lines.filter(l=>stageOf(l)===k).reduce((a,l)=>a+l[1],0)/den(c)}));return {name:c.name,segs,tot:segs.reduce((a,z)=>a+z.v,0)}});
+  legend(id.leg,stages.filter(([,t])=>bars.some(b=>b.segs.find(z=>z.k===t).v>0)).map(([,t,c])=>({t,c,cls:"box"})));
+  hbars($(id.svg),bars,{max:Math.max(...bars.map(b=>b.tot))*1.02,xlabel:O?"Energy, kWh per kg H₂ produced at the electrolyser":"Energy, kWh per kg H₂ delivered",xf:v=>f(v,0),vf:v=>v<0.1?f(v,3):f(v,2),unit:"kWh/kg",inlbl:true,ml:210});
   const best=bars.reduce((a,b)=>b.tot<a.tot?b:a);
-  $("o14Title").textContent=`${best.name.replace(" chain","")} uses the least energy per kg H₂ produced: ${f(best.tot,2)} kWh/kg`;
+  $(id.t).textContent=`${best.name.replace(" chain","")} uses the least energy per kg H₂ ${word}: ${f(best.tot,2)} kWh/kg`;
   const names=["Electrolysis","Liquefaction / Haber-Bosch","Export-tank BOG reliq","Ship fuel bought","Cargo burned as ship fuel (H₂ or NH₃)","Regas / cracking"];
   const short=["LH₂","NH₃ NG-fired","NH₃ clean fuel"];
-  $("oKwh").innerHTML=`<thead><tr><th>kWh per kg H₂ produced</th>${short.map(n=>`<th>${n}</th>`).join("")}</tr></thead><tbody>`+
-    names.map((n,i)=>`<tr><td>${n}</td>${chains.map(c=>`<td>${c.lines[i][1]?f(c.lines[i][1]/c.h2in,3):"–"}</td>`).join("")}</tr>`).join("")+
-    `<tr class="cross"><td><b>Total, per kg produced</b></td>${chains.map(c=>`<td><b>${f(c.tot/c.h2in,2)}</b></td>`).join("")}</tr>`+
-    `<tr><td>H₂ produced per cargo, t</td>${chains.map(c=>`<td>${f(c.h2in/1000,0)}</td>`).join("")}</tr>`+
-    `<tr><td class="neg">Reference: per kg delivered (Full Chain)</td>${chains.map(c=>`<td class="neg">${f(c.tot/c.del,2)}</td>`).join("")}</tr></tbody>`;
+  $(id.tbl).innerHTML=`<thead><tr><th>kWh per kg H₂ ${word}</th>${short.map(n=>`<th>${n}</th>`).join("")}</tr></thead><tbody>`+
+    names.map((n,i)=>`<tr><td>${n}</td>${chains.map(c=>`<td>${c.lines[i][1]?f(c.lines[i][1]/den(c),3):"–"}</td>`).join("")}</tr>`).join("")+
+    `<tr class="cross"><td><b>Total, per kg ${word}</b></td>${chains.map(c=>`<td><b>${f(c.tot/den(c),2)}</b></td>`).join("")}</tr>`+
+    `<tr><td>H₂ ${word} per cargo, t</td>${chains.map(c=>`<td>${f(den(c)/1000,0)}</td>`).join("")}</tr>`+
+    `<tr><td class="neg">Reference: per kg ${O?"delivered (Economics / Full Chain)":"produced (Economic Origin)"}</td>${chains.map(c=>`<td class="neg">${f(c.tot/(O?c.del:c.h2in),2)}</td>`).join("")}</tr></tbody>`;
 }
 function renderEconO(){
   const E=econModel("origin"),{chains,T,pr}=E, P2=parseFloat($("oH").value);
@@ -1340,7 +1352,7 @@ function renderEconO(){
   lines.forEach(l=>{rowsH+=`<tr><td>${l.k}</td><td>${f(l.price,l.unit==="kg"?2:0)} USD/${l.unit==="kg"?"kg":l.unit}</td>`+chains.map(c=>{const x=l.get(c),q=x[1],usd=q*x[3];return q?`<td>${qf(q,x[2])} ${x[2]}</td><td>${f(usd/c.den,3)}</td><td>${f(usd/c.den*c.Q/1e6,1)}</td>`:`<td>–</td><td>–</td><td>–</td>`}).join("")+`</tr>`});
   rowsH+=`<tr class="cross"><td><b>Total</b></td><td></td>`+chains.map(c=>`<td></td><td><b>${f(cost(c,P2),3)}</b></td><td><b>${f(cost(c,P2)*c.Q/1e6,1)}</b></td>`).join("")+`</tr></tbody>`;
   $("oLines").innerHTML=rowsH;
-  renderOriginKwh();
+  renderKwh("origin");
 }
 [...EIDS,...IDS,...DIDS,...UIDS,...CIDS,...KIDS,"eH"].forEach(k=>$(k).addEventListener("input",()=>{renderEcon();renderEconO()}));
 $("eH").addEventListener("input",()=>{$("oH").value=$("eH").value;renderEconO()});

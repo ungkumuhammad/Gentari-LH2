@@ -1481,3 +1481,5 @@ On this basis LH2 never beats either NH3 chain (clean-fuel breakeven disappears)
 - (same day) Economic Origin: added Chart 14, chain energy in kWh per kg H2 produced at the electrolyser (Full Chain
   lines ÷ H2 into plant). Defaults: LH2 12.21, NH3 NG-fired 9.78, NH3 clean 9.07 kWh/kg produced
   (vs 13.27 / 11.36 / 11.66 per kg delivered).
+- (same day) Economics: added Chart 11b, kWh per kg H2 delivered (13.27 / 11.36 / 11.66), sharing one renderKwh(basis)
+  with Economic Origin's Chart 14; each table cross-references the other basis.
