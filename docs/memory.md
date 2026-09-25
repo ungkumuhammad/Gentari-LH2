@@ -1485,3 +1485,5 @@ On this basis LH2 never beats either NH3 chain (clean-fuel breakeven disappears)
   with Economic Origin's Chart 14; each table cross-references the other basis.
 - (same day) Economics Chart 11b: unit toggle kWh/kg delivered ↔ GWh/y (+ MW avg table) at the Case Study volume.
   At 100 ktpa: 1,327 / 1,136 / 1,166 GWh/y (152 / 130 / 133 MW avg), matching the Case Study.
+- (same day) User couldn't find the GWh/y view behind the toggle → replaced toggle with an always-visible Chart 11c
+  (GWh/y + MW avg table) under Chart 11b on the Economics sheet. Lesson: user prefers views shown, not hidden behind switches.
