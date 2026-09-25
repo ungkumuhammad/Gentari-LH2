@@ -1478,3 +1478,6 @@ Added "Economic Origin" tab: same annual energy bill as Economics, divided by H2
 At 100 ktpa delivered (108.7 / 116.1 / 128.6 ktpa produced), H2 4 USD/kg: LH2 1.613, NH3 NG-fired 1.041,
 NH3 clean 1.228 USD/kg produced (vs 1.754 / 1.208 / 1.579 per kg delivered). Annual USD M identical.
 On this basis LH2 never beats either NH3 chain (clean-fuel breakeven disappears).
+- (same day) Economic Origin: added Chart 14, chain energy in kWh per kg H2 produced at the electrolyser (Full Chain
+  lines ÷ H2 into plant). Defaults: LH2 12.21, NH3 NG-fired 9.78, NH3 clean 9.07 kWh/kg produced
+  (vs 13.27 / 11.36 / 11.66 per kg delivered).
