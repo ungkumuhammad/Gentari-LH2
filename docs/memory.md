@@ -1483,3 +1483,5 @@ On this basis LH2 never beats either NH3 chain (clean-fuel breakeven disappears)
   (vs 13.27 / 11.36 / 11.66 per kg delivered).
 - (same day) Economics: added Chart 11b, kWh per kg H2 delivered (13.27 / 11.36 / 11.66), sharing one renderKwh(basis)
   with Economic Origin's Chart 14; each table cross-references the other basis.
+- (same day) Economics Chart 11b: unit toggle kWh/kg delivered ↔ GWh/y (+ MW avg table) at the Case Study volume.
+  At 100 ktpa: 1,327 / 1,136 / 1,166 GWh/y (152 / 130 / 133 MW avg), matching the Case Study.

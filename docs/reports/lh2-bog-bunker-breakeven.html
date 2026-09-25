@@ -645,6 +645,13 @@ ul.caveats{margin:0;padding-left:18px;display:grid;gap:6px;font-size:13.5px;colo
 <section>
   <span class="eyebrow">Chart 11b · energy intensity, delivered basis</span>
   <h2 id="e11bTitle">Energy per kg H₂ delivered</h2>
+  <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+    <span class="note">Show</span>
+    <div class="seg" role="group" aria-label="Energy unit">
+      <button type="button" id="ekKg" aria-pressed="true">kWh per kg H₂ delivered</button>
+      <button type="button" id="ekYr" aria-pressed="false">GWh per year</button>
+    </div>
+  </div>
   <div class="card chart">
     <div class="legend" id="c11bleg"></div>
     <svg id="c11b" viewBox="0 0 720 250" role="img" aria-label="Stacked chain energy in kWh per kg H2 delivered"></svg>
@@ -1297,7 +1304,9 @@ function renderEcon(){
   renderKwh("del");
 }
 
+var ekUnit="kg";
 function renderKwh(basis){
+  if(basis!=="origin"&&ekUnit==="y")return renderKwhYear();
   const O=basis==="origin", den=c=>O?c.h2in:c.del, id=O?{leg:"c14leg",svg:"c14",t:"o14Title",tbl:"oKwh"}:{leg:"c11bleg",svg:"c11b",t:"e11bTitle",tbl:"eKwh"}, word=O?"produced":"delivered";
   if(!lastChain)return;
   const {chains,stages,stageOf}=lastChain;
@@ -1314,6 +1323,25 @@ function renderKwh(basis){
     `<tr><td>H₂ ${word} per cargo, t</td>${chains.map(c=>`<td>${f(den(c)/1000,0)}</td>`).join("")}</tr>`+
     `<tr><td class="neg">Reference: per kg ${O?"delivered (Economics / Full Chain)":"produced (Economic Origin)"}</td>${chains.map(c=>`<td class="neg">${f(c.tot/(O?c.del:c.h2in),2)}</td>`).join("")}</tr></tbody>`;
 }
+
+function renderKwhYear(){
+  if(!lastChain)return;
+  const {chains,stages,stageOf}=lastChain, T=(parseFloat($("kTarget").value)||0)*1e6;
+  const G=(c,v)=>v/c.del*T/1e6;   // kWh per cargo -> GWh/y at contracted delivered volume
+  const bars=chains.map(c=>{const segs=stages.map(([k,t,col])=>({k:t,c:col,v:G(c,c.lines.filter(l=>stageOf(l)===k).reduce((a,l)=>a+l[1],0))}));return {name:c.name,segs,tot:segs.reduce((a,z)=>a+z.v,0)}});
+  legend("c11bleg",stages.filter(([,t])=>bars.some(b=>b.segs.find(z=>z.k===t).v>0)).map(([,t,c])=>({t,c,cls:"box"})));
+  hbars($("c11b"),bars,{max:Math.max(...bars.map(b=>b.tot))*1.02,xlabel:`Energy, GWh per year at ${f(T/1e6,0)} ktpa delivered`,xf:v=>f(v,0),vf:v=>v<10?f(v,1):f(v,0),unit:"GWh/y",inlbl:true,ml:210});
+  const best=bars.reduce((a,b)=>b.tot<a.tot?b:a), worst=bars.reduce((a,b)=>b.tot>a.tot?b:a);
+  $("e11bTitle").textContent=`${best.name.replace(" chain","")} needs the least: ${f(best.tot,0)} GWh/y, ${f(worst.tot-best.tot,0)} GWh/y less than ${worst.name.replace(" chain","")}`;
+  const names=["Electrolysis","Liquefaction / Haber-Bosch","Export-tank BOG reliq","Ship fuel bought","Cargo burned as ship fuel (H₂ or NH₃)","Regas / cracking"];
+  const short=["LH₂","NH₃ NG-fired","NH₃ clean fuel"];
+  const g=v=>v?f(v,v<10?1:0):"–";
+  $("eKwh").innerHTML=`<thead><tr><th>At ${f(T/1e6,0)} ktpa delivered</th>${short.map(n=>`<th>${n}, GWh/y</th><th>MW avg</th>`).join("")}</tr></thead><tbody>`+
+    names.map((n,i)=>`<tr><td>${n}</td>${chains.map(c=>{const v=G(c,c.lines[i][1]);return `<td>${g(v)}</td><td>${g(v/8.76)}</td>`}).join("")}</tr>`).join("")+
+    `<tr class="cross"><td><b>Total</b></td>${chains.map(c=>{const v=G(c,c.tot);return `<td><b>${f(v,0)}</b></td><td><b>${f(v/8.76,0)}</b></td>`}).join("")}</tr>`+
+    `<tr><td>H₂ delivered per year, ktpa</td>${chains.map(()=>`<td>${f(T/1e6,0)}</td><td></td>`).join("")}</tr></tbody>`;
+}
+function setEk(u){ekUnit=u;$("ekKg").setAttribute("aria-pressed",u==="kg");$("ekYr").setAttribute("aria-pressed",u==="y");renderKwh("del")}
 function renderEconO(){
   const E=econModel("origin"),{chains,T,pr}=E, P2=parseFloat($("oH").value);
   $("oHout").textContent=f(P2,2)+" USD/kg";
@@ -1361,6 +1389,8 @@ $("oH").addEventListener("input",()=>{$("eH").value=$("oH").value;renderEcon();r
 ["cDF","cVL","cSrcB","cSrcC","kDF","kVL","kSrcB","kSrcC","reset","dReset","uReset","cReset","kReset"].forEach(k=>$(k).addEventListener("click",()=>{renderEcon();renderEconO()}));
 $("eReset").addEventListener("click",()=>{EIDS.forEach(k=>$(k).value=EDEF[k]);$("eH").value=4;$("oH").value=4;renderEcon();renderEconO()});
 $("tabEconO").addEventListener("click",()=>showSheet("econo"));
+$("ekKg").addEventListener("click",()=>setEk("kg"));
+$("ekYr").addEventListener("click",()=>setEk("y"));
 $("tabEcon").addEventListener("click",()=>showSheet("econ"));
 renderEcon();renderEconO();
 {const all=["upstream","shipping","downstream","chain","case","econ","econo"];let w=location.hash.slice(1);if(!all.includes(w)){try{w=localStorage.getItem("sheet")}catch(e){}}showSheet(all.includes(w)?w:"shipping")}
