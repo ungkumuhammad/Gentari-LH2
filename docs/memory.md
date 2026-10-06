@@ -4,7 +4,7 @@
 > Updated every session. `CLAUDE.md` points here — read this at the start of
 > any session where the user references prior work or continuing a task.
 >
-> Last updated: 2026-09-24
+> Last updated: 2026-10-06
 
 ---
 
@@ -1583,3 +1583,33 @@ On this basis LH2 never beats either NH3 chain (clean-fuel breakeven disappears)
   3. Sea days per cargo (20, placeholder) — no corridor fixed.
   4. CO2: needs a sourced VLSFO emission factor (and N2O slip) before it can be shown.
   5. Rename "Lost on voyage" was done ("Burned as ship fuel"); consider per-kg as default view on Downstream Chart 5.
+
+---
+
+## Word database (Rev 0): Section 13 "LH2 vs NH3 as hydrogen carrier" written (2026-10-06)
+
+User supplied `LiqH2VC - Database Rev 0.docx` (the Gentari/PETRONAS "Liquid Hydrogen Value Chain Technology
+Database", sections 1-12 already written, heading 13 present but empty) and asked for Section 13 to be written from the
+"LH2 vs Ammonia Energy Value Chain" artifact, in the document's existing writing and formatting, no gaps.
+First upload was an IRM/rights-protected container (not readable; no workaround attempted); the user re-uploaded an
+unprotected copy. The `.docx` itself is **not** stored in the repo (confidential, user's file); the delivered copy
+went to the user through the session.
+
+| Item | Detail |
+|------|--------|
+| Structure written | 13 intro, 13.1 Basis of the Comparison, 13.2 Preparing the Cargo, 13.3 Shipping and Boil-off, 13.4 Back to Gaseous Hydrogen, 13.5 End-to-End Energy (incl. sensitivity table), 13.6 Annual Supply Case (100 ktpa), 13.7 Energy Cost, 13.8 Summary and Key Uncertainties (+ sources line) |
+| Method | Direct XML insertion into `word/document.xml`; reused section 12's own patterns (body paragraph, hidden list-23 counter paragraph so Word numbers 13.1-13.8, Heading 2, empty spacer paragraphs, 12.1-style navy-header tables). Existing XML verified byte-identical after removing the insertions; only `document.xml` changed; validator passed |
+| Numbers | Read from the artifact's own model (headless Chromium on `docs/reports/lh2-vs-ammonia-energy-value-chain.html`), not retyped from notes; every figure cross-checked against that output. Extra runs for the 0.2 %/day voyage BOR case, electrolysis-on case and Haber-Bosch sweep (breakeven 2.65 kWh/kg H2 for NG-fired cracker, ~2.25 for clean-fuel) |
+| Tagging in the Word text | Plain words instead of bracket tags: "team input", "assumption", "estimate, source still needed", "KHI (Section x)". Sources line at the end of 13.8 |
+| Reconciliations flagged in the text | (1) artifact voyage BOR 0.40 %/day vs the doc's 0.2 %/day planning assumption (Sections 10.3/12.2); the 0.2 case is shown. (2) BOG re-liquefaction 3.94 kWh/kg vs Section 10.2's 8 kWh/kg; effect < 1 %. (3) liquefier 112 MW (108.7 ktpa produced) vs Section 12.1's 103 MW (100 ktpa produced). (4) Artifact shows NH3-ship H2 carried as 4,842 t on the Shipping sheet but 4,871 t elsewhere (17.75 % vs 5.6 kg/kg); the doc uses 4,871 t throughout and quotes the 1.68 USD/kg per-tonne breakeven without a tonnage |
+| TOC | Eight TOC2 entries added after the existing "13." entry; page numbers are estimates from a LibreOffice render (offset to the Word page of the 13 heading, p.44). User must update the TOC field in Word |
+| Left unchanged | Section 12.3 row "The comparison with ammonia is not finished" still stands (capital cost and shipping economics are still open); revision table still "xx" |
+
+**Rendering notes:** LibreOffice shows the whole document's H2 numbers oddly (1.13, 1.14, "6." for 13) because of the
+hidden-counter trick; Word numbers it correctly (the stored TOC shows 12.1-13). `keepNext` was added to the empty
+paragraph after each H2, to table cells and to the lead-in sentence so headings/tables do not strand across pages
+(invisible; same look).
+
+**Open items carried forward (unchanged from the artifact handoff):** Haber-Bosch 1 kWh/kg H2 incl. ASU?; sea days
+(20, placeholder); import-terminal electricity price (placeholder = 140 USD/MWh); CO2 needs a sourced VLSFO factor; NH3
+dataset (D4) to replace remaining NH3 estimates.
