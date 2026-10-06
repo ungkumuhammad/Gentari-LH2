@@ -182,6 +182,17 @@ ul.caveats{margin:0;padding-left:18px;display:grid;gap:6px;font-size:13.5px;colo
   <div class="tbl"><table id="uTank2"></table></div>
 </section>
 <section>
+  <span class="eyebrow">Chart 7b · how efficient would the liquefier have to be?</span>
+  <h2 id="u7bTitle">The liquefier SEC needed to match Haber-Bosch</h2>
+  <p class="note">Hold the ammonia route where it is and sweep the liquefier's specific energy consumption (SEC). The parity point is where the LH₂ line meets the ammonia line. The shaded region is below the reversible (ideal) work of liquefying hydrogen. No liquefier can operate there, however well engineered.</p>
+  <div class="card chart">
+    <div class="legend" id="c7bleg"></div>
+    <svg id="c7b" viewBox="0 0 720 320" role="img" aria-label="Upstream energy of the LH2 route against liquefaction SEC, with the ammonia route and the thermodynamic minimum"></svg>
+  </div>
+  <div class="tiles" id="u7bTiles"></div>
+  <p class="note">Minimum liquefaction work: 3.3 kWh/kg for normal-H₂ and 3.9 kWh/kg for para-H₂ (<span class="cite">doe-2009-h2-liquefaction-energy</span>, via <code>data/properties/liquefaction.csv</code>). Para-H₂ is the relevant floor, because LH₂ must be converted to para for storage. KHI's disclosed 8–9 kWh/kg is <span class="cite">kawasaki-2026-questionnaire</span>. The chart follows the Upstream inputs and the per-cargo / per-kg switch above.</p>
+</section>
+<section>
   <span class="eyebrow">Method, assumptions and gaps</span>
   <h2>What the upstream numbers rest on</h2>
   <ul class="caveats">
@@ -941,6 +952,37 @@ $("bDay").addEventListener("click",()=>setBasis("day"));
 $("bH2").addEventListener("click",()=>setBasis("h2"));
 window.addEventListener("resize",()=>{$("tip").hidden=true});
 render();
+const MIN_NORMAL=3.3, MIN_PARA=3.9;   // kWh/kg reversible liquefaction work, doe-2009-h2-liquefaction-energy (cited)
+function renderUp7b(){
+  const s=P(),u={};UIDS.forEach(k=>u[k]=parseFloat($(k).value)||0);
+  const cargoL=s.vol*s.fillL/100*s.rhoL, cargoN=s.vol*s.rhoN, h2N=cargoN/u.uStoich/(1-u.uLoss/100);
+  const rlL=u.uTank*u.uFill/100*s.rhoL*u.uBorL/100*u.uDays*u.uRlqL, rlN=u.uTank*u.uFill/100*s.rhoN*u.uBorN/100*u.uDays*u.uRlqN;
+  const perKg=uBasis==="kg";
+  const L=sec=>perKg?sec+rlL/cargoL:(sec*cargoL+rlL)/1000;      // kWh/kg H2 or MWh/cargo
+  const N=perKg?(h2N*u.uSecN+rlN)/h2N:(h2N*u.uSecN+rlN)/1000;
+  const par=perKg?N-rlL/cargoL:(N*1000-rlL)/cargoL;              // SEC at parity, kWh/kg
+  const xs=[];for(let v=0;v<=10+1e-9;v+=0.05)xs.push(+v.toFixed(2));
+  const ymax=Math.max(L(10),N)*1.08, unit=perKg?"kWh/kg H₂":"MWh per cargo";
+  legend("c7bleg",[{c:"var(--s1)",t:"LH₂ route: liquefaction + tank reliq"},{c:"var(--s2)",t:"NH₃ route: Haber-Bosch + tank reliq"},{c:"var(--warn-bg)",t:"Below minimum liquefaction work (unreachable)",cls:"box"},{c:"var(--s1-fill)",t:"KHI disclosed 8–9 kWh/kg",cls:"box"}]);
+  const pts=[{x:u.uSecL,y:L(u.uSecL),color:"var(--s1)",label:[`Your input ${f(u.uSecL,1)} kWh/kg`],anchor:"end",dy:-12}];
+  if(par>=0&&par<=10)pts.push({x:par,y:N,color:"var(--ink)",label:[`Parity at ${f(par,2)} kWh/kg`],anchor:"start",dy:24});
+  chart($("c7b"),{x0:0,x1:10,y0:0,y1:ymax,xlabel:"Liquefaction SEC, kWh per kg H₂",ylabel:perKg?"Upstream energy, kWh/kg H₂":"Upstream energy, MWh per cargo",xf:v=>v,yf:v=>perKg?f(v,0):f(v/1000,0)+"k",snap:0.05,
+    areas:[{xs:[0,MIN_PARA],top:[ymax,ymax],bot:[0,0],fill:"var(--warn-bg)"},{xs:[8,9],top:[ymax,ymax],bot:[0,0],fill:"var(--s1-fill)"}],
+    series:[{xs,ys:xs.map(()=>N),color:"var(--s2)",w:2.5},{xs,ys:xs.map(L),color:"var(--s1)",w:2.5}],
+    vlines:[{x:MIN_NORMAL,color:"var(--warn)",dash:"3 3"},{x:MIN_PARA,color:"var(--warn)",dash:"3 3"}],
+    vlabels:[{x:MIN_NORMAL,text:"3.3 normal-H₂",anchor:"end"},{x:MIN_PARA,text:"3.9 para-H₂ minimum",anchor:"start"}],
+    points:pts,
+    tip:v=>`<div style="margin-bottom:4px"><b>SEC ${f(v,2)} kWh/kg</b>${v<MIN_PARA?' <span style="color:var(--warn)">unreachable</span>':""}</div>${row("var(--s1)","LH₂ route",f(L(v),perKg?2:0)+" "+unit)}${row("var(--s2)","NH₃ route",f(N,perKg?2:0)+" "+unit)}`});
+  $("u7bTitle").textContent=par<MIN_PARA
+    ?`A liquefier would need ${f(par,2)} kWh/kg to match Haber-Bosch — below the ${MIN_PARA} kWh/kg thermodynamic minimum, so it is unreachable`
+    :`A liquefier at ${f(par,2)} kWh/kg would match Haber-Bosch — above the ${MIN_PARA} kWh/kg minimum, so it is physically possible`;
+  $("u7bTiles").innerHTML=
+    tile("Parity liquefaction SEC",`${f(par,2)} <small>kWh/kg H₂</small>`,perKg?"same upstream energy per kg H₂":"same upstream energy per 40,000 m³ cargo")+
+    tile("Minimum possible (para-H₂)",`${MIN_PARA} <small>kWh/kg</small>`,`normal-H₂ ${MIN_NORMAL} kWh/kg`)+
+    tile("Gap to the minimum",`${f(MIN_PARA-par,2)} <small>kWh/kg</small>`,par<MIN_PARA?"a perfect liquefier still uses more":"parity is above the floor")+
+    tile("Your liquefier vs KHI",`${f(u.uSecL,1)} <small>kWh/kg</small>`,`${f(MIN_PARA/u.uSecL*100,0)} % of ideal (para basis)`);
+}
+
 /* ================= DOWNSTREAM ================= */
 const DIDS=["dDuty","dSendP","dEtaP","dDT","dCp","dHead","dEtaSW","dFeedNG","dFeedCl","dStoich","dElec","dAnnual","dHold","dBorL","dSecL","dBorN","dSecN"];
 const DDEF={};DIDS.forEach(k=>DDEF[k]=$(k).value);
@@ -1090,6 +1132,7 @@ NH₃ tank reliq = ${f(invN)} kg × ${u.uBorN} %/d × ${u.uDays} d × ${u.uRlqN}
   $("uTank2").innerHTML=`<thead><tr><th>Export tank</th><th>Inventory, kg</th><th>BOR, %/day</th><th>Boil-off, kg/day</th><th>Reliq, kWh/kg</th><th>Reliq energy, MWh/day</th><th>Per cargo (${u.uDays} d), MWh</th></tr></thead><tbody>
     <tr><td>LH₂, ${f(u.uTank)} m³</td><td>${f(invL)}</td><td>${u.uBorL}</td><td>${f(bogL)}</td><td>${u.uRlqL}</td><td>${f(bogL*u.uRlqL/1000,2)}</td><td>${f(rlL/1000,1)}</td></tr>
     <tr><td>NH₃, ${f(u.uTank)} m³</td><td>${f(invN)}</td><td>${u.uBorN}</td><td>${f(bogN)}</td><td>${u.uRlqN}</td><td>${f(bogN*u.uRlqN/1000,2)}</td><td>${f(rlN/1000,1)}</td></tr></tbody>`;
+  renderUp7b();
 }
 UIDS.forEach(k=>$(k).addEventListener("input",renderUp));
 IDS.forEach(k=>$(k).addEventListener("input",renderUp));

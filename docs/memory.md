@@ -1583,3 +1583,8 @@ On this basis LH2 never beats either NH3 chain (clean-fuel breakeven disappears)
   3. Sea days per cargo (20, placeholder) — no corridor fixed.
   4. CO2: needs a sourced VLSFO emission factor (and N2O slip) before it can be shown.
   5. Rename "Lost on voyage" was done ("Burned as ship fuel"); consider per-kg as default view on Downstream Chart 5.
+- (2026-10-06) Upstream sheet: added Chart 7b "How efficient would the liquefier have to be?" — sweeps liquefaction SEC
+  0–10 kWh/kg vs the NH3 upstream line, parity point, shaded region below the 3.9 kWh/kg para-H2 minimum
+  (3.3 normal-H2 also marked; doe-2009-h2-liquefaction-energy), KHI 8–9 band. Follows the per-cargo / per-kg switch.
+  Defaults: parity 1.70 kWh/kg per cargo, 0.98 kWh/kg per kg H2 — both unreachable. (The older 2.34/3.27 figures
+  are from the shipping-studies artifact 2CqBBj9ozNr65hN1uXaBEq, HB 0.60 kWh/kg NH3.)
