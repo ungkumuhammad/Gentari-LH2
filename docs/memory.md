@@ -1657,3 +1657,16 @@ repo's main brand. Registered in `docs/brand/` (README + `tokens.json` + `assets
 The `LiqH2VC - Database Rev 0.docx` was uploaded again on 2026-10-09 (revision 27, 58 pages). The first upload that day
 was IRM-protected (DRMEncryptedDataSpace) and unreadable; the second was unprotected. Still not stored in the repo
 (confidential). Next task: all-departments syndication deck built from it in the brand above.
+
+### All-departments syndication deck built from the database (2026-10-09)
+
+20-slide `.pptx` built with pptxgenjs from the unprotected `LiqH2VC - Database Rev 0.docx`, in the `docs/brand/` style:
+cover → scope (13 sections, chain chevrons) → properties → liquefaction energy → technology players → plants built → storage →
+shipping → KHI spec → export-facility cost → regulation → challenges → LH2 vs NH3 (basis, full-chain energy, stream by
+stream, sensitivities and annual case, energy cost, summary, open items) → closing. Every number taken from the database,
+with the section cited in each slide footer. Delivered through the session, **not** committed (confidential, same as the
+.docx). The generator and images live in the session scratchpad.
+
+Flagged on slides: database inconsistencies (Las Vegas 27.2 vs 30 t/day; La Porte 27.2 vs "over 30"); tank cost reference
+size still "xx m³" (Section 10.2); no cost year for any USD figure. Chart on the cost slide applies the Section 10.1 rule
+2,250 × (size/30)^-0.38 kUSD per t/day. Cover date "October 2026" is a placeholder until the user confirms the session date.
