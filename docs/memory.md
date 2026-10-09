@@ -4,7 +4,7 @@
 > Updated every session. `CLAUDE.md` points here — read this at the start of
 > any session where the user references prior work or continuing a task.
 >
-> Last updated: 2026-09-24
+> Last updated: 2026-10-06
 
 ---
 
@@ -1588,3 +1588,52 @@ On this basis LH2 never beats either NH3 chain (clean-fuel breakeven disappears)
   (3.3 normal-H2 also marked; doe-2009-h2-liquefaction-energy), KHI 8–9 band. Follows the per-cargo / per-kg switch.
   Defaults: parity 1.70 kWh/kg per cargo, 0.98 kWh/kg per kg H2 — both unreachable. (The older 2.34/3.27 figures
   are from the shipping-studies artifact 2CqBBj9ozNr65hN1uXaBEq, HB 0.60 kWh/kg NH3.)
+
+---
+
+## Word database (Rev 0): Section 13 "LH2 vs NH3 as hydrogen carrier" written (2026-10-06)
+
+User supplied `LiqH2VC - Database Rev 0.docx` (the Gentari/PETRONAS "Liquid Hydrogen Value Chain Technology
+Database", sections 1-12 already written, heading 13 present but empty) and asked for Section 13 to be written from the
+"LH2 vs Ammonia Energy Value Chain" artifact, in the document's existing writing and formatting, no gaps.
+First upload was an IRM/rights-protected container (not readable; no workaround attempted); the user re-uploaded an
+unprotected copy. The `.docx` itself is **not** stored in the repo (confidential, user's file); the delivered copy
+went to the user through the session.
+
+| Item | Detail |
+|------|--------|
+| Structure written | 13 intro, 13.1 Basis of the Comparison, 13.2 Preparing the Cargo, 13.3 Shipping and Boil-off, 13.4 Back to Gaseous Hydrogen, 13.5 End-to-End Energy (incl. sensitivity table), 13.6 Annual Supply Case (100 ktpa), 13.7 Energy Cost, 13.8 Summary and Key Uncertainties (+ sources line) |
+| Method | Direct XML insertion into `word/document.xml`; reused section 12's own patterns (body paragraph, hidden list-23 counter paragraph so Word numbers 13.1-13.8, Heading 2, empty spacer paragraphs, 12.1-style navy-header tables). Existing XML verified byte-identical after removing the insertions; only `document.xml` changed; validator passed |
+| Numbers | Read from the artifact's own model (headless Chromium on `docs/reports/lh2-vs-ammonia-energy-value-chain.html`), not retyped from notes; every figure cross-checked against that output. Extra runs for the 0.2 %/day voyage BOR case, electrolysis-on case and Haber-Bosch sweep (breakeven 2.65 kWh/kg H2 for NG-fired cracker, ~2.25 for clean-fuel) |
+| Tagging in the Word text | Plain words instead of bracket tags: "team input", "assumption", "estimate, source still needed", "KHI (Section x)". Sources line at the end of 13.8 |
+| Reconciliations flagged in the text | (1) artifact voyage BOR 0.40 %/day vs the doc's 0.2 %/day planning assumption (Sections 10.3/12.2); the 0.2 case is shown. (2) BOG re-liquefaction 3.94 kWh/kg vs Section 10.2's 8 kWh/kg; effect < 1 %. (3) liquefier 112 MW (108.7 ktpa produced) vs Section 12.1's 103 MW (100 ktpa produced). (4) Artifact shows NH3-ship H2 carried as 4,842 t on the Shipping sheet but 4,871 t elsewhere (17.75 % vs 5.6 kg/kg); the doc uses 4,871 t throughout and quotes the 1.68 USD/kg per-tonne breakeven without a tonnage |
+| TOC | Eight TOC2 entries added after the existing "13." entry; page numbers are estimates from a LibreOffice render (offset to the Word page of the 13 heading, p.44). User must update the TOC field in Word |
+| Left unchanged | Section 12.3 row "The comparison with ammonia is not finished" still stands (capital cost and shipping economics are still open); revision table still "xx" |
+
+**Rendering notes:** LibreOffice shows the whole document's H2 numbers oddly (1.13, 1.14, "6." for 13) because of the
+hidden-counter trick; Word numbers it correctly (the stored TOC shows 12.1-13). `keepNext` was added to the empty
+paragraph after each H2, to table cells and to the lead-in sentence so headings/tables do not strand across pages
+(invisible; same look).
+
+**Open items carried forward (unchanged from the artifact handoff):** Haber-Bosch 1 kWh/kg H2 incl. ASU?; sea days
+(20, placeholder); import-terminal electricity price (placeholder = 140 USD/MWh); CO2 needs a sourced VLSFO factor; NH3
+dataset (D4) to replace remaining NH3 estimates.
+
+### Word database Section 13, revision 2: graphs, liquefier study, 12.3 row (2026-10-06, same session)
+
+User asked to (1) update the Section 12.3 ammonia row to match, (2) add graphs to Section 13 where it explains the
+differences, (3) include the "How efficient would the liquefier have to be?" study, (4) explain each stream then the
+full chain, and (5) hand back the `.docx`. Built again from the user's unprotected upload plus all Section 13 changes.
+
+| Item | Detail |
+|------|--------|
+| New structure | 13.1 Basis, 13.2 Upstream, **13.3 How Efficient Would the Liquefier Have to Be?**, 13.4 Shipping, 13.5 Downstream, 13.6 Full Chain, 13.7 Annual Supply Case, 13.8 Energy Cost, 13.9 Summary. "Stream" read as the upstream / shipping / downstream segments, then the full chain; each stream = what it covers, numbers table, graph, what the graph shows |
+| Graphs (Figures 11-16) | upstream energy per cargo and per kg; liquefier SEC sweep; LH2 boil-off vs engine limit; regas vs cracker; end-to-end stacked kWh/kg; energy cost vs H2 price. Drawn with matplotlib in the reference dataviz palette (blue LH2, orange NH3; validator passed), values from the artifact models with asserts in the script. Inserted as centred images with SEQ-field captions in the document's own caption format (continue from Figure 10) |
+| Liquefier study source | "Two Ways to Move Hydrogen" artifact (`docs/reports/lh2-vs-nh3-shipping-studies.html`, identical to the live artifact), Upstream sheet. Basis there: 100 ktpa, 8,000 h/y, Haber-Bosch placeholder 0.60 kWh/kg NH3. Model outputs: parity SEC 3.27 kWh/kg (below the 3.9 para / 3.3 normal reversible work, DOE Program Record 9013, 2009 = unreachable); at the team HB input of 1 kWh/kg H2 the NH3 plant draws 12.5 MW vs 113.2 MW and parity falls to 0.94 kWh/kg; at HB 0.7 kWh/kg NH3 parity is 3.83; for LH2 to match a 8 / 9 kWh/kg liquefier HB would need ~1.46 / 1.64 kWh/kg NH3 (2.4-2.7x the placeholder). KHI 8-9 kWh/kg = 49-43 % second-law efficiency, para basis, upper bound (feed pressure unconfirmed) |
+| Stream-by-stream net (full chain) | vs NG-fired NH3: LH2 +8.6 kWh/kg upstream, +1.8 at sea (incl. cargo burned), -8.5 downstream, net +1.9 kWh/kg |
+| 12.3 row | Label now "The comparison with ammonia is only partly finished"; text points to Section 13 and says capital cost, ship cost and shipping economics are still to be compared. Text-only change, formatting untouched |
+| Integrity | Removing the insertions and reverting the 12.3 row text restores the original `document.xml` byte for byte; only `document.xml`, `document.xml.rels` and six new media files changed; validator passed |
+
+**Still for the user to do in Word:** right-click the table of contents and Update Field (page numbers for 13.1-13.9
+are estimates); Executive Summary does not yet mention Section 13 (not changed). Scripts for the figures and the XML
+insertion live in the session scratchpad, not in the repo.
