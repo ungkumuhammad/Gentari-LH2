@@ -1637,3 +1637,23 @@ full chain, and (5) hand back the `.docx`. Built again from the user's unprotect
 **Still for the user to do in Word:** right-click the table of contents and Update Field (page numbers for 13.1-13.9
 are estimates); Executive Summary does not yet mention Section 13 (not changed). Scripts for the figures and the XML
 insertion live in the session scratchpad, not in the repo.
+
+---
+
+## Gentari brand registered as main brand (2026-10-09)
+
+User supplied a Gentari brand reference sheet (compiled from their `frontendengineeringmodel` repo; a working draft,
+not the official guideline) and two reference slides (cover + "lead-in" content slide), and asked for it to be the
+repo's main brand. Registered in `docs/brand/` (README + `tokens.json` + `assets/`), pointed to from CLAUDE.md §6 and §9.
+
+| Decision | Detail |
+|----------|--------|
+| Core colours | Gentari Purple `#60269E`, Gentari Cyan `#00C8E8` |
+| Deck fonts | Cover title/date **Verdana** (as on the reference cover); all other slides **Calibri** headings + body (user instruction) |
+| Lead-in title colour | `#7030A0` (from the reference slide, user said follow it), not `#60269E` |
+| Cover artwork | `docs/brand/assets/cover-background.png` = the reference cover with the title area filled flat purple; 1600×900 raster, so soft on large screens until vector logo/artwork is supplied |
+| Missing | Official typeface, logo rules, white/mono/vector logos, official PowerPoint master |
+
+The `LiqH2VC - Database Rev 0.docx` was uploaded again on 2026-10-09 (revision 27, 58 pages). The first upload that day
+was IRM-protected (DRMEncryptedDataSpace) and unreadable; the second was unprotected. Still not stored in the repo
+(confidential). Next task: all-departments syndication deck built from it in the brand above.

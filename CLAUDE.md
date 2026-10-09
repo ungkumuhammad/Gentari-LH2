@@ -128,6 +128,7 @@ docs/
   okr.md             ← active Objectives & Key Results (current priorities)
   conventions.md     ← units, currency, citation format (authoritative)
   glossary.md        ← terminology
+  brand/             ← Gentari brand (MAIN BRAND): colours, fonts, house deck style, assets
   methodology/       ← per-segment method & assumptions (01–06)
   comparison/        ← LH2-vs-NH3 OKR deliverables & milestone plan
 data/
@@ -215,6 +216,12 @@ Every deliverable (memo, table, model result) states up front:
 **system boundary · units · currency & cost-year · key assumptions**, and ends
 with a **Sources** list. Ranges and uncertainty are shown, not hidden behind a
 single point estimate.
+
+**Brand.** Gentari is the main brand for every visual deliverable (decks,
+reports, charts, pages). Follow [`docs/brand/README.md`](docs/brand/README.md)
+(tokens in `docs/brand/tokens.json`): Gentari Purple cover with Verdana title,
+Calibri lead-in slides with full-sentence purple titles, the confidentiality
+marking, and the chart/table colours listed there.
 
 ---
 
