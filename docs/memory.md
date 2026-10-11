@@ -1657,3 +1657,22 @@ repo's main brand. Registered in `docs/brand/` (README + `tokens.json` + `assets
 The `LiqH2VC - Database Rev 0.docx` was uploaded again on 2026-10-09 (revision 27, 58 pages). The first upload that day
 was IRM-protected (DRMEncryptedDataSpace) and unreadable; the second was unprotected. Still not stored in the repo
 (confidential). Next task: all-departments syndication deck built from it in the brand above.
+
+### Word database Section 13, revision 3: full value chain including electrolysis (2026-10-11)
+
+User asked to include "electrolysis of the H2 each route consumes" for the full value chain, on top of what Section 13
+already had, to show the different perspective. Interpreted as the Word document (the artifact already has this as the
+Full Chain checkbox, off by default). New **13.7 Full Value Chain: Including Electrolysis**; later sub-sections renumbered
+(13.8 Annual Supply Case, 13.9 Energy Cost, 13.10 Summary); cross-references, intro, Summary and the 12.3 row updated.
+
+| Item | Detail |
+|------|--------|
+| Basis | Value Chain artifact with electrolysis on, 60 kWh/kg H2 (assumption), 100 ktpa. Per kg delivered: electrolysis 65.22 / 69.64 / 77.14 (LH2 / NG-fired NH3 / clean-fuel NH3); totals 78.49 / 81.00 / 88.80; annual 7,849 / 8,100 / 8,880 GWh/y (896 / 925 / 1,014 MW avg); electrolyser 744 / 795 / 881 MW avg (NH3 routes 7 % / 18 % larger) |
+| Perspectives shown | (1) electrolysis is 83-87 % of the total; (2) ranking vs no-electrolysis flips: NG-fired NH3 14 % lower without, 3 % higher with; (3) per kg produced the order reverses again (72.21 / 69.78 / 69.07); (4) cost: feed electricity USD 9.13-10.80/kg dwarfs the 1.2-1.8 energy cost; gap NG-fired NH3 vs LH2 narrows 0.545 -> 0.21 USD/kg |
+| **Artifact finding (not fixed)** | With electrolysis on, the Value Chain artifact still counts hydrogen burned on the ship (2.90 kWh/kg) and ammonia burned in the cracker (4.65 / 8.27 kWh/kg; USD 0.348 / 0.630 / 1.120 per kg in the cost sheet) on top of the electrolysis that already pays for that hydrogen, so both energy and cost totals are overstated. The doc shows the assessment figures AND a corrected view: 75.59 / 76.35 / 80.53 kWh/kg, cost 10.536 / 10.328 / 11.259 USD/kg. Effect: LH2 leads on energy at 60 kWh/kg but only by ~1 %; break-even electrolyser energy ~50 kWh/kg (NG-fired) and ~35 (clean fuel) corrected, ~26 as computed; at/below ~50 NG-fired NH3 is lower. NG-fired NH3 is still ~2 % cheaper with the feed charged. **Suggest fixing the artifact's electrolysis-on mode to exclude burned cargo.** |
+| Figures | 16 (stacked electrolysis + rest, and NH3 as % of LH2 under three views) and 17 (NH3 minus LH2 vs electrolyser energy). Total figures in Section 13 now 8 (Figures 11-18) |
+| 12.3 row | Now also says the result depends on whether electrolysis is counted (Section 13.7) |
+| Integrity | Removing insertions and reverting the 12.3 row text restores the original `document.xml` byte for byte; validator passed |
+
+**Open items:** electrolyser energy (60 kWh/kg H2) needs a sourced value, it now drives the full-chain ranking; TOC page
+numbers are estimates (update the field in Word); optional: add a side-by-side with/without electrolysis view to the artifact.
