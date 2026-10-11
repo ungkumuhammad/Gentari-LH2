@@ -1664,8 +1664,9 @@ was IRM-protected (DRMEncryptedDataSpace) and unreadable; the second was unprote
 cover → scope (13 sections, chain chevrons) → properties → liquefaction energy → technology players → plants built → storage →
 shipping → KHI spec → export-facility cost → regulation → challenges → LH2 vs NH3 (basis, full-chain energy, stream by
 stream, sensitivities and annual case, energy cost, summary, open items) → closing. Every number taken from the database,
-with the section cited in each slide footer. Delivered through the session, **not** committed (confidential, same as the
-.docx). The generator and images live in the session scratchpad.
+with the section cited in each slide footer. Committed at the user's request (2026-10-11) as
+`docs/reports/lh2-database-syndication-rev0.pptx`; the generator is `scripts/decks/database-syndication/build.js` (images in
+`img/`, cover artwork from `docs/brand/assets/`). The source `.docx` itself is still not in the repo.
 
 Flagged on slides: database inconsistencies (Las Vegas 27.2 vs 30 t/day; La Porte 27.2 vs "over 30"); tank cost reference
 size still "xx m³" (Section 10.2); no cost year for any USD figure. Chart on the cost slide applies the Section 10.1 rule
