@@ -1676,3 +1676,17 @@ Full Chain checkbox, off by default). New **13.7 Full Value Chain: Including Ele
 
 **Open items:** electrolyser energy (60 kWh/kg H2) needs a sourced value, it now drives the full-chain ranking; TOC page
 numbers are estimates (update the field in Word); optional: add a side-by-side with/without electrolysis view to the artifact.
+
+### All-departments syndication deck built from the database (2026-10-09)
+
+20-slide `.pptx` built with pptxgenjs from the unprotected `LiqH2VC - Database Rev 0.docx`, in the `docs/brand/` style:
+cover → scope (13 sections, chain chevrons) → properties → liquefaction energy → technology players → plants built → storage →
+shipping → KHI spec → export-facility cost → regulation → challenges → LH2 vs NH3 (basis, full-chain energy, stream by
+stream, sensitivities and annual case, energy cost, summary, open items) → closing. Every number taken from the database,
+with the section cited in each slide footer. Committed at the user's request (2026-10-11) as
+`docs/reports/lh2-database-syndication-rev0.pptx`; the generator is `scripts/decks/database-syndication/build.js` (images in
+`img/`, cover artwork from `docs/brand/assets/`). The source `.docx` itself is still not in the repo.
+
+Flagged on slides: database inconsistencies (Las Vegas 27.2 vs 30 t/day; La Porte 27.2 vs "over 30"); tank cost reference
+size still "xx m³" (Section 10.2); no cost year for any USD figure. Chart on the cost slide applies the Section 10.1 rule
+2,250 × (size/30)^-0.38 kUSD per t/day. Cover date "October 2026" is a placeholder until the user confirms the session date.
