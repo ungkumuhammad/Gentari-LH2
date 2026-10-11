@@ -4,7 +4,7 @@
 > Updated every session. `CLAUDE.md` points here — read this at the start of
 > any session where the user references prior work or continuing a task.
 >
-> Last updated: 2026-10-06
+> Last updated: 2026-10-11
 
 ---
 
@@ -1690,3 +1690,19 @@ with the section cited in each slide footer. Committed at the user's request (20
 Flagged on slides: database inconsistencies (Las Vegas 27.2 vs 30 t/day; La Porte 27.2 vs "over 30"); tank cost reference
 size still "xx m³" (Section 10.2); no cost year for any USD figure. Chart on the cost slide applies the Section 10.1 rule
 2,250 × (size/30)^-0.38 kUSD per t/day. Cover date "October 2026" is a placeholder until the user confirms the session date.
+
+### Syndication deck updated with the latest Section 13 work (2026-10-11)
+
+`docs/reports/lh2-database-syndication-rev0.pptx` regenerated from `scripts/decks/database-syndication/build.js`; now 23 slides
+(was 20). User asked to update the deck with the latest developed info, on `main` and on `claude/quirky-darwin-6qi852`.
+
+| Change | Detail |
+|--------|--------|
+| New slide 16 | Liquefier efficiency (Section 13.3): LH2 113 MW vs NH3 42 MW at 9 kWh/kg; parity 3.27 kWh/kg H2 (placeholder Haber-Bosch) and 0.94 (team input), both below the 3.9 minimum work (US DOE Record 9013, 2009); chart built from native shapes |
+| New slide 18 | Full value chain with electrolysis (Section 13.7): 78.49 / 81.00 / 88.80 kWh/kg; corrected for burned cargo counted twice 75.59 / 76.35 / 80.53 |
+| New slide 19 | Electrolyser sweep: tie at ~50 kWh/kg (gas-fired, corrected), ~35 (clean fuel), ~26 as computed; cost with feed USD 10.33 vs 10.54 per kg |
+| Updated | Sensitivity table (electrolysis row), summary slide (title and both columns), open-items table (electrolyser energy row); footers renumbered to Sections 13.8-13.10 |
+| Checks | Rendered every changed slide and fixed overflow (3-line title, table over text, label crossing a line); `validate.py` passed |
+
+**Open items:** electrolyser energy (60 kWh/kg H2) still needs a sourced value; deck numbers follow the Word document, so a
+later change to Section 13 means rebuilding the deck.

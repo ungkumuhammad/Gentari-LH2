@@ -494,10 +494,55 @@ txt(s, bullets(["Upstream: the liquefier needs about nine times the energy per k
   { x: 7.3, y: 4.6, w: 5.43, h: 1.6, fontSize: 14 });
 note(s, "Positive = LH₂ uses more energy. At sea includes the cargo hydrogen LH₂ burns. Haber-Bosch power and sea days are still placeholders, so the net figure will move with them.", 6.4, 0.45);
 
+// ================= 15b. How efficient would the liquefier have to be? =================
+s = lead("LH2 vs NH3",
+  "To match the ammonia plant a liquefier would need 3.27 kWh/kg H₂, below the 3.9 minimum, so no liquefier can close the upstream gap",
+  "LiqH₂VC Database Rev 0 · Section 13.3 · power at the plant fence, MW · 100,000 t H₂ a year, 8,000 operating hours a year",
+  "Hold the ammonia route fixed and sweep the liquefier's energy use. The LH2 line rises with the liquefier energy; the NH3 lines are flat. They would cross at 3.27 kWh/kg with the placeholder Haber-Bosch demand and at 0.94 kWh/kg with the team's 1 kWh/kg H2. Both points sit inside the shaded region, below the minimum work to liquefy hydrogen, so no liquefier can reach them. Even at the top of the placeholder range, 0.7 kWh/kg NH3, the crossing is 3.83 kWh/kg, just below 3.9. Liquefaction cannot be engineered into a win on upstream electricity; it could only win if the ammonia plant drew far more than assumed.");
+const LQ = { x0: 1.25, x1: 8.3, y0: 1.95, y1: 5.2, ymax: 150, xmax: 12 };
+const lqx = (v) => LQ.x0 + (LQ.x1 - LQ.x0) * v / LQ.xmax, lqy = (v) => LQ.y1 - (LQ.y1 - LQ.y0) * v / LQ.ymax;
+txt(s, "Power at the plant fence, MW", { x: X0, y: 1.55, w: 4.0, h: 0.3, fontSize: 12, bold: true, color: C.text2 });
+s.addShape(pres.shapes.RECTANGLE, { x: lqx(0), y: LQ.y0, w: lqx(3.9) - lqx(0), h: LQ.y1 - LQ.y0, fill: { color: HEX.tint }, line: { color: HEX.tint }, objectName: "liq-unreachable-zone" });
+s.addShape(pres.shapes.RECTANGLE, { x: lqx(8), y: LQ.y0, w: lqx(9) - lqx(8), h: LQ.y1 - LQ.y0, fill: { color: HEX.lilac, transparency: 45 }, line: { type: "none" }, objectName: "liq-khi-band" });
+[0, 50, 100, 150].forEach((v) => {
+  s.addShape(pres.shapes.LINE, { x: LQ.x0, y: lqy(v), w: LQ.x1 - LQ.x0, h: 0, line: { color: HEX.grid, width: 0.75 } });
+  txt(s, String(v), { x: X0, y: lqy(v) - 0.12, w: 0.5, h: 0.24, fontSize: 11, align: "right", valign: "middle" });
+});
+for (let v = 0; v <= LQ.xmax; v += 2) {
+  s.addShape(pres.shapes.LINE, { x: lqx(v), y: LQ.y1, w: 0, h: 0.08, line: { color: HEX.text, width: 0.75 } });
+  txt(s, String(v), { x: lqx(v) - 0.3, y: LQ.y1 + 0.1, w: 0.6, h: 0.25, fontSize: 11, align: "center" });
+}
+s.addShape(pres.shapes.LINE, { x: LQ.x0, y: LQ.y1, w: LQ.x1 - LQ.x0, h: 0, line: { color: HEX.text, width: 0.75 }, objectName: "liq-axis" });
+txt(s, "Liquefier energy, kWh per kg H₂", { x: LQ.x1 - 3.0, y: LQ.y1 + 0.36, w: 3.0, h: 0.25, fontSize: 11, align: "right" });
+s.addShape(pres.shapes.LINE, { x: lqx(3.3), y: LQ.y0, w: 0, h: LQ.y1 - LQ.y0, line: { color: HEX.title, width: 1.25, dashType: "dash" }, objectName: "liq-min-3.3" });
+s.addShape(pres.shapes.LINE, { x: lqx(3.9), y: LQ.y0, w: 0, h: LQ.y1 - LQ.y0, line: { color: HEX.title, width: 1.25 }, objectName: "liq-min-3.9" });
+txt(s, "Unreachable: below the minimum work to liquefy, 3.3 kWh/kg (dashed) or 3.9 with ortho-para conversion", { x: lqx(0) + 0.08, y: LQ.y0 + 0.08, w: 1.8, h: 1.1, fontSize: 11, color: C.accent1 });
+txt(s, "KHI 8–9", { x: lqx(8) - 0.2, y: LQ.y0 + 0.05, w: lqx(9) - lqx(8) + 0.4, h: 0.25, fontSize: 11, bold: true, align: "center" });
+// LH2 line (liquefier 12.5 MW per kWh/kg + 0.683 MW export-tank boil-off), clipped at the top of the plot
+const lqEnd = (LQ.ymax - 0.683) / 12.5;
+s.addShape(pres.shapes.LINE, { x: lqx(0), y: lqy(LQ.ymax), w: lqx(lqEnd) - lqx(0), h: lqy(0.683) - lqy(LQ.ymax), flipV: true, line: { color: HEX.purple, width: 3 }, objectName: "liq-lh2-line" });
+s.addShape(pres.shapes.LINE, { x: LQ.x0, y: lqy(41.6), w: LQ.x1 - LQ.x0, h: 0, line: { color: HEX.blue, width: 3 }, objectName: "liq-nh3-placeholder" });
+s.addShape(pres.shapes.LINE, { x: LQ.x0, y: lqy(12.5), w: LQ.x1 - LQ.x0, h: 0, line: { color: HEX.blue, width: 3, dashType: "dash" }, objectName: "liq-nh3-team" });
+[[3.27, 41.6, "liq-parity-1"], [0.94, 12.5, "liq-parity-2"]].forEach((p) =>
+  s.addShape(pres.shapes.OVAL, { x: lqx(p[0]) - 0.1, y: lqy(p[1]) - 0.1, w: 0.2, h: 0.2, fill: { color: HEX.dark }, line: { color: "FFFFFF", width: 1.5 }, objectName: p[2] }));
+txt(s, "3.27", { x: lqx(3.27) - 0.68, y: lqy(41.6) - 0.31, w: 0.5, h: 0.25, fontSize: 12, bold: true, align: "right" });
+txt(s, "0.94", { x: lqx(0.94) + 0.2, y: lqy(12.5) + 0.05, w: 0.7, h: 0.22, fontSize: 12, bold: true });
+// legend row
+const lgY = 5.88;
+[[X0 + 0.65, "LH₂ route", HEX.purple, null, 1.0], [X0 + 2.5, "NH₃ placeholder Haber-Bosch", HEX.blue, null, 2.45], [X0 + 5.75, "NH₃ team input (dashed)", HEX.blue, "dash", 2.0]].forEach((l, i) => {
+  s.addShape(pres.shapes.LINE, { x: l[0], y: lgY + 0.14, w: 0.4, h: 0, line: { color: l[2], width: 3, dashType: l[3] || "solid" }, objectName: "liq-legend-line-" + (i + 1) });
+  txt(s, l[1], { x: l[0] + 0.5, y: lgY, w: l[4], h: 0.28, fontSize: 12, valign: "middle" });
+});
+box(s, 8.65, 1.65, 4.08, 4.45, HEX.tint, "liq-stats");
+stat(s, 8.9, 1.8, 3.6, "113 vs 42 MW", "LH₂ liquefier route against the ammonia route at 9 kWh/kg: 2.7 times the power", { size: 26, bh: 0.5, lh: 0.65, name: "liq-power" });
+stat(s, 8.9, 3.1, 3.6, "3.27 → 0.94 kWh/kg", "Liquefier energy that would match ammonia, with the placeholder and then the team Haber-Bosch input", { size: 24, bh: 0.5, lh: 0.8, name: "liq-parity" });
+stat(s, 8.9, 4.6, 3.6, "3.9 kWh/kg", "Minimum work to liquefy (3.3 without ortho-para conversion); Kawasaki's 8–9 is 49–43 % of it", { size: 26, bh: 0.5, lh: 0.8, name: "liq-min" });
+note(s, "Placeholder Haber-Bosch 0.60 kWh/kg NH₃ (about 3.4 kWh/kg H₂, estimate, source needed); team input 1 kWh/kg H₂; 60,000 m³ export tank each route. Minimum work: US DOE Hydrogen Program Record 9013 (2009); the 49–43 % is an upper bound because Kawasaki's feed pressure is unconfirmed. Today's liquefier would match ammonia only if Haber-Bosch drew 1.46–1.64 kWh/kg NH₃, 2.4–2.7 times the placeholder.", 6.3, 0.65);
+
 // ================= 16. Sensitivities and annual case =================
 s = lead("LH2 vs NH3",
-  "The ranking can flip: LH₂ uses the least energy if Haber-Bosch needs more than ~2.65 kWh/kg H₂, or once hydrogen production is counted",
-  "LiqH₂VC Database Rev 0 · Sections 13.3, 13.6 and 13.7 · kWh per kg H₂ delivered; supply case 100,000 t H₂ a year",
+  "The ranking can flip: LH₂ uses the least energy if Haber-Bosch needs more than ~2.65 kWh/kg H₂, or once electrolysis is counted",
+  "LiqH₂VC Database Rev 0 · Sections 13.6 and 13.8 · kWh per kg H₂ delivered; supply case 100,000 t H₂ a year",
   "Haber-Bosch energy is the swing input: the team value of 1 kWh/kg H2 may exclude the air separation unit. The placeholder range with air separation, 2.8-3.9 kWh/kg H2, is above the break-even.");
 const hl = (t) => ({ text: t, options: { bold: true, color: HEX.title } });
 table(s, ["Case", "LH₂", "NH₃ gas-fired", "NH₃ clean fuel"], [
@@ -505,9 +550,9 @@ table(s, ["Case", "LH₂", "NH₃ gas-fired", "NH₃ clean fuel"], [
   ["LH₂ ship boil-off 0.2 %/day, not 0.40", "12.72", hl("11.36"), "11.66"],
   ["Haber-Bosch 2.65 kWh/kg H₂, not 1", hl("13.27"), hl("13.27"), "13.78"],
   ["Haber-Bosch 3 kWh/kg H₂, not 1", hl("13.27"), "13.68", "14.23"],
-  ["Hydrogen production included (electrolysis 60 kWh/kg)", hl("78.49"), "81.00", "88.80"],
+  ["Electrolysis counted, 60 kWh/kg", hl("78.49"), "81.00", "88.80"],
 ], { x: X0, y: 1.65, w: 7.6, colW: [3.7, 1.2, 1.35, 1.35], rowH: 0.62, fontSize: 14, objectName: "sensitivity-table" });
-txt(s, "Lowest energy in each case shown in purple.", { x: X0, y: 5.5, w: 7.6, h: 0.3, fontSize: 12 });
+txt(s, "Lowest energy in each case shown in purple. Electrolysis case: slides 18 and 19.", { x: X0, y: 5.5, w: 7.6, h: 0.3, fontSize: 12 });
 box(s, 8.55, 1.65, 4.18, 4.45, HEX.tint, "annual-case");
 txt(s, "Delivering 100,000 t of H₂ a year", { x: 8.8, y: 1.8, w: 3.7, h: 0.35, fontSize: 15, bold: true, color: C.text2 });
 stat(s, 8.8, 2.2, 3.7, "5 vs 4 ships", "40,000 m³ ships for LH₂ against gas-fired NH₃; LH₂ needs 4.97, close to a sixth", { size: 28, bh: 0.5, lh: 0.65, name: "ships" });
@@ -515,10 +560,67 @@ stat(s, 8.8, 3.5, 3.7, "108.7 vs 116.1 ktpa", "Hydrogen to produce for 100 ktpa 
 stat(s, 8.8, 4.8, 3.7, "152 vs 130 MW", "Average chain power, 1,327 against 1,136 GWh a year", { size: 26, bh: 0.5, lh: 0.65, name: "power" });
 note(s, "Round trip 42.5 days (two 20-day legs, two 1.25-day port calls), 90 % ship availability (assumption), 7.73 voyages per ship a year. The liquefier draws about 112 MW here, against 103 MW in Section 12.1, because it must make 108.7 ktpa.", 6.3, 0.6);
 
+// ================= 16b. Full value chain including electrolysis =================
+s = lead("LH2 vs NH3",
+  "Counting the electrolysis of the hydrogen each route consumes adds 65–77 kWh/kg and puts LH₂ ahead: 78.49 against 81.00 kWh/kg",
+  "LiqH₂VC Database Rev 0 · Section 13.7 · full value chain with electrolysis · kWh per kg H₂ delivered · electrolyser 60 kWh/kg H₂ (assumption)",
+  "Until now both routes started from the same hydrogen gas. In practice each route consumes a different amount of hydrogen for the same delivery: 2,832 t per LH2 cargo and 4,871 t per NH3 cargo. Adding the electrolysis of that hydrogen on top of the earlier chain makes electrolysis 83-87 % of the energy. The NH3 routes pay more for it because they lose more hydrogen, which outweighs what they save in the rest of the chain. One point needs care: the earlier chain counts hydrogen burned on the ship and ammonia burned in the cracker as energy used, and once electrolysis is added those are already paid for, so counting them again overstates the totals. The corrected totals are 75.59, 76.35 and 80.53 kWh/kg, and LH2 is still lowest but by only about 1 %.");
+const cats16b = ["NH₃, clean-fuel cracker · 88.80", "NH₃, gas-fired cracker · 81.00", "LH₂ route · 78.49"];
+const ser16b = [
+  ["Electrolysis of the hydrogen consumed", [77.14, 69.64, 65.22], HEX.purple],
+  ["Rest of the chain (Section 13.6)", [11.66, 11.36, 13.27], HEX.blue],
+];
+s.addChart(pres.charts.BAR, ser16b.map((r) => ({ name: r[0], labels: cats16b, values: r[1] })), chartOpts({
+  x: 0.5, y: 1.55, w: 8.0, h: 4.6, barDir: "bar", barGrouping: "stacked", barGapWidthPct: 45,
+  chartColors: ser16b.map((r) => r[2]), showValue: true, dataLabelPosition: "ctr", dataLabelColor: "FFFFFF", dataLabelFontBold: true,
+  dataLabelFormatCode: "0.00", valAxisMinVal: 0, valAxisMaxVal: 100, valAxisMajorUnit: 20, valAxisLabelFormatCode: "0",
+  showLegend: true, legendPos: "t", catAxisLabelFontSize: 13, objectName: "electrolysis-chart",
+}));
+txt(s, "NH₃ energy as % of LH₂ (LH₂ = 100)", { x: 8.9, y: 1.65, w: 3.83, h: 0.35, fontSize: 15, bold: true, color: C.text2 });
+const up = (t) => ({ text: t, options: { bold: true, color: HEX.title } });
+table(s, ["NH₃ route", "Without", "With", "Corrected*"], [
+  ["Gas-fired", "86", up("103"), up("101")],
+  ["Clean fuel", "88", up("113"), up("107")],
+], { x: 8.9, y: 2.1, w: 3.83, colW: [1.05, 0.9, 0.7, 1.18], rowH: 0.45, fontSize: 12, objectName: "electrolysis-views-table" });
+txt(s, "Above 100 = NH₃ uses more energy than LH₂ (shown in purple). Without and With electrolysis are the chain on slide 14 and the same chain plus electrolysis.", { x: 8.9, y: 3.6, w: 3.83, h: 0.85, fontSize: 12 });
+txt(s, [{ text: "*Corrected: ", options: { bold: true } },
+  { text: "the earlier chain counts hydrogen burned on the ship (2.90 kWh/kg) and ammonia burned in the cracker (4.65 and 8.27) as energy used. With electrolysis they are already paid for, so they are removed. Totals become 75.59, 76.35 and 80.53 kWh/kg." }],
+  { x: 8.9, y: 4.5, w: 3.83, h: 1.65, fontSize: 12 });
+note(s, "Electrolysis is 83 % of the LH₂ route's energy and 86–87 % of the NH₃ routes'. The NH₃ routes consume more hydrogen per kg delivered (4,871 t against 2,832 t a cargo; 86.2 % and 77.8 % delivered against 92.0 %). At 100,000 t a year: 7,849, 8,100 and 8,880 GWh, or 896, 925 and 1,014 MW average.", 6.3, 0.65);
+
+// ================= 16c. What the electrolysis result depends on =================
+s = lead("LH2 vs NH3",
+  "The tie hinges on the electrolyser: LH₂ leads above ~50 kWh/kg H₂, gas-fired NH₃ below it; the cost gap is only USD 0.21/kg",
+  "LiqH₂VC Database Rev 0 · Sections 13.7 and 13.9 · NH₃ minus LH₂, kWh per kg H₂ delivered · cost in USD per kg H₂ delivered, cost year not stated",
+  "Plotted is the energy of each NH3 route minus the LH2 route as the electrolyser energy changes; above zero means NH3 uses more. As computed, gas-fired NH3 and LH2 tie at about 26 kWh/kg, below the 33.3 kWh/kg that the hydrogen itself contains, so LH2 would lead for any electrolyser above that. With the overlap removed they tie at about 50 kWh/kg, and the clean-fuel route at about 35. So the electrolyser energy needs a sourced value before the ranking can be settled. On cost, charging the hydrogen feed through the electrolysis electricity at USD 140/MWh makes the feed by far the largest cost, and the gap between the routes shrinks from USD 0.545 to USD 0.21 per kg. Gas-fired NH3 stays cheapest because part of its energy is natural gas, about USD 44/MWh against USD 140/MWh for electricity.");
+const sweepE = [20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70];
+// Burned cargo per kg delivered: LH2 2.8985, gas-fired NH3 4.65, clean-fuel NH3 8.2667 kWh/kg; without electrolysis 13.275, 11.356, 11.658;
+// hydrogen consumed per kg delivered 1.08695 (LH2), 1.16072 (gas-fired), 1.28572 (clean fuel). Checked against the model at 26, 40, 50, 60 and 65 kWh/kg.
+const dAs = sweepE.map((e) => +((11.356 + 1.16072 * e) - (13.275 + 1.08695 * e)).toFixed(2));
+const dGas = sweepE.map((e) => +((11.356 - 4.65 + 1.16072 * e) - (13.275 - 2.8985 + 1.08695 * e)).toFixed(2));
+const dClean = sweepE.map((e) => +((11.658 - 8.2667 + 1.28572 * e) - (13.275 - 2.8985 + 1.08695 * e)).toFixed(2));
+txt(s, "NH₃ minus LH₂, kWh per kg H₂ delivered (above zero = NH₃ uses more)", { x: X0, y: 1.6, w: 7.9, h: 0.3, fontSize: 14, bold: true, color: C.text2 });
+s.addChart(pres.charts.LINE, [
+  { name: "Gas-fired NH₃, overlap removed", labels: sweepE.map(String), values: dGas },
+  { name: "Gas-fired NH₃, as computed", labels: sweepE.map(String), values: dAs },
+  { name: "Clean-fuel NH₃, overlap removed", labels: sweepE.map(String), values: dClean },
+], chartOpts({
+  x: 0.5, y: 1.95, w: 8.0, h: 4.2, chartColors: [HEX.blue, "9DBFEA", HEX.dark], lineSize: 3, lineDataSymbol: "none",
+  valAxisMinVal: -4, valAxisMaxVal: 8, valAxisMajorUnit: 2, valAxisLabelFormatCode: "0",
+  catAxisLabelPos: "low", showCatAxisTitle: true, catAxisTitle: "Electrolyser energy, kWh per kg H₂ produced",
+  catAxisTitleFontSize: 12, catAxisTitleColor: HEX.text, catAxisTitleFontFace: "+mn-lt",
+  showLegend: true, legendPos: "t", objectName: "electrolyser-sweep-chart",
+}));
+box(s, 8.9, 1.65, 3.83, 4.5, HEX.tint, "electrolysis-stats");
+stat(s, 9.15, 1.8, 3.4, "~50 kWh/kg", "Electrolyser energy at which gas-fired NH₃ and LH₂ tie, overlap removed (about 35 for clean fuel; 26 as computed)", { size: 26, bh: 0.5, lh: 0.9, name: "tie" });
+stat(s, 9.15, 3.2, 3.4, "USD 10.33 vs 10.54", "per kg with the hydrogen feed charged, gas-fired NH₃ against LH₂; the gap falls from USD 0.545 to 0.21", { size: 24, bh: 0.5, lh: 0.9, name: "cost-feed" });
+stat(s, 9.15, 4.65, 3.4, "795 / 881 vs 744 MW", "Average electrolyser power, gas-fired / clean-fuel NH₃ against LH₂: 7 % and 18 % more", { size: 22, bh: 0.5, lh: 0.8, name: "electrolyser-size" });
+note(s, "Electrolyser 60 kWh/kg H₂ is an assumption and needs a sourced value. Cost charges the electrolysis electricity at USD 140/MWh (team input) and removes burned hydrogen and ammonia already paid for; the assessment's own cost sheet does not remove them and shows USD 10.88, 10.96 and 12.38 per kg.", 6.35, 0.6);
+
 // ================= 17. Energy cost =================
 s = lead("LH2 vs NH3",
   "On energy cost alone, gas-fired ammonia is cheapest at USD 1.208/kg H₂ against USD 1.754 for LH₂; liquefier power is ~78 % of the LH₂ bill",
-  "LiqH₂VC Database Rev 0 · Section 13.8 · energy cost · USD per kg H₂ delivered, cost year not stated",
+  "LiqH₂VC Database Rev 0 · Section 13.9 · energy cost · USD per kg H₂ delivered, cost year not stated",
   "Only energy is priced: no capital, charter, port, carbon or hydrogen-feed cost. The hydrogen price only affects LH2, through the cargo it burns.");
 const cats17 = ["NH₃, clean-fuel cracker · 1.579", "NH₃, gas-fired cracker · 1.208", "LH₂ route · 1.754"];
 const ser17 = [
@@ -543,15 +645,15 @@ note(s, "Prices are team inputs in USD with no cost year: electricity 140 USD/MW
 
 // ================= 18. Summary =================
 s = lead("LH2 vs NH3",
-  "Neither carrier wins on every measure: ammonia leads on energy, energy cost and ship count, while LH₂ delivers more of its hydrogen",
-  "LiqH₂VC Database Rev 0 · Section 13.9 · summary of the LH₂ vs NH₃ screening",
+  "Neither carrier wins on every measure: ammonia leads on energy cost and ships, LH₂ on hydrogen delivered and energy with electrolysis",
+  "LiqH₂VC Database Rev 0 · Section 13.10 · summary of the LH₂ vs NH₃ screening",
   "This is a screening view of energy and energy cost. The capital-cost and shipping-economics comparison still needs feasibility-study cost data.");
 const cols = [
   ["Where LH₂ is ahead", HEX.purple, ["Delivers 92.0 % of the hydrogen it starts with, against 86.2 % and 77.8 % for NH₃",
     "The import terminal only vaporises the liquid: 0.05 kWh/kg, no chemical conversion",
-    "Uses the least energy once hydrogen production is counted: 78.49 against 81.00 kWh/kg"]],
-  ["Where NH₃ (gas-fired cracker) is ahead", HEX.blue, ["Less energy per kg delivered: 11.36 against 13.27 kWh/kg",
-    "Lower energy cost: USD 1.208 against 1.754 per kg",
+    "Uses the least energy once electrolysis is counted: 78.49 against 81.00 kWh/kg, but by only ~1 % with burned cargo not counted twice"]],
+  ["Where NH₃ (gas-fired cracker) is ahead", HEX.blue, ["Less energy per kg delivered before electrolysis: 11.36 against 13.27 kWh/kg",
+    "Lower energy cost: USD 1.208 against 1.754 per kg; with the hydrogen feed charged the gap falls to USD 0.21",
     "Fewer ships for 100,000 t a year: 4 against 5",
     "Upstream, even a perfect liquefier could not match the ammonia plant"]],
 ];
@@ -570,13 +672,13 @@ txt(s, [{ text: "Not yet decided:  ", options: { bold: true, color: C.accent4 } 
 // ================= 19. Open items =================
 s = lead("LH2 vs NH3",
   "Six open items could change the result; closing them needs supplier and vessel data, the internal ammonia dataset and a feasibility study",
-  "LiqH₂VC Database Rev 0 · Sections 10.2, 11, 12.3 and 13.9 · open items",
+  "LiqH₂VC Database Rev 0 · Sections 10.2, 11, 12.3 and 13.10 · open items",
   "These are the inputs to firm up next. The first two matter most for the ranking.");
 table(s, ["Open item", "Current value", "Why it matters"], [
   ["Haber-Bosch energy", "1 kWh/kg H₂ (team input)", "May exclude air separation. NH₃ stays ahead only below ~2.65 kWh/kg H₂ (2.25 with a clean-fuel cracker)"],
   ["LH₂ ship boil-off", "0.40 %/day (team input); 0.2 %/day in Section 12.2", "No full-scale data. Each extra 0.1 %/day removes about 2 % of the cargo over 20 sea days"],
   ["Sea days per cargo", "20 (assumption)", "No corridor fixed. Sets ship count and fuel; LH₂ is close to a sixth ship (4.97)"],
-  ["Hydrogen production energy", "Not counted; 60 kWh/kg when included (assumption)", "Counting it puts LH₂ ahead, because it loses less hydrogen"],
+  ["Electrolyser energy", "Not counted in 13.2–13.6; 60 kWh/kg H₂ in 13.7 (assumption)", "Puts LH₂ ahead by only ~1 % once burned cargo is not counted twice; the routes tie at ~50 kWh/kg, so it needs a source"],
   ["Other NH₃ values", "Re-liquefaction 0.25 kWh/kg, density 682 kg/m³, LHV 18.6 MJ/kg (estimates)", "To be replaced with the internal ammonia dataset and the import-terminal power price"],
   ["Not yet included", "—", "Plant, ship and terminal CAPEX and OPEX, charter, carbon cost (CO₂, N₂O), safety and permitting"],
 ], { x: X0, y: 1.6, w: W, colW: [2.6, 3.9, 5.63], rowH: [0.42, 0.68, 0.68, 0.6, 0.6, 0.68, 0.6], fontSize: 13, objectName: "open-items-table" });
