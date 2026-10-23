@@ -1706,3 +1706,15 @@ size still "xx m³" (Section 10.2); no cost year for any USD figure. Chart on th
 
 **Open items:** electrolyser energy (60 kWh/kg H2) still needs a sourced value; deck numbers follow the Word document, so a
 later change to Section 13 means rebuilding the deck.
+
+---
+
+## 2026-10-23 — Excel replica of the LH2 vs NH3 Energy Value Chain artifact
+
+- Built `scripts/build_energy_chain_workbook.py` → `docs/comparison/lh2-vs-nh3-energy-value-chain.xlsx`
+  (6 sheets: Upstream, Midstream = artifact "Shipping", Downstream, Full Chain, Annual Energy = "Case Study",
+  Energy Cost = "Economic Origin"). No input sheet: each sheet holds its own inputs (purple-tint cells), cross-sheet links via defined names.
+- Verdana font, Gentari palette (purple #60269E / cyan #00C8E8). Native Excel charts for artifact charts 1–9, 7b, 12–14 (chart 10/11 variants folded into the Energy Cost basis dropdown: produced vs delivered).
+- Electrolysis dropdown (Yes/No) lives on **Upstream**; flows to Full Chain, Annual Energy, Energy Cost. Other dropdowns: chart bases, NH3 fuel mode/source, ballast, import-tank reliq.
+- Verified against an independent Python port of the artifact JS (defaults and a toggled state): all match. Charts only visually checked in LibreOffice (preview PDF; LO mis-draws #N/A markers and custom labels) — open in Excel to confirm final look.
+- Open: Haber-Bosch 1 kWh/kg H2 (ASU included?), placeholder prices, import-terminal power price = upstream.
