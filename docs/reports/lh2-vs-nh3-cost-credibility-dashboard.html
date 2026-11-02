@@ -1,0 +1,587 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LH₂ vs NH₃ Cost and Credibility Dashboard</title>
+<style>
+:root{
+  --bg:#f8fafc;--surface:#fff;--ink:#0f1729;--ink2:#3a4658;--muted:#65758b;--rule:#e1e7ef;--grid:#e8edf2;
+  --purple:#60269e;--title:#7030a0;--tint:#f1eaf6;--cyan:#00c8e8;
+  --lh2:#4a3aa7;--nh3:#2977d6;--dark:#1f2933;
+  --good:#16a34a;--warn:#c27803;--bad:#c2410c;--none:#8a97a8;
+  --int:#60269e;--net:#0e7490;--asm:#64748b;
+  --amber-bg:#fdf2dc;--green-bg:#e3f4ea;--grey-bg:#eef1f5;
+  --font:Verdana,Geneva,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0c1118;--surface:#141b25;--ink:#e8edf4;--ink2:#b4c0cf;--muted:#8a99ac;--rule:#263142;--grid:#1d2733;
+  --purple:#a47ce0;--title:#c3a2f0;--tint:#241a36;--cyan:#22d3ee;--lh2:#9d8ef0;--nh3:#5aa2f2;--dark:#e8edf4;
+  --good:#4ade80;--warn:#f0b454;--bad:#fb923c;--none:#8a99ac;--int:#a47ce0;--net:#22d3ee;--asm:#94a3b8;
+  --amber-bg:#3a2e12;--green-bg:#12301f;--grey-bg:#1a2330}}
+:root[data-theme="dark"]{
+  --bg:#0c1118;--surface:#141b25;--ink:#e8edf4;--ink2:#b4c0cf;--muted:#8a99ac;--rule:#263142;--grid:#1d2733;
+  --purple:#a47ce0;--title:#c3a2f0;--tint:#241a36;--cyan:#22d3ee;--lh2:#9d8ef0;--nh3:#5aa2f2;--dark:#e8edf4;
+  --good:#4ade80;--warn:#f0b454;--bad:#fb923c;--none:#8a99ac;--int:#a47ce0;--net:#22d3ee;--asm:#94a3b8;
+  --amber-bg:#3a2e12;--green-bg:#12301f;--grey-bg:#1a2330}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:14px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding:0 16px}
+.bar{position:sticky;top:0;z-index:20;background:#fff;color:#0f1729;border-bottom:1px solid #e1e7ef}
+.bar .in{display:flex;align-items:center;gap:16px;padding:10px 0;flex-wrap:wrap}
+.logo{height:30px;width:auto;display:block}
+.bar nav{display:flex;gap:4px 14px;flex-wrap:wrap;margin-left:auto;font-size:12px}
+.bar nav a{color:#44545d;text-decoration:none;padding:2px 0;border-bottom:2px solid transparent}
+.bar nav a:hover{color:#60269e;border-color:#60269e}
+.conf{text-align:center;color:#3f9a3f;font-size:11px;padding:6px 0 0}
+h1{font-size:26px;line-height:1.25;color:var(--title);margin:14px 0 6px;font-weight:700}
+h2{font-size:19px;line-height:1.3;color:var(--title);margin:0 0 4px;font-weight:700}
+h3{font-size:14px;margin:0 0 8px}
+.lead{color:var(--ink2);margin:0 0 14px;max-width:900px}
+.meta{display:flex;flex-wrap:wrap;gap:6px 10px;font-size:12px;color:var(--muted);margin-bottom:14px}
+.meta b{color:var(--ink2)}
+section{margin:30px 0 0;scroll-margin-top:70px}
+.card{background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:16px}
+.grid{display:grid;gap:12px}
+.g4{grid-template-columns:repeat(4,1fr)}.g3{grid-template-columns:repeat(3,1fr)}.g2{grid-template-columns:2fr 1fr}.g2e{grid-template-columns:1fr 1fr}
+@media(max-width:900px){.g4{grid-template-columns:1fr 1fr}.g3,.g2,.g2e{grid-template-columns:1fr}}
+@media(max-width:520px){.g4{grid-template-columns:1fr}h1{font-size:21px}}
+.kpi .lab{font-size:12px;font-weight:700;margin-bottom:4px}
+.kpi .big{font-size:30px;font-weight:700;color:var(--ink);line-height:1.15}
+.kpi .sub{font-size:12px;color:var(--muted);margin:2px 0 8px}
+.note{font-size:12px;color:var(--muted)}
+.note b{color:var(--ink2)}
+.foot{font-size:11px;color:var(--muted);margin-top:8px}
+ul.tight{margin:6px 0 0;padding-left:18px}ul.tight li{margin:3px 0}
+/* chips */
+.chips{display:inline-flex;gap:4px;align-items:center;vertical-align:middle;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;line-height:1;padding:3px 7px;border-radius:999px;border:1.5px solid;white-space:nowrap;cursor:pointer;text-decoration:none;background:var(--surface)}
+.chip.INT{color:#fff;background:var(--int);border-color:var(--int)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .chip.INT{color:#1b0f2e}}
+:root[data-theme="dark"] .chip.INT{color:#1b0f2e}
+.chip.NET{color:var(--net);border-color:var(--net)}
+.chip.BOTH{color:var(--ink);border-color:var(--int);background:linear-gradient(90deg,var(--tint) 50%,transparent 50%)}
+.chip.ASM{color:var(--asm);border-color:var(--asm);border-style:dashed}
+.acc{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;line-height:1;padding:3px 7px;border-radius:999px;border:1.5px solid var(--rule);background:var(--surface);color:var(--ink2);white-space:nowrap;cursor:pointer;text-decoration:none}
+.dots{display:inline-flex;gap:2px}.dots i{width:7px;height:7px;border-radius:50%;border:1.5px solid currentColor;display:block}.dots i.on{background:currentColor}
+.acc.a3{color:var(--good);border-color:var(--good)}.acc.a2{color:var(--warn);border-color:var(--warn)}.acc.a1{color:var(--bad);border-color:var(--bad)}.acc.a0{color:var(--none);border-color:var(--none);border-style:dashed}
+.strip{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:10px;padding-top:10px;border-top:1px dashed var(--rule);font-size:11.5px;color:var(--ink2)}
+.strip .it{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap}
+.dim{opacity:.18;transition:opacity .15s}
+.flash{outline:3px solid var(--cyan);outline-offset:2px}
+/* legend */
+.legend{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:800px){.legend{grid-template-columns:1fr}}
+.legend dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:7px 10px;align-items:start;font-size:12px}
+.legend dt{margin:0}.legend dd{margin:0;color:var(--ink2)}
+.filters{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid var(--rule);font-size:12px}
+.seg{display:inline-flex;border:1px solid var(--rule);border-radius:8px;overflow:hidden}
+.seg button{font:inherit;font-size:12px;border:0;background:var(--surface);color:var(--ink2);padding:6px 10px;cursor:pointer;border-right:1px solid var(--rule)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--purple);color:#fff}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .seg button[aria-pressed="true"]{color:#1b0f2e}}
+select{font:inherit;font-size:12px;padding:5px 8px;border-radius:8px;border:1px solid var(--rule);background:var(--surface);color:var(--ink)}
+button.act{font:inherit;font-size:12px;padding:6px 12px;border-radius:8px;border:1px solid var(--purple);background:var(--surface);color:var(--purple);cursor:pointer}
+button.act:hover{background:var(--tint)}
+/* tables */
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th{background:var(--dark);color:var(--surface);text-align:left;padding:7px 9px;font-weight:700;white-space:nowrap}
+:root[data-theme="dark"] th{color:#0c1118}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) th{color:#0c1118}}
+td{padding:7px 9px;border-bottom:1px solid var(--rule);vertical-align:top}
+td:first-child{font-weight:700}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.hl td{background:var(--tint)}
+.st{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;white-space:nowrap}
+.st.ok{background:var(--green-bg);color:var(--good)}.st.part{background:var(--amber-bg);color:var(--warn)}.st.bad{background:#fde8e1;color:#9a3412}.st.na{background:var(--grey-bg);color:var(--muted)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .st.bad{background:#3b1d12;color:#fb923c}}
+:root[data-theme="dark"] .st.bad{background:#3b1d12;color:#fb923c}
+/* matrix */
+.mx{display:grid;grid-template-columns:70px repeat(5,1fr);gap:6px;font-size:12px}
+.mx .h{background:var(--dark);color:var(--surface);font-weight:700;padding:8px;border-radius:6px;text-align:center}
+:root[data-theme="dark"] .mx .h{color:#0c1118}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .mx .h{color:#0c1118}}
+.mx .r{font-weight:700;display:flex;align-items:center;font-size:14px}
+.mx .c{padding:8px;border-radius:6px;background:var(--grey-bg);display:flex;flex-direction:column;gap:5px}
+.mx .c.amber{background:var(--amber-bg)}.mx .c.green{background:var(--green-bg)}
+.mx .g{font-weight:700}
+.mx .c small{color:var(--ink2);font-size:11px}
+@media(max-width:760px){.mx{grid-template-columns:1fr}.mx .h:first-child{display:none}}
+svg{display:block;width:100%;max-width:100%;height:auto}.grid>*{min-width:0}
+svg text{font-family:var(--font);fill:var(--ink2)}
+.sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.lg{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:11.5px;color:var(--ink2);margin-top:6px}
+.callout{border-left:4px solid var(--purple);background:var(--tint);padding:10px 14px;border-radius:0 8px 8px 0;font-size:13px}
+.steps{counter-reset:s;display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:10px 0 0;padding:0;list-style:none}
+@media(max-width:900px){.steps{grid-template-columns:1fr 1fr}}@media(max-width:520px){.steps{grid-template-columns:1fr}}
+.steps li{counter-increment:s;background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:12px;font-size:12.5px}
+.steps li:before{content:counter(s);display:inline-flex;width:22px;height:22px;border-radius:50%;background:var(--purple);color:#fff;align-items:center;justify-content:center;font-weight:700;font-size:12px;margin-bottom:6px}
+.pill{display:inline-block;background:var(--tint);color:var(--purple);font-weight:700;font-size:11px;padding:2px 8px;border-radius:999px}
+input[type=number]{font:inherit;font-size:12px;width:70px;padding:4px 6px;border:1px solid var(--rule);border-radius:6px;background:var(--surface);color:var(--ink)}
+details summary{cursor:pointer;color:var(--purple);font-weight:700;font-size:12.5px}
+footer{margin:36px 0 40px;font-size:11.5px;color:var(--muted)}
+footer ol{margin:6px 0 0;padding-left:18px}
+@media print{.bar{position:static}.filters,.bar nav{display:none}}
+</style>
+</head>
+<body>
+<div class="bar"><div class="wrap in">
+  <img class="logo" alt="Gentari" src="data:image/png;base64,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">
+  <b style="font-size:13px;color:#60269e">Technology intelligence</b>
+  <nav aria-label="Sections">
+    <a href="#headline">Headline</a><a href="#stack">Cost stack</a><a href="#parity">Parity</a><a href="#drivers">Drivers</a><a href="#tank">Tank cost</a><a href="#calendar">Evidence calendar</a><a href="#studies">Studies</a><a href="#crosscheck">Internal cross-check</a><a href="#custodian">Custodian</a><a href="#register">Register</a>
+  </nav>
+</div></div>
+<div class="conf">Confidential - For PETRONAS Staff Only · contains KHI-proprietary figures (Gentari-confidential)</div>
+
+<main class="wrap">
+<header>
+  <h1>LH₂ delivered cost stays above NH₃ on almost every path to 2045, and most of that picture rests on internet data and developer targets rather than our own data</h1>
+  <p class="lead">Every figure on this page carries two marks: <b>where it came from</b> (our internal data or the internet) and <b>how far we trust it today</b>. The content is the Dan mock-up, re-checked against our LH₂ database and the Gentari ammonia-cracker database.</p>
+  <div class="meta">
+    <span><b>Boundary:</b> pure H₂ delivered at the import-terminal gate</span>
+    <span><b>Basis:</b> 100 kt/yr, 8,000 km, same production cost for both routes</span>
+    <span><b>Unit:</b> USD per kg H₂ [cost year not stated in the mock-up]</span>
+    <span><b>Evidence as of:</b> 30 Oct 2026 (mock-up)</span>
+    <span><b>Reviewed:</b> 2 Nov 2026</span>
+    <span class="pill">v0.1 DRAFT for team review</span>
+  </div>
+</header>
+
+<section id="guide" style="margin-top:8px">
+  <div class="card">
+    <div class="legend">
+      <div>
+        <h3>Where the data came from</h3>
+        <dl id="legOrigin"></dl>
+      </div>
+      <div>
+        <h3>How far we trust it today (reviewer assessment)</h3>
+        <dl id="legAcc"></dl>
+      </div>
+    </div>
+    <p class="note" style="margin:12px 0 0"><b>Evidence grade A–E</b> (kept from the mock-up, shown in the stage matrix) is a different thing: it says what kind of evidence stands behind a technology claim (A independent operating data … E study or assumption). The accuracy mark says whether <i>we</i> would quote the number. Click any mark to jump to its row in the <a href="#register" style="color:var(--purple)">register</a>.</p>
+    <div class="filters">
+      <span><b>Highlight origin</b></span>
+      <div class="seg" id="fOrigin" role="group" aria-label="Filter by origin"></div>
+      <label><b>Accuracy at least</b> <select id="fAcc"><option value="0">any</option><option value="1">Low or better</option><option value="2">Medium or better</option><option value="3">High only</option></select></label>
+      <button class="act" id="fReset" type="button">Reset</button>
+    </div>
+  </div>
+  <div class="grid g3" style="margin-top:12px" id="summary"></div>
+</section>
+
+<section id="headline">
+  <h2>1. Headline: the gap narrows to about $0.1 per kg by 2040, then stalls</h2>
+  <p class="lead">Default view: LH₂ published developer targets met against an improving NH₃ route. Nothing after 2026 is a forecast; the years apply developers' own targets (mock-up).</p>
+  <div class="grid g4" id="kpis"></div>
+  <div class="grid g2" style="margin-top:12px">
+    <div class="card"><h3>Delivered cost, USD per kg H₂</h3><div id="chLine"></div>
+      <div class="lg"><span><span class="sw" style="background:var(--lh2)"></span>LH₂ (targets met)</span><span><span class="sw" style="background:var(--nh3)"></span>NH₃ (improving)</span></div>
+      <div class="strip" id="stH"></div></div>
+    <div class="card"><h3>How to read it</h3>
+      <ul class="tight">
+        <li>The gap narrows from $1.96 to $0.11 by 2040, then stalls.</li>
+        <li>Liquefier CAPEX and large LH₂ tanks carry the closure. Liquefaction energy carries very little.</li>
+        <li>Parity needs every target on schedule and NH₃ standing still.</li>
+        <li>The two largest levers (liquefier CAPEX, tank cost) are numbers KHI has <b>not</b> disclosed to us: liquefier CAPEX is withheld outright and tank cost exists only inside an IAE aggregate (see section 8).</li>
+      </ul>
+      <p class="foot">Mock-up sources: IEA GHR 2026 annex; KHI/NEDO roadmap; Incheon plant (Korea.net); HySTRA/Kawasaki; DOE; KBR/CATF. Model run on the published inputs in the mock-up's register; we have not reproduced it.</p>
+    </div>
+  </div>
+</section>
+
+<section id="stack">
+  <h2>2. Where the cost sits, and which stages are not yet shown to work at the scale assumed</h2>
+  <div class="card">
+    <h3>Delivered cost by stage, USD per kg H₂</h3><div id="chStack"></div><div class="lg" id="lgStack"></div>
+    <div class="strip" id="stC"></div>
+  </div>
+  <div class="card" style="margin-top:12px">
+    <h3>Credibility by stage in 2030 — letter = evidence grade; amber = scale not yet demonstrated</h3>
+    <div class="mx" id="matrix"></div>
+    <p class="foot">Scale-up = size needed ÷ largest size demonstrated (mock-up). Sources named in the mock-up: Incheon/Korea.net, HySTRA, DOE/NASA, Air Liquide, KHI, ADNOC L&amp;S, IEA GHR 2026. Grades never rise because a date arrives.</p>
+  </div>
+</section>
+
+<section id="parity">
+  <h2>3. Parity is conditional: about 2039 against flat NH₃, and not reached by 2045 in the other three cases</h2>
+  <div class="grid g2">
+    <div class="card"><h3>Gap, LH₂ minus NH₃, USD per kg (below zero = LH₂ cheaper)</h3><div id="chGap"></div><div class="lg" id="lgGap"></div>
+      <p class="foot">Paths after 2026 are scenarios applying published developer targets on a stated schedule, not forecasts. "Conservative" postures are analyst judgements (mock-up) and need panel validation.</p></div>
+    <div class="card"><h3>Parity year by path</h3><div id="parityList"></div></div>
+  </div>
+  <div class="card" style="margin-top:12px"><div class="strip" id="stP" style="margin:0;padding:0;border:0"></div></div>
+</section>
+
+<section id="drivers">
+  <h2>4. Every dollar of LH₂ improvement rests on a claim, a plan or an assumption; none is yet operating evidence</h2>
+  <div class="grid g2">
+    <div class="card"><h3>Effect on the 2040 gap of each input, USD per kg (one lever at a time)</h3><div id="chTor"></div>
+      <div class="lg"><span><span class="sw" style="background:var(--lh2)"></span>closes the gap (LH₂ improvements)</span><span><span class="sw" style="background:var(--nh3)"></span>widens it (NH₃ improvements)</span></div>
+      <p class="foot">Effects do not add exactly. Mock-up sources: KHI/NEDO, DOE AMR 2024, HySTRA, Maritime Optima, IEA GHR 2026.</p>
+      <div class="strip" id="stD"></div></div>
+    <div class="grid" style="align-content:start">
+      <div class="card kpi"><div class="big">$2.08</div><div class="sub">per kg that technology inputs take off the LH₂ cost, 2026 to 2040 (mock-up). Its five LH₂ levers sum to $2.07 (0.83+0.80+0.17+0.16+0.11), so the figure ties out.</div></div>
+      <div class="card kpi"><div class="big">0%</div><div class="sub">of it supported by operating evidence (grades A–C); the rest is grade D (vendor claim or plan) or E (study or assumption).</div></div>
+      <div class="card"><h3>What would turn a claim into evidence</h3><ul class="tight"><li>Measured energy of the KHI 50 t/d liquefier</li><li>KHI 50,000 m³ tank cost and boil-off</li><li>Published price and voyage data, 40,000 m³ carrier</li></ul></div>
+    </div>
+  </div>
+</section>
+
+<section id="tank">
+  <h2>5. LH₂ tank cost alone moves the 2040 delivered cost by about $6 per kg, more than any other input</h2>
+  <div class="grid g2e">
+    <div class="card"><h3>Delivered cost in 2040 by LH₂ tank cost, USD per kg</h3><div id="chTank"></div>
+      <p class="foot">$10.84 − $4.85 = $5.99 per kg, which matches the "about $6" claim. KHI's 50,000 m³ Ogishima tank is the data point that would settle it; its cost is unpublished (mock-up). Our KHI questionnaire reply also records liquefier CAPEX/OPEX (Q8–Q9) and carrier newbuild cost (Q31) as not disclosed, and terminal CAPEX as not separately disclosed.</p>
+      <div class="strip" id="stT"></div></div>
+    <div class="card"><h3>One input changed, 2040 (LH₂ targets met vs NH₃ improving)</h3>
+      <div class="tw"><table><thead><tr><th>Input changed</th><th class="num">LH₂</th><th class="num">NH₃</th><th class="num">Gap</th></tr></thead><tbody id="sens"></tbody></table></div>
+      <p class="foot">Gap column as printed in the mock-up; rows differ from LH₂ − NH₃ by ≤ $0.01 through rounding. Anchors: IEA GHR 2026 annex, DOE/Shell/CB&amp;I concept (DOE AMR 2024), KBR/CATF 2022. Cracker heat: IEA base 10.2 kWh/kg, KBR 6.4.</p>
+      <div class="strip" id="stT2"></div></div>
+  </div>
+</section>
+
+<section id="calendar">
+  <h2>6. The evidence that would change the picture arrives between late 2026 and about 2038, and we can ask for it now</h2>
+  <div class="card"><div class="tw"><table><thead><tr><th>Route</th><th>Milestone</th><th>Date or target</th><th>Evidence to ask for</th><th>Origin / accuracy</th></tr></thead><tbody id="cal"></tbody></table></div>
+    <p class="foot">Developer targets, not commitments; several have slipped before. Dates are rated Low accuracy by default for that reason. Mock-up sources: KHI (19 Oct 2026), KHI/NEDO roadmap, Kawasaki/JSE, Uniper/thyssenkrupp Uhde, ADNOC L&amp;S, Baird Maritime.</p></div>
+  <div class="grid g2e" style="margin-top:12px">
+    <div class="card"><h3>Ask KHI</h3><ul class="tight"><li>Cost and boil-off of the 50,000 m³ tank</li><li>Price and delivery of the 40,000 m³ carrier</li><li>Guaranteed energy of the 50 t/d liquefier</li></ul>
+      <p class="note" style="margin-top:8px"><span class="chip INT">INTERNAL</span> <b>Already asked once.</b> The KHI questionnaire reply (31 Mar / 6 Apr 2026) records liquefier CAPEX (Q8), OPEX (Q9) and carrier newbuild cost (Q31) as not disclosed, "Feasibility Study necessary". The new request needs a different route (pre-FEED or feasibility scope), not the same question.</p></div>
+    <div class="card"><h3>Ask Air Liquide</h3><ul class="tight"><li>Guaranteed energy and CAPEX for a 60 to 150 t/d train</li><li>Performance data from the 30 t NH₃/d cracker pilot</li><li>Reference plants above 30 t/d single train</li></ul>
+      <p class="note" style="margin-top:8px"><span class="chip INT">INTERNAL</span> Our own Air Liquide figure is only the user-provided 7.5 kWh/kg liquefier milestone for 2030 (chain dashboard), not independently sourced. Cracker licensor data we hold is for KBR, Topsoe, Technip, Casale and Duiker, not Air Liquide.</p></div>
+  </div>
+</section>
+
+<section id="studies">
+  <h2>7. Independent studies agree LH₂ costs more, and the evidence base is mostly plans and assumptions</h2>
+  <div class="grid g2e">
+    <div class="card"><h3>Register entries by evidence grade (mock-up)</h3><div id="chGrade"></div>
+      <p class="note">32 entries, none grade A (independent operating data) and none grade C (contractual guarantee). The register itself was not supplied to us, only these counts. <span class="chip NET">INTERNET</span> <span class="acc a0"><span class="dots"><i></i><i></i><i></i></span>Unverified</span></p></div>
+    <div class="card"><h3>Independent studies, USD per kg H₂</h3>
+      <div class="tw"><table><thead><tr><th>Study</th><th>Period</th><th class="num">LH₂</th><th class="num">NH₃</th><th>Marks</th></tr></thead><tbody id="studyRows"></tbody></table></div></div>
+  </div>
+  <div class="card" style="margin-top:12px"><h3>Caveats to resolve before external use (mock-up, plus our review)</h3>
+    <ul class="tight">
+      <li>KBR figures include blue-hydrogen production and are volume scenarios, not calendar years, so they are not like-for-like with the 2026–2045 path above.</li>
+      <li>The Roland Berger "near parity by 2035" claim could not be verified and is excluded (mock-up).</li>
+      <li>KHI tank cost, carrier price and guaranteed liquefier energy are unpublished (mock-up); our database confirms carrier price (Q31) as undisclosed and tank/terminal CAPEX as available only as an IAE aggregate.</li>
+      <li>IEA ETP 2023 figures were taken second-hand via Hydrogen Insight, and arXiv 2507.02412 is a preprint giving only percentage edges.</li>
+    </ul></div>
+</section>
+
+<section id="crosscheck">
+  <h2>8. Internal cross-check: our own data agrees on direction, differs on scale, and cannot confirm the two biggest levers</h2>
+  <p class="lead">Mock-up values against what we hold in the LH₂ database (KHI replies, IAE stack), the chain-summary dashboard and the Gentari ammonia-cracker database. "Differs" means our number would change the mock-up result and should be reviewed, not that the mock-up is wrong.</p>
+  <div class="card"><div class="tw"><table><thead><tr><th>Item</th><th>Mock-up (internet)</th><th>Our internal data</th><th>Status</th><th>Action for Custodian</th></tr></thead><tbody id="xc"></tbody></table></div></div>
+  <div class="card" style="margin-top:12px">
+    <h3>Cost-stack check: mock-up LH₂ stages vs the IAE-2019 stack held in our database (via KHI)</h3>
+    <p class="note">IAE figures are in JPY/Nm³, ~2019 vintage, unit inferred in our table. Converted with 1 Nm³ H₂ = 0.0899 kg (our properties table) and a yen rate you can change. <label>JPY per USD <input type="number" id="fx" value="150" min="80" max="220" step="5"></label> <span class="note">[ASSUMPTION: 150 JPY/USD, placeholder, no source]</span></p>
+    <div class="tw"><table><thead><tr><th>Stage</th><th class="num">IAE Base</th><th class="num">IAE Large</th><th class="num">IAE Tech</th><th class="num">Mock-up 2026</th><th class="num">Mock-up ÷ IAE Base</th></tr></thead><tbody id="iae"></tbody></table></div>
+    <p class="foot">IAE columns are USD/kg H₂ from JPY/Nm³ (data/costs/lh2-cost-stack.csv, iae-2019-gigaton via kawasaki-2026-supplemental). Mock-up columns are 2026 USD/kg. Mapping: conversion ↔ liquefaction; export storage ↔ loading terminal; import storage + reconversion ↔ receiving terminal. The two bases differ in vintage, scale and what "other" and "losses" contain, so read the ratio as order of magnitude only.</p>
+  </div>
+  <div class="callout" style="margin-top:12px"><b>Why this matters.</b> Our chain-summary dashboard (energy cost only, no CAPEX) puts LH₂ within about ±2% of the cheapest NH₃ route at maturity (LH₂ at 6 kWh/kg: USD 10.60/kg vs NH₃ NG-fired, VLSFO-only ship: USD 10.82/kg; both include electrolysis at placeholder prices). The mock-up reaches a gap of $0.1–2.0 per kg only once CAPEX is included. So the carrier decision is a CAPEX question, and CAPEX is the part KHI has not disclosed. A pre-FEED or feasibility scope with KHI is the single action that would most improve this dashboard's accuracy.</div>
+</section>
+
+<section id="custodian">
+  <h2>9. Custodian and update process (proposal for Dan and Ikhwan to confirm)</h2>
+  <div class="grid g2e">
+    <div class="card"><h3>Ownership and cadence</h3>
+      <table><tbody>
+        <tr><td>Dashboard Custodian</td><td><span class="pill">To be nominated</span> by Ikhwan (next step 3 in Dan's note)</td></tr>
+        <tr><td>Review frequency</td><td>Quarterly [PROPOSAL, per Dan: "perhaps quarterly"], plus interim updates on the triggers below</td></tr>
+        <tr><td>Go-live</td><td>Within 2026 (OKR hard deadline: end of Q4 2026, docs/okr.md)</td></tr>
+        <tr><td>First full review</td><td>Q1 2027 [PROPOSAL]</td></tr>
+        <tr><td>Version log</td><td>v0.1 draft, 2 Nov 2026: mock-up content + provenance and accuracy marks</td></tr>
+      </tbody></table></div>
+    <div class="card"><h3>Interim-update triggers</h3>
+      <ul class="tight">
+        <li>KHI publishes liquefier energy, tank cost or carrier price (any of the three "Ask KHI" items)</li>
+        <li>A carrier contract with a published price is signed</li>
+        <li>A cracker above 30 t NH₃/d enters operation with published data</li>
+        <li>A new independent LH₂ vs NH₃ study is published</li>
+        <li>A developer milestone in section 6 slips or is met</li>
+      </ul></div>
+  </div>
+  <ol class="steps" aria-label="Update process">
+    <li><b>Gather.</b> Zane's weekly LH₂ digest (Mondays 07:00 MYT) and OEM or developer engagement feed candidate updates into the research staging area.</li>
+    <li><b>Review.</b> Custodian checks each candidate: source, origin, and whether it contradicts an internal figure. Proposes an accuracy mark.</li>
+    <li><b>Update.</b> Change the row in the register, bump its reviewed date, and move the mark up or down. Grades and marks never rise only because a date arrives.</li>
+    <li><b>Publish and log.</b> Re-issue the page with a new "evidence as of" date and a one-line change note.</li>
+  </ol>
+  <p class="note" style="margin-top:8px">Keep it light: one register, one owner, one quarterly pass. The register below can be exported to CSV for the review meeting.</p>
+</section>
+
+<section id="register">
+  <h2>10. Data register: every figure, its origin, accuracy and basis</h2>
+  <p class="lead">This is the part the Custodian maintains. Everything above is drawn from it. Rows react to the filters at the top of the page.</p>
+  <div class="card">
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+      <input id="q" type="search" placeholder="Search register…" aria-label="Search register" style="font:inherit;font-size:12px;padding:6px 10px;border-radius:8px;border:1px solid var(--rule);background:var(--surface);color:var(--ink);min-width:220px">
+      <button class="act" id="csv" type="button">Export CSV</button>
+      <span class="note" id="regCount"></span>
+    </div>
+    <div class="tw"><table><thead><tr><th>ID</th><th>Item</th><th>Value in mock-up</th><th>Origin</th><th>Accuracy</th><th>Why this rating</th><th>Internal cross-check</th><th>Source</th><th>Next review</th></tr></thead><tbody id="reg"></tbody></table></div>
+  </div>
+</section>
+
+<footer>
+  <b>Sources.</b> Mock-up deck: gentari-lh2-nh3-dashboard-mockup (user-provided, 30 Oct 2026, internet-sourced content, unverified). Internal: kawasaki-2026-questionnaire, kawasaki-2026-supplemental, iae-2019-gigaton (all in data/references.csv); data/properties/*.csv, data/costs/lh2-cost-stack.csv, data/vessels/*.csv, data/carriers/chain-energy-defaults.csv; gentari-tcoe-ammonia-cracker-db and the KBR/Casale/Duiker packages; docs/comparison/03-chain-summary-dashboard.md.
+  <ol>
+    <li>We did <b>not</b> go to the internet to re-verify any "INTERNET" figure for this version; those marks reflect what the mock-up states, plus our internal cross-check. Where we could not check, the mark is Low or Unverified.</li>
+    <li>Accuracy marks are the reviewer's draft judgement (2 Nov 2026) for the Custodian to confirm, not a measured error band.</li>
+    <li>KHI figures are vendor statements (Gentari-confidential), rated Medium at best. Remove KHI-derived rows before any external circulation.</li>
+  </ol>
+</footer>
+</main>
+
+<script>
+(function(){
+"use strict";
+/* ---------- vocabulary ---------- */
+var ORG={INT:{n:"INTERNAL",d:"Our own data: KHI disclosures, our LH₂ database, our models, the Gentari cracker database."},
+ NET:{n:"INTERNET",d:"Public or published source, as cited in the mock-up. Not re-verified by us."},
+ BOTH:{n:"INTERNET + INTERNAL",d:"Internet figure that we can compare with an internal number (agrees or conflicts)."},
+ ASM:{n:"ASSUMPTION",d:"Analyst judgement with no source behind it. Use for structure, not as a fact."}};
+var ACC=[{n:"Unverified",d:"No traceable source or calculation we can check; do not quote externally."},
+ {n:"Low",d:"Vendor target, scenario or modelled output, or it conflicts with internal data. Use for direction only."},
+ {n:"Medium",d:"One credible source and our internal data agrees or does not contradict it. Quote with a range."},
+ {n:"High",d:"Confirmed by two independent origins or an industry-standard fact. Use as is."}];
+
+/* ---------- register ---------- */
+var R=[];
+function add(id,sec,name,val,o,a,why,int_,src,next){R.push({id:id,sec:sec,name:name,val:val,o:o,a:a,why:why,int_:int_||"",src:src||"Mock-up",next:next||"Q1 2027 [PROPOSAL]"})}
+var M="Mock-up model run; arithmetic checked, model not reproduced.";
+add("H1","Headline","Gap in 2026, LH₂ minus NH₃","$1.96/kg (LH₂ $8.65 vs NH₃ $6.69)","BOTH",1,M+" Stage values sum to both totals ($4.00+0.34+2.36+0.53+0.47+0.56+0.39 = 8.65; NH₃ 6.69). Level depends on CAPEX inputs KHI has not disclosed.","Direction agrees with our energy-only model (LH₂ at 9 kWh/kg is above NH₃). Level cannot be checked: liquefier, terminal and carrier CAPEX are undisclosed.","IEA GHR 2026; KHI/NEDO; HySTRA; DOE; KBR/CATF (as cited in mock-up)","On KHI cost disclosure");
+add("H2","Headline","Gap in 2030","$1.53/kg (LH₂ $7.37 vs NH₃ $5.83)","NET",1,"Scenario applying developers' own targets; 7.37 − 5.83 = 1.54 (rounding).","","As above");
+add("H3","Headline","Gap in 2040 and 2045","$0.11 and $0.10/kg (4.91 vs 4.80; 4.75 vs 4.65)","NET",1,"Scenario end-point. Mock-up says 'then stalls'; depends on every LH₂ target landing on schedule.","","As above");
+add("H4","Headline","Parity year","Not by 2045 (about 2039 vs flat NH₃)","BOTH",1,"2039 reproduces from the printed gaps (+0.49 in 2035, −0.17 in 2040, linear). Result is a scenario outcome; direction is supported by independent studies (none show parity before 2040).","Our KHI data gives the SEC improvement window (2035–2040), which is consistent with the schedule used.","KBR/CATF; arXiv 2507.02412 (as cited)");
+add("H5","Headline","Share of improvement backed by operating evidence","0% ($2.08 of $2.08/kg is grade D or E)","BOTH",2,"Lever sum ties out ($2.07 vs $2.08). Zero is plausible: our own KHI figures are also vendor statements, not independent operating data.","KHI replies are vendor claims, consistent with grade D.","Mock-up register (not supplied)");
+add("C1","Cost stack","Production cost, common to both routes","$4.00/kg (2026), $3.20/kg (2030)","ASM",0,"Mock-up assumption, identical for both routes, so it cancels in the gap but sets the percentage shares.","No internal LCOH. Our chain model uses a 60 kWh/kg electrolyser and a USD 6/kg boil-off price, both user placeholders.","Mock-up (stated as common LCOH)");
+add("C2","Cost stack","LH₂ conversion (liquefaction)","$2.36/kg (2026), $1.99/kg (2030)","BOTH",1,"Largest LH₂-specific stage. KHI gives energy but no CAPEX or OPEX.","KHI SEC 8–9 kWh/kg (kawasaki-2026-questionnaire). Energy alone at our USD 140/MWh placeholder = 9 × 0.140 = $1.26/kg. IAE-2019 liquefaction ≈ $0.76/kg at 150 JPY/USD, about one third of the mock-up.","IEA GHR 2026 annex (as cited); KHI replies");
+add("C3","Cost stack","NH₃ conversion (synthesis)","$0.71/kg (both years)","NET",0,"No NH₃ synthesis source named. Our internal NH₃ dataset (decision D4) has not been received.","Haber-Bosch 0.6 kWh/kg NH₃ is an ESTIMATE placeholder in chain-energy-defaults.csv.","Mock-up");
+add("C4","Cost stack","LH₂ export storage / import storage","$0.53 / $0.56 per kg (flat 2026 to 2030)","BOTH",1,"Tank cost is the least certain input (30× spread across sources, section 5).","KHI design tanks are 64,000 m³ (export) and 65,000 m³ (import), BOR 0.1 %/d; tank CAPEX undisclosed. IAE loading/receiving terminals ≈ $0.41 / $0.47 per kg at 150 JPY/USD.","DOE AMR 2024; IEA GHR 2026 (as cited)");
+add("C5","Cost stack","NH₃ export storage / import storage","$0.35 / $0.35 per kg","NET",0,"Mature technology, but no cost source named and we hold no NH₃ terminal cost.","NH₃ at-rest BOR 0.04 %/d is a placeholder in our chain defaults; no cost.","Mock-up");
+add("C6","Cost stack","LH₂ shipping","$0.47/kg","BOTH",1,"Carrier price unpublished (mock-up). Depends on 40,000 m³ carrier assumption.","KHI: 40,000 m³ vessel under construction, 160,000 m³ commercial target; carrier newbuild cost not disclosed (reply Q31). IAE seaborne ≈ $0.30/kg at 150 JPY/USD (distance basis unknown).","HySTRA/Kawasaki; Maritime Optima (as cited)");
+add("C7","Cost stack","NH₃ shipping","$0.17/kg","NET",0,"Plausible for a mature trade, but no source named and no internal NH₃ ship cost.","Our NH₃ carrier table holds specifications only (24,000–90,000 m³), not prices.","Mock-up");
+add("C8","Cost stack","LH₂ reconversion (regasification)","$0.39/kg","BOTH",1,"Technology matches ours; cost is not verifiable.","KHI: open-rack vaporiser with seawater, heat duty 3.8 MJ/kg (= 1.06 kWh/kg). Heat is free from seawater, so cost is mostly CAPEX, which KHI has not given.","Mock-up; KHI replies");
+add("C9","Cost stack","NH₃ reconversion (cracking)","$0.82/kg (both years)","BOTH",2,"Order of magnitude supported by our licensor data (CAPEX and energy within the same range, see X8, X9).","Licensor SEC 7.93–8.71 kWh/kg H₂; ISBL Class V CAPEX ≈ $2,000–4,250 per t H₂/yr (derived).","IEA GHR 2026; KBR/CATF (as cited); Gentari TCOE DB");
+add("C10","Cost stack","Hydrogen losses","LH₂ $0.34/$0.24; NH₃ $0.29/$0.23 per kg (2026/2030)","BOTH",1,"LH₂ loss is priced; KHI says it expects none.","KHI claims no hydrogen loss (boil-off burned as ship fuel or re-liquefied). NH₃ placeholders: Haber-Bosch 2 %, cracker 3 % (ESTIMATE).","Mock-up");
+add("M1","Maturity","LH₂ conversion: grade D, scale-up 1.7× (30 → 50 t/d)","D · 1.7×","BOTH",1,"Ratio is 50 ÷ 30 = 1.67. It depends on the train size chosen; the demonstrated 30 t/d is from Korea.net (internet), not checked by us.","KHI offers 115 t/d per train (design, not demonstrated) and a minimum economic scale of 10,000 t/yr. On the KHI train, scale-up vs 30 t/d is 3.8×. 100 kt/yr is 274 t/d (needs 6 trains of 50 t/d or 3 of 115 t/d).","Incheon/Korea.net; KHI; Air Liquide (as cited)");
+add("M2","Maturity","LH₂ export storage: grade D, 13× (3,200 → 43,100 m³)","D · 13×","BOTH",1,"43,100 ÷ 3,200 = 13.5.","KHI design tank is 64,000 m³ per tank, which would be 20× the 3,200 m³ demonstrated.","DOE/NASA; KHI (as cited)");
+add("M3","Maturity","LH₂ shipping: grade D, 36× (75 → 2,700 t H₂)","D · 36×","BOTH",2,"2,700 ÷ 75 = 36. Capacity agrees with our own vessel data.","40,000 m³ × 70.8 kg/m³ × 98% fill = 2,775 t (consistent). Suiso Frontier 1,250 m³ × 70.8 = 88.5 t gross vs 75 t in the mock-up (fill basis to confirm); ratio would be 31× on 88.5 t.","HySTRA; KHI (as cited)");
+add("M4","Maturity","LH₂ import storage: grade D, 15× (3,200 → 47,700 m³)","D · 15×","BOTH",1,"47,700 ÷ 3,200 = 14.9.","KHI import tank 65,000 m³ per tank, 20× the 3,200 m³ demonstrated.","KHI (as cited)");
+add("M5","Maturity","LH₂ reconversion: grade C, 'not assessed'","C · not assessed","BOTH",1,"Internal inconsistency in the mock-up: grade C means contractual guarantee, yet the register reports no grade C entries and the cell says not assessed.","KHI: open-rack vaporiser (seawater), heat duty 3.8 MJ/kg; no guarantee on file.","Mock-up");
+add("M6","Maturity","NH₃ conversion, export storage, import storage: grade A, established","A · established","NET",3,"Haber-Bosch and refrigerated ammonia storage are century-scale industrial practice. No specific citation in the mock-up; add one.","","General industry knowledge");
+add("M7","Maturity","NH₃ shipping: grade B, 63,200 t (no scale-up)","B · 1×","BOTH",2,"Established trade. 63,200 t ≈ 92,700 m³ at 682 kg/m³ (≈ a very large ammonia carrier).","Our NH₃ carrier table lists 24,000–90,000 m³ (up to ≈ 61,400 t); the mock-up size is just above it.","ADNOC L&S (as cited)");
+add("M8","Maturity","NH₃ reconversion: grade D, 40× (30 → 1,200 t NH₃/d)","D · 40×","BOTH",2,"1,200 ÷ 30 = 40. Our licensor data offers the same scale on paper.","KBR 1,233.7 t NH₃/d per train; Topsoe 1,080; Casale 1,029; Technip 1,013 (Gentari TCOE DB). Our DB also lists a Hanwha Impact 219 t/d H₂ plant as 'Operational' (≈ 1,390 t NH₃/d), which conflicts with the mock-up's 'no operating plant above 30 t/d'; to be resolved.","Uniper/Uhde; Air Liquide (as cited); Gentari TCOE DB");
+add("P1","Parity","Targets met vs NH₃ flat","About 2039; gap 2040 −$0.17, 2045 −$0.23","NET",1,"Scenario. Only path in which LH₂ reaches parity.","","Mock-up model");
+add("P2","Parity","Targets met vs NH₃ improving (default)","Not by 2045; gap 2040 $0.11, 2045 $0.10","NET",1,"Scenario. Default view.","","Mock-up model");
+add("P3","Parity","Conservative vs NH₃ flat","Not by 2045; gap 2040 $0.77, 2045 $0.67","ASM",0,"'Conservative' posture is an analyst judgement and needs panel validation (mock-up).","","Mock-up (analyst judgement)");
+add("P4","Parity","Conservative vs NH₃ improving","Not by 2045; gap 2040 $1.05, 2045 $0.99","ASM",0,"As P3.","","Mock-up (analyst judgement)");
+add("D1","Drivers","LH₂ liquefier CAPEX effect on 2040 gap","$0.83/kg","NET",1,"Largest lever. Depends on a liquefier CAPEX that KHI has not disclosed.","KHI liquefier CAPEX and OPEX: not disclosed (replies Q8, Q9).","KHI/NEDO roadmap; DOE AMR 2024 (as cited)","On KHI cost disclosure");
+add("D2","Drivers","LH₂ tank cost effect","$0.80/kg","NET",1,"Second lever. Source spread is 30× (D, T1–T3).","KHI gives no separate tank or terminal CAPEX (IAE aggregate only); the 50,000 m³ Ogishima tank cost is unpublished.","DOE; IEA; KBR (as cited)","On KHI cost disclosure");
+add("D3","Drivers","Liquefaction energy effect","$0.17/kg","BOTH",2,"Small lever, and our KHI data supports the direction and timing.","KHI SEC 8–9 kWh/kg today; improvement window 2035–2040. Our chain model: 1 kWh/kg of SEC is worth USD 15.2 M/y at 100 kt/yr, i.e. $0.15/kg at USD 140/MWh. The mock-up's power price is not stated, so the lever cannot be reproduced.","KHI/NEDO roadmap (as cited); kawasaki-2026-questionnaire");
+add("D4","Drivers","LH₂ carrier size and price effect","$0.16/kg","BOTH",1,"Carrier price is unpublished.","Carrier newbuild cost not disclosed by KHI (Q31).","HySTRA; Maritime Optima (as cited)");
+add("D5","Drivers","LH₂ boil-off effect","$0.11/kg","BOTH",1,"Boil-off assumption is not printed in the mock-up.","Our voyage BOR (0.2 %/d) is a placeholder, since KHI states only 'fuel-gas rate equals BOR'. An unpromoted public figure of about 3.44 %/d (RSER 2026) sits in research/ staging, 17× higher. This lever could move a lot either way.","Mock-up; research/ staging");
+add("D6","Drivers","NH₃ carrier size and price effect","−$0.05/kg","NET",0,"No source named; small.","No internal NH₃ ship cost.","Mock-up");
+add("D7","Drivers","NH₃ cracker heat effect","−$0.08/kg","BOTH",2,"Base 10.2 kWh/kg (IEA) vs 6.4 kWh/kg (KBR/CATF).","Licensor SEC 7.93, 8.18, 8.71 kWh/kg H₂ (Topsoe, Casale, Technip) sit between the two; thermodynamic floor 4.22 kWh/kg.","IEA GHR 2026; KBR/CATF 2022; Gentari TCOE DB");
+add("D8","Drivers","NH₃ cracker CAPEX effect","−$0.16/kg","BOTH",2,"$1,900 per t H₂/yr (study) is close to our lowest licensor figure.","Topsoe $100 M / 50 ktpa = $2,000; KBR $191 M / 68 ktpa = $2,809; Duiker $51 M / 12 ktpa = $4,250 per t H₂/yr (derived, ISBL, Class V).","Study (as cited); Gentari TCOE DB");
+add("T1","Tank","DOE/Shell concept tank, about $1,750/m³","2040 delivered $4.85/kg","NET",1,"Concept-stage cost, not a quote.","","DOE AMR 2024 (as cited)");
+add("T2","Tank","IEA tank cost, about $9,000/m³","2040 delivered $5.71/kg","NET",1,"Published institutional estimate.","","IEA GHR 2026 annex (as cited)");
+add("T3","Tank","KBR tank cost, about $52,600/m³","2040 delivered $10.84/kg","NET",1,"Highest estimate; study basis.","","KBR/CATF 2022 (as cited)");
+add("T4","Tank","Other one-at-a-time sensitivities (table, section 5)","See table","NET",1,"Model outputs; rounding differences up to $0.01.","Distance: mock-up uses 8,000 km, our chain defaults use 6,000 km (placeholder).","Mock-up model");
+add("E1","Calendar","Uniper/Uhde 28 t NH₃/d cracker commissioning","End 2026","NET",1,"Developer target; slips are common.","","Uniper/thyssenkrupp Uhde (as cited)");
+add("E2","Calendar","KHI 50 t/d liquefier completes","End 2028","NET",1,"Developer target. Not mentioned in our KHI replies.","Our KHI data states a 115 t/d train design and a 10,000 t/yr minimum scale, not a 50 t/d unit.","KHI (19 Oct 2026, as cited)");
+add("E3","Calendar","Ship-to-base transfer and ocean trials","FY2030","NET",1,"Developer target.","","Kawasaki/JSE (as cited)");
+add("E4","Calendar","KHI large compressor commercial launch","About 2031","NET",1,"Roadmap item.","KHI's SEC improvement window is 2035–2040; this is an enabling step before it.","KHI/NEDO roadmap (as cited)");
+add("E5","Calendar","KHI power-recovery and wet turbines","About 2035","BOTH",1,"Roadmap item; timing inside KHI's disclosed window.","KHI: SEC improvement window 2035–2040, 'scale-up and subcomponents under development'. Turbines not named in our documents.","KHI/NEDO roadmap (as cited)");
+add("E6","Calendar","KHI magnetic refrigeration commercial","About 2038","BOTH",1,"Roadmap item; technology is early-stage.","Timing falls inside the KHI 2035–2040 window. Technology not named in our documents.","KHI/NEDO roadmap (as cited)");
+add("E7","Calendar","Korean consortium LH₂ carriers (40,000 and 160,000 m³)","2032 to 2040","BOTH",1,"Developer plan.","KHI: 40,000 m³ vessel under construction; 160,000 m³ is the commercial target.","Mock-up");
+add("E8","Calendar","First 175,000 m³ ammonia carriers (ADNOC L&S)","2029","NET",1,"Delivery date from the owner.","","ADNOC L&S (as cited)");
+add("E9","Calendar","First cracker above 300 t NH₃/d in operation","No verified date","BOTH",1,"Mock-up states no verified date. Our DB conflicts (see M8).","Gentari TCOE DB lists large licensor offers and a Hanwha Impact 219 t/d H₂ plant marked 'Operational'.","Mock-up; Gentari TCOE DB");
+add("S1","Studies","KBR for CATF (250 kt/yr 2030; 1,000 kt/yr 2040; 10,000 kt/yr 2050)","LH₂ $6.09 / $4.64 / $3.23; NH₃ $3.25 / $2.57 / $1.96","NET",2,"Published study; figures taken from the mock-up, not re-read in the source. Includes blue-H₂ production and uses volume scenarios, so it is not like-for-like with the 2026–2045 path.","","KBR/CATF 2022 (as cited)");
+add("S2","Studies","IEA ETP 2023, transport only, 2030","LH₂ $2.0–3.7; NH₃ $1.9–2.2","NET",1,"Taken second-hand via Hydrogen Insight; transport only, so a different boundary.","","IEA ETP 2023 via Hydrogen Insight (as cited)");
+add("S3","Studies","arXiv 2507.02412","NH₃ 16% edge (2030), 10% edge (2040)","NET",1,"Preprint; percentage edge only, no dollar values.","","arXiv 2507.02412 (as cited)");
+add("S4","Studies","Mock-up register: 32 entries by grade","A 0 · B 11 · C 0 · D 12 · E 9","NET",0,"Counts tie (11+12+9 = 32) but the register was not supplied to us.","","Mock-up register (not supplied)");
+/* internal reference values */
+add("X1","Internal","KHI liquefier specific energy, today","8–9 kWh/kg H₂","INT",2,"Vendor statement (KHI reply Rev.1, 31 Mar / 6 Apr 2026); implies 43–49% second-law efficiency on the para-H₂ minimum of 3.9 kWh/kg (our derivation).","","kawasaki-2026-questionnaire; doe-2009-h2-liquefaction-energy");
+add("X2","Internal","KHI liquefier train and minimum scale","115 t/d per train; minimum economic scale 10,000 t/yr","INT",2,"Vendor design figure, not demonstrated.","","kawasaki-2026-supplemental; -questionnaire");
+add("X3","Internal","KHI terminal tanks and at-rest boil-off","64,000 m³ (export) and 65,000 m³ (import) per tank; 0.1 %/d","INT",2,"Vendor design figure.","","kawasaki-2026-supplemental");
+add("X4","Internal","IAE-2019 LH₂ supply-cost stack (via KHI)","Base 37.6, Large 30.7, Tech 26.1 JPY/Nm³ (all stages incl. production)","INT",1,"~2019 vintage; unit inferred (slide unlabelled); KHI-supplied from IAE; primary source not retrieved.","","iae-2019-gigaton via kawasaki-2026-supplemental");
+add("X5","Internal","Gentari cracker licensor data","SEC 7.93–8.71 kWh/kg H₂; NH₃ per H₂ 6.35–7.20 t/t; ISBL Class V CAPEX $51–191 M","INT",2,"Licensor Class V estimates in a work-in-progress database with open review remarks (e.g. the KBR SEC cell shows 0.290, which is the electrical figure, so it is excluded).","","gentari-tcoe-ammonia-cracker-db; kbr-gentari-*");
+add("X6","Internal","Chain-summary dashboard result (energy cost only)","LH₂ at 6 kWh/kg USD 10.60/kg; NH₃ NG-fired, VLSFO-only ship USD 10.82/kg","INT",1,"Our own model; energy only, placeholder prices (power 140 USD/MWh, H₂ 6 USD/kg), 100 kt/yr, 40,000 m³ carriers. Open flag: burned boil-off counted twice.","","docs/comparison/03-chain-summary-dashboard.md");
+
+var IDX={};R.forEach(function(r){IDX[r.id]=r});
+
+/* ---------- helpers ---------- */
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+function dots(a){var s='<span class="dots" aria-hidden="true">';for(var i=1;i<=3;i++)s+='<i class="'+(i<=a?"on":"")+'"></i>';return s+"</span>"}
+function chips(id,compact){var r=IDX[id];if(!r)return"";
+  return '<span class="chips" data-id="'+id+'"><a class="chip '+r.o+'" href="#r-'+id+'" title="'+esc(ORG[r.o].n+": "+ORG[r.o].d)+'">'+ORG[r.o].n+'</a><a class="acc a'+r.a+'" href="#r-'+id+'" title="'+esc("Accuracy: "+ACC[r.a].n+". "+r.why)+'">'+dots(r.a)+ACC[r.a].n+'</a></span>'}
+function strip(el,ids){var h="";ids.forEach(function(id){var r=IDX[id];h+='<span class="it" data-id="'+id+'"><b>'+id+'</b> '+esc(r.name.length>46?r.name.slice(0,44)+"…":r.name)+" "+chips(id)+"</span>"});document.getElementById(el).innerHTML=h}
+function $(i){return document.getElementById(i)}
+function svg(w,h,body,label){return '<svg viewBox="0 0 '+w+' '+h+'" role="img" aria-label="'+esc(label)+'">'+body+"</svg>"}
+function css(v){return "var(--"+v+")"}
+
+/* ---------- legend & summary ---------- */
+(function(){var h="";["INT","NET","BOTH","ASM"].forEach(function(k){h+='<dt><span class="chip '+k+'">'+ORG[k].n+'</span></dt><dd>'+ORG[k].d+'</dd>'});$("legOrigin").innerHTML=h;
+ h="";[3,2,1,0].forEach(function(a){h+='<dt><span class="acc a'+a+'">'+dots(a)+ACC[a].n+'</span></dt><dd>'+ACC[a].d+'</dd>'});$("legAcc").innerHTML=h})();
+
+(function(){var mock=R.filter(function(r){return r.sec!=="Internal"});var n=mock.length;
+ var c={INT:0,NET:0,BOTH:0,ASM:0},a=[0,0,0,0];mock.forEach(function(r){c[r.o]++;a[r.a]++});
+ function bar(parts){var t=parts.reduce(function(s,p){return s+p.v},0),h='<div style="display:flex;height:12px;border-radius:6px;overflow:hidden;margin:8px 0">';parts.forEach(function(p){if(p.v)h+='<div style="flex:'+p.v+';background:'+p.c+'" title="'+p.l+': '+p.v+'"></div>'});return h+"</div>"}
+ var ok=a[2]+a[3];
+ $("summary").innerHTML=
+ '<div class="card"><h3>Origin of the '+n+' mock-up figures</h3>'+bar([{v:c.NET,c:css("net"),l:"Internet"},{v:c.BOTH,c:css("purple"),l:"Internet + internal"},{v:c.ASM,c:css("asm"),l:"Assumption"}])+
+ '<div class="note"><b>'+c.NET+'</b> internet only · <b>'+c.BOTH+'</b> internet with an internal cross-check · <b>'+c.ASM+'</b> assumption. The mock-up itself contains no internal data; every internal comparison was added in this review, and the register also holds <b>'+R.filter(function(r){return r.sec==="Internal"}).length+'</b> internal reference values used for those checks.</div></div>'+
+ '<div class="card"><h3>Accuracy of the '+n+' mock-up figures</h3>'+bar([{v:a[3],c:css("good"),l:"High"},{v:a[2],c:css("warn"),l:"Medium"},{v:a[1],c:css("bad"),l:"Low"},{v:a[0],c:css("none"),l:"Unverified"}])+
+ '<div class="note"><b>'+a[3]+'</b> High · <b>'+a[2]+'</b> Medium · <b>'+a[1]+'</b> Low · <b>'+a[0]+'</b> Unverified. Only '+ok+' of '+n+' are Medium or better.</div></div>'+
+ '<div class="card"><h3>What this means for go-live</h3><div class="note">Use the dashboard for <b>direction and monitoring</b> now (as Dan proposes), not for absolute dollar values. The marks tell the Custodian where the next unit of effort buys the most: KHI CAPEX disclosure, an NH₃ internal dataset (D4), and a citation for the "established" NH₃ stages.</div></div>'})();
+
+/* ---------- KPIs ---------- */
+$("kpis").innerHTML=[
+ {l:"Gap in 2026, LH₂ minus NH₃",b:"$1.96",s:"LH₂ $8.65 vs NH₃ $6.69 per kg",id:"H1"},
+ {l:"Gap in 2030",b:"$1.53",s:"LH₂ $7.37 vs NH₃ $5.83",id:"H2"},
+ {l:"Parity year on this path",b:"Not by 2045",s:"Gap in 2045: $0.10. Against flat NH₃: about 2039",id:"H4"},
+ {l:"Backed by operating evidence",b:"0%",s:"$2.08 of $2.08 per kg rests on grade D or E",id:"H5"}].map(function(k){
+ return '<div class="card kpi" data-id="'+k.id+'"><div class="lab">'+k.l+'</div><div class="big">'+k.b+'</div><div class="sub">'+k.s+'</div>'+chips(k.id)+'</div>'}).join("");
+
+/* ---------- charts ---------- */
+function lineChart(id,cats,series,o){
+ var W=640,H=300,L=46,Rr=62,T=14,B=30,ymin=o.ymin,ymax=o.ymax;
+ function fm(v){return (v<0?"−":"")+(o.pre||"")+Math.abs(v).toFixed(2)}function X(i){return L+(W-L-Rr)*i/(cats.length-1)}function Y(v){return T+(H-T-B)*(1-(v-ymin)/(ymax-ymin))}
+ var s="";for(var g=ymin;g<=ymax+1e-9;g+=o.step){s+='<line x1="'+L+'" x2="'+(W-Rr)+'" y1="'+Y(g)+'" y2="'+Y(g)+'" stroke="'+css("grid")+'"/><text x="'+(L-6)+'" y="'+(Y(g)+4)+'" font-size="11" text-anchor="end">'+(g<0?"−":"")+(o.pre||"")+Math.abs(g).toFixed(o.dec||0)+'</text>'}
+ if(o.zero&&ymin<0)s+='<line x1="'+L+'" x2="'+(W-Rr)+'" y1="'+Y(0)+'" y2="'+Y(0)+'" stroke="'+css("dark")+'" stroke-width="1.2"/>';
+ cats.forEach(function(c,i){s+='<text x="'+X(i)+'" y="'+(H-10)+'" font-size="11" text-anchor="middle">'+c+'</text>'});
+ series.forEach(function(se){var d=se.v.map(function(v,i){return(i?"L":"M")+X(i)+","+Y(v)}).join(" ");
+  s+='<path d="'+d+'" fill="none" stroke="'+se.c+'" stroke-width="2.5" '+(se.dash?'stroke-dasharray="'+se.dash+'"':"")+'/>';
+  se.v.forEach(function(v,i){s+='<circle cx="'+X(i)+'" cy="'+Y(v)+'" r="3.5" fill="'+se.c+'"><title>'+se.n+" "+cats[i]+": "+fm(v)+'</title></circle>'});
+  var last=se.v.length-1;s+='<text x="'+(X(last)+8)+'" y="'+(Y(se.v[last])+4+(se.dy||0))+'" font-size="11" font-weight="700" fill="'+se.c+'" style="fill:'+se.c+'">'+fm(se.v[last])+'</text>'});
+ if(o.lab)series.forEach(function(se){s+='<text x="'+(X(0)+8)+'" y="'+(Y(se.v[0])-8+(se.dy0||0))+'" font-size="11" font-weight="700" style="fill:'+se.c+'">'+(o.pre||"")+se.v[0].toFixed(2)+'</text>'});
+ $(id).innerHTML=svg(W,H,s,o.label)}
+var C={lh2:css("lh2"),nh3:css("nh3")};
+lineChart("chLine",["2026","2030","2035","2040","2045"],[{n:"LH₂ (targets met)",c:C.lh2,v:[8.65,7.37,5.89,4.91,4.75],dy:-3},{n:"NH₃ (improving)",c:C.nh3,v:[6.69,5.83,5.26,4.8,4.65],dy:6}],{ymin:4,ymax:9,step:1,pre:"$",dec:0,lab:true,label:"Delivered cost 2026 to 2045, LH2 targets met versus NH3 improving"});
+strip("stH",["H1","H2","H3","H4","H5"]);
+
+/* stacked bars */
+(function(){
+ var rows=[{l:"LH₂ 2026",t:"$8.65",v:[4.0,.34,2.36,.53,.47,.56,.39]},{l:"NH₃ 2026",t:"$6.69",v:[4.0,.29,.71,.35,.17,.35,.82]},{l:"LH₂ 2030",t:"$7.37",v:[3.2,.24,1.99,.53,.47,.56,.39]},{l:"NH₃ 2030",t:"$5.83",v:[3.2,.23,.71,.35,.17,.35,.82]}];
+ var nm=["Production (common)","Hydrogen losses","Conversion","Export storage","Shipping","Import storage","Reconversion"];
+ var col=["#64748b","#f59f0a","#4a3aa7","#2977d6","#00c8e8","#21c45d","#1f2933"];
+ var W=640,H=230,L=82,Rr=50,T=12,sc=(W-L-Rr)/10,s="";
+ for(var g=0;g<=10;g+=2)s+='<line x1="'+(L+g*sc)+'" x2="'+(L+g*sc)+'" y1="'+T+'" y2="'+(H-26)+'" stroke="'+css("grid")+'"/><text x="'+(L+g*sc)+'" y="'+(H-8)+'" font-size="11" text-anchor="middle">$'+g+'</text>';
+ rows.forEach(function(r,i){var y=T+i*50,x=L;s+='<text x="'+(L-8)+'" y="'+(y+24)+'" font-size="12" font-weight="700" text-anchor="end" style="fill:'+css("ink")+'">'+r.l+'</text>';
+  r.v.forEach(function(v,j){var w=v*sc;s+='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="34" fill="'+col[j]+'"><title>'+nm[j]+": $"+v.toFixed(2)+'</title></rect>';if(w>30)s+='<text x="'+(x+w/2)+'" y="'+(y+21)+'" font-size="10.5" text-anchor="middle" style="fill:#fff">'+v.toFixed(2)+'</text>';x+=w});
+  s+='<text x="'+(x+6)+'" y="'+(y+22)+'" font-size="12" font-weight="700" style="fill:'+css("ink")+'">'+r.t+'</text>'});
+ $("chStack").innerHTML=svg(W,H,s,"Stacked delivered cost by stage for LH2 and NH3 in 2026 and 2030");
+ $("lgStack").innerHTML=nm.map(function(n,i){return '<span><span class="sw" style="background:'+col[i]+'"></span>'+n+'</span>'}).join("")})();
+strip("stC",["C1","C2","C3","C4","C5","C6","C7","C8","C9","C10"]);
+
+/* maturity matrix */
+(function(){
+ var hd=["Conversion","Export storage","Shipping","Import storage","Reconversion"];
+ var L=[["D","Scale-up 1.7×","30 → 50 t/d","amber","M1"],["D","Scale-up 13×","3,200 → 43,100 m³","amber","M2"],["D","Scale-up 36×","75 → 2,700 t H₂","amber","M3"],["D","Scale-up 15×","3,200 → 47,700 m³","amber","M4"],["C","Not assessed","","","M5"]];
+ var N=[["A","Established","","green","M6"],["A","Established","","green","M6"],["B","Established","63,200 → 63,200 t NH₃","green","M7"],["A","Established","","green","M6"],["D","Scale-up 40×","30 → 1,200 t NH₃/d","amber","M8"]];
+ var h='<div class="h"></div>'+hd.map(function(x){return '<div class="h">'+x+'</div>'}).join("");
+ [["LH₂",L],["NH₃",N]].forEach(function(row){h+='<div class="r">'+row[0]+'</div>';row[1].forEach(function(c){h+='<div class="c '+c[3]+'" data-id="'+c[4]+'"><span class="g">'+c[0]+' · '+c[1]+'</span>'+(c[2]?'<small>'+c[2]+'</small>':'')+chips(c[4])+'</div>'})});
+ $("matrix").innerHTML=h})();
+
+/* parity */
+(function(){
+ var cats=["2026","2030","2035","2040","2045"];
+ var S=[{n:"Targets met vs NH₃ flat",c:css("lh2"),v:[1.96,1.53,.49,-.17,-.23],id:"P1"},{n:"Targets met vs NH₃ improving",c:css("nh3"),v:[1.96,1.53,.63,.11,.10],id:"P2"},{n:"Conservative vs NH₃ flat",c:css("dark"),v:[1.96,1.82,1.34,.77,.67],id:"P3",dash:"6 4"},{n:"Conservative vs NH₃ improving",c:css("asm"),v:[1.96,1.82,1.48,1.05,.99],id:"P4",dash:"2 4"}];
+ S[0].dy=10;S[1].dy=-3;S[2].dy=3;S[3].dy=-4;
+ lineChart("chGap",cats,S.map(function(s){return{n:s.n,c:s.c,v:s.v,dash:s.dash,dy:s.dy}}),{ymin:-0.5,ymax:2,step:0.5,pre:"$",dec:1,zero:true,label:"Gap LH2 minus NH3 for four paths, 2026 to 2045"});
+ $("lgGap").innerHTML=S.map(function(s){return '<span><span class="sw" style="background:'+s.c+'"></span>'+s.n+'</span>'}).join("");
+ var t={P1:["About 2039","Gap in 2040 −$0.17, in 2045 −$0.23"],P2:["Not by 2045","Gap in 2040 $0.11, in 2045 $0.10"],P3:["Not by 2045","Gap in 2040 $0.77, in 2045 $0.67"],P4:["Not by 2045","Gap in 2040 $1.05, in 2045 $0.99"]};
+ $("parityList").innerHTML=S.map(function(s){return '<div data-id="'+s.id+'" style="padding:8px 0;border-bottom:1px solid var(--rule)"><div class="note"><b>'+s.n+'</b></div><div style="font-size:19px;font-weight:700">'+t[s.id][0]+'</div><div class="note">'+t[s.id][1]+'</div>'+chips(s.id)+'</div>'}).join("");
+ strip("stP",["P1","P2","P3","P4"])})();
+
+/* tornado */
+(function(){
+ var d=[["LH₂: Liquefier CAPEX",.83,"D1"],["LH₂: LH₂ tank cost",.80,"D2"],["LH₂: Liquefaction energy",.17,"D3"],["LH₂: Carrier size and price",.16,"D4"],["LH₂: Boil-off",.11,"D5"],["NH₃: Carrier size and price",-.05,"D6"],["NH₃: Cracker heat",-.08,"D7"],["NH₃: Cracker CAPEX",-.16,"D8"]];
+ var W=640,H=40+d.length*32,L=186,mid=L+200,sc=240,s="";
+ s+='<line x1="'+mid+'" x2="'+mid+'" y1="6" y2="'+(H-22)+'" stroke="'+css("dark")+'"/>';
+ d.forEach(function(r,i){var y=10+i*32,w=Math.abs(r[1])*sc,x=r[1]>=0?mid:mid-w;
+  s+='<text x="'+(L-8)+'" y="'+(y+17)+'" font-size="12" text-anchor="end" style="fill:'+css("ink2")+'">'+r[0]+'</text><rect x="'+x+'" y="'+y+'" width="'+w+'" height="22" rx="2" fill="'+(r[1]>=0?css("lh2"):css("nh3"))+'" data-id="'+r[2]+'"><title>'+r[0]+': '+(r[1]<0?"−":"")+'$'+Math.abs(r[1]).toFixed(2)+'</title></rect><text x="'+(r[1]>=0?mid+w+6:mid-w-6)+'" y="'+(y+16)+'" font-size="12" font-weight="700" text-anchor="'+(r[1]>=0?"start":"end")+'" style="fill:'+css("ink")+'">'+(r[1]<0?"−":"")+'$'+Math.abs(r[1]).toFixed(2)+'</text>'});
+ $("chTor").innerHTML=svg(W,H,s,"Effect of each input on the 2040 gap");strip("stD",["D1","D2","D3","D4","D5","D6","D7","D8"])})();
+
+/* tank */
+(function(){
+ var d=[["LH₂, DOE/Shell concept tank (~$1,750/m³)",4.85,"T1"],["LH₂, IEA tank cost (~$9,000/m³)",5.71,"T2"],["LH₂, KBR tank cost (~$52,600/m³)",10.84,"T3"],["NH₃, improving path",4.8,null]];
+ var W=560,H=250,L=44,T=18,B=64,s="",max=12,bw=82,gap=36;
+ for(var g=0;g<=12;g+=3)s+='<line x1="'+L+'" x2="'+(W-8)+'" y1="'+(T+(H-T-B)*(1-g/max))+'" y2="'+(T+(H-T-B)*(1-g/max))+'" stroke="'+css("grid")+'"/><text x="'+(L-6)+'" y="'+(T+(H-T-B)*(1-g/max)+4)+'" font-size="11" text-anchor="end">$'+g+'</text>';
+ d.forEach(function(r,i){var x=L+16+i*(bw+gap),h=(H-T-B)*r[1]/max,y=T+(H-T-B)-h;
+  s+='<rect x="'+x+'" y="'+y+'" width="'+bw+'" height="'+h+'" rx="3" fill="'+(i<3?css("lh2"):css("nh3"))+'"'+(r[2]?' data-id="'+r[2]+'"':"")+'><title>'+r[0]+': $'+r[1].toFixed(2)+'</title></rect><text x="'+(x+bw/2)+'" y="'+(y-6)+'" font-size="12" font-weight="700" text-anchor="middle" style="fill:'+css("ink")+'">$'+r[1].toFixed(2)+'</text>';
+  var w=r[0].split(/, | \(/);s+='<text x="'+(x+bw/2)+'" y="'+(H-B+16)+'" font-size="10.5" text-anchor="middle">'+esc(w[0])+'</text><text x="'+(x+bw/2)+'" y="'+(H-B+30)+'" font-size="10.5" text-anchor="middle">'+esc((w[1]||"").replace(")",""))+'</text>'+(w[2]?'<text x="'+(x+bw/2)+'" y="'+(H-B+44)+'" font-size="10.5" text-anchor="middle">'+esc(w[2].replace(")",""))+'</text>':"")});
+ $("chTank").innerHTML=svg(W,H,s,"2040 delivered cost for three LH2 tank cost estimates and NH3");strip("stT",["T1","T2","T3"])})();
+(function(){var rows=[["Base case",4.91,4.80,.11,0],["Liquefaction energy stays at the 2026 value",5.08,4.80,.27],["Liquefaction energy 6 kWh/kg",4.91,4.80,.11],["Liquefier CAPEX −25%",4.65,4.80,-.15],["Liquefier CAPEX +50%",5.43,4.80,.63],["LH₂ carrier CAPEX −30%",4.82,4.80,.02],["Cracker CAPEX $1,900/t H₂/yr (study)",4.91,4.82,.09],["Cracker heat 6.4 kWh/kg (KBR/CATF)",4.91,4.75,.16],["Power price 60 USD/MWh",5.04,4.91,.14],["Discount rate 10%",5.15,5.00,.15],["Distance 12,000 km",5.07,4.86,.20]];
+ function f(v){return (v<0?"−":"")+"$"+Math.abs(v).toFixed(2)}
+ $("sens").innerHTML=rows.map(function(r,i){return '<tr'+(i==0?' class="hl"':"")+'><td>'+r[0]+'</td><td class="num">'+f(r[1])+'</td><td class="num">'+f(r[2])+'</td><td class="num">'+f(r[3])+'</td></tr>'}).join("");
+ strip("stT2",["T4"])})();
+
+/* calendar */
+(function(){var rows=[["NH₃","Uniper/Uhde 28 t NH₃/d cracker commissioning","End 2026","Confirmed start-up and test results","E1"],["LH₂","KHI 50 t/d liquefier completes","End 2028","Measured specific energy at 50 t/d","E2"],["LH₂","Ship-to-base transfer and ocean trials","FY2030","Boil-off, transfer losses, reliability","E3"],["LH₂","KHI large compressor commercial launch (roadmap)","About 2031","Operating compressor in a liquefier","E4"],["LH₂","KHI power-recovery and wet turbines (roadmap)","About 2035","Demonstration units operating","E5"],["LH₂","KHI magnetic refrigeration commercial (roadmap)","About 2038","Large-scale test","E6"],["LH₂","Korean consortium LH₂ carriers (40,000 and 160,000 m³)","2032 to 2040","Contract and price","E7"],["NH₃","First 175,000 m³ ammonia carriers (ADNOC L&S)","2029","Delivery","E8"],["NH₃","First cracker above 300 t NH₃/d in operation","No verified date","Operating plant with published data","E9"]];
+ $("cal").innerHTML=rows.map(function(r){return '<tr data-id="'+r[4]+'"><td>'+r[0]+'</td><td style="font-weight:400">'+r[1]+'</td><td style="font-weight:400;white-space:nowrap">'+r[2]+'</td><td style="font-weight:400">'+r[3]+'</td><td>'+chips(r[4])+'</td></tr>'}).join("")})();
+
+/* studies */
+(function(){var rows=[["KBR for CATF","250 kt/yr 2030","$6.09","$3.25","S1"],["KBR for CATF","1,000 kt/yr 2040","$4.64","$2.57","S1"],["KBR for CATF","10,000 kt/yr 2050","$3.23","$1.96","S1"],["IEA ETP 2023, transport only","2030","$2.0–3.7","$1.9–2.2","S2"],["arXiv 2507.02412","2030","—","16% edge","S3"],["arXiv 2507.02412","2040","—","10% edge","S3"]];
+ $("studyRows").innerHTML=rows.map(function(r){return '<tr data-id="'+r[4]+'"><td>'+r[0]+'</td><td style="font-weight:400">'+r[1]+'</td><td class="num" style="font-weight:400">'+r[2]+'</td><td class="num" style="font-weight:400">'+r[3]+'</td><td>'+chips(r[4])+'</td></tr>'}).join("");
+ var g=[["B",11,"Company-reported operating data"],["D",12,"Vendor claim or plan"],["E",9,"Study or assumption"]],W=520,H=120,s="",x=10,tot=32,sc=(W-20)/tot,cols=[css("warn"),css("lh2"),css("asm")];
+ g.forEach(function(r,i){var w=r[1]*sc;s+='<rect x="'+x+'" y="14" width="'+w+'" height="38" fill="'+cols[i]+'" data-id="S4"><title>Grade '+r[0]+': '+r[1]+' ('+r[2]+')</title></rect><text x="'+(x+w/2)+'" y="38" font-size="13" font-weight="700" text-anchor="middle" style="fill:#fff">'+r[0]+' · '+r[1]+'</text>';x+=w});
+ s+='<text x="10" y="76" font-size="11.5">A Independent operating data: 0 · C Contractual guarantee: 0</text><text x="10" y="94" font-size="11.5">B Company-reported · D Vendor claim or plan · E Study or assumption</text><text x="10" y="112" font-size="11.5" font-weight="700" style="fill:'+css("ink")+'">32 entries; no entry is independent operating data</text>';
+ $("chGrade").innerHTML=svg(W,H,s,"Register entries by evidence grade")})();
+
+/* cross-check */
+(function(){var S={ok:'<span class="st ok">Consistent</span>',part:'<span class="st part">Partly</span>',bad:'<span class="st bad">Differs</span>',na:'<span class="st na">Not in internal data</span>'};
+ var rows=[
+ ["Liquefier energy, today → 2040","6 kWh/kg reached by 2040 in the base case","KHI: 8–9 kWh/kg today; improvement window 2035–2040 (X1). The 6 kWh/kg milestone is user-provided, not independently sourced.",S.ok,"Keep. Ask KHI for the guaranteed value at 50 t/d."],
+ ["Liquefier train size","30 → 50 t/d, scale-up 1.7×","KHI designs 115 t/d per train, minimum scale 10,000 t/yr (X2). On that train the scale-up is 3.8× vs 30 t/d.",S.bad,"Decide which train size the 100 kt/yr case assumes, and restate the grade-D cell."],
+ ["Storage tank size","43,100 m³ export, 47,700 m³ import","KHI design 64,000 / 65,000 m³ per tank, BOR 0.1 %/d (X3). That is 20× the 3,200 m³ demonstrated, not 13–15×.",S.bad,"Align the tank size, or state why the mock-up is smaller than KHI's design."],
+ ["Carrier size","2,700 t H₂ (about 40,000 m³)","40,000 m³ × 70.8 kg/m³ × 98% = 2,775 t. 160,000 m³ is KHI's commercial target.",S.ok,"Keep. Confirm the 75 t Suiso Frontier figure (88.5 t gross at 1,250 m³)."],
+ ["Hydrogen losses","LH₂ $0.34/kg (2026)","KHI claims no hydrogen loss (liquefaction table). Our own chain model flags a double-count of burned boil-off.",S.bad,"Treat $0.34 as conservative; settle the boil-off convention first."],
+ ["LH₂ delivered cost excluding production","$4.65/kg (2026), $4.17/kg (2030)","IAE-2019 via KHI gives about $2.0/kg (Base) at 150 JPY/USD (X4, table above).",S.bad,"Resolve the IAE vintage, unit and yen basis; likely explains part of the factor of about 2."],
+ ["Chain result","LH₂ above NH₃ by $1.96 (2026) → $0.10 (2045)","Our energy-only model: LH₂ within about ±2% of the cheapest NH₃ route at maturity; no CAPEX (X6). Different boundary.",S.part,"Add CAPEX to our model, or label the two views as different boundaries on the page."],
+ ["Cracker energy","Base 10.2 kWh/kg (IEA); 6.4 (KBR/CATF)","Licensors 7.93, 8.18, 8.71 kWh/kg H₂; thermodynamic floor 4.22 kWh/kg (X5).",S.part,"Base 10.2 is above every licensor offer on file; consider a licensor-based base case."],
+ ["Cracker CAPEX","$1,900 per t H₂/yr (study)","Topsoe $2,000; KBR $2,809; Duiker $4,250 per t H₂/yr, derived from ISBL Class V (X5).",S.ok,"Keep at the low end; show the range $1,900–4,250."],
+ ["Largest operating cracker","30 t NH₃/d; 1,200 t/d needed","Licensors offer 1,013–1,234 t NH₃/d per train; Hanwha Impact 219 t/d H₂ marked 'Operational' (X5).",S.bad,"Confirm whether the Hanwha plant is operating or FEED-only, then fix the DB or the grade."],
+ ["Voyage boil-off","Lever worth $0.11/kg","Our placeholder is 0.2 %/d; KHI gives only 'fuel gas equals BOR'; unpromoted public figure ≈ 3.44 %/d sits in research/.",S.part,"Ask KHI for a voyage BOR; promote or reject the public figure through Zane."],
+ ["Liquefier CAPEX and tank cost","Top two levers ($0.83 and $0.80/kg)","Liquefier CAPEX and OPEX not disclosed by KHI (Q8, Q9); terminal CAPEX not separately disclosed (IAE aggregate only); no internal source for tank cost.",S.na,"Highest-value gap. Pursue through a pre-FEED or feasibility scope."],
+ ["NH₃ synthesis, storage, shipping costs","$0.71, $0.35, $0.17 per kg","Only placeholders (Haber-Bosch 0.6 kWh/kg NH₃) until the internal NH₃ dataset (D4) arrives.",S.na,"Replace with the internal dataset when received."]];
+ $("xc").innerHTML=rows.map(function(r){return '<tr><td>'+r[0]+'</td><td style="font-weight:400">'+r[1]+'</td><td style="font-weight:400">'+r[2]+'</td><td>'+r[3]+'</td><td style="font-weight:400">'+r[4]+'</td></tr>'}).join("");
+ function iae(){var fx=parseFloat($("fx").value)||150,rho=0.0899;function u(j){return j/rho/fx}
+  var st=[["Conversion ↔ liquefaction",10.3,10.0,8.6,2.36],["Export storage ↔ loading terminal",5.6,1.9,1.8,.53],["Shipping ↔ seaborne transport",4.0,4.0,2.3,.47],["Import storage + reconversion ↔ receiving terminal",6.3,3.4,2.8,.56+.39],["Other (IAE) ↔ losses (mock-up)",1.3,1.3,1.3,.34]];
+  var h="",tb=0,tl=0,tt=0,tm=0;
+  st.forEach(function(r){tb+=r[1];tl+=r[2];tt+=r[3];tm+=r[4];h+='<tr><td>'+r[0]+'</td><td class="num">$'+u(r[1]).toFixed(2)+'</td><td class="num">$'+u(r[2]).toFixed(2)+'</td><td class="num">$'+u(r[3]).toFixed(2)+'</td><td class="num">$'+r[4].toFixed(2)+'</td><td class="num">'+(r[4]/u(r[1])).toFixed(1)+'×</td></tr>'});
+  h+='<tr class="hl"><td>Total excluding production</td><td class="num">$'+u(tb).toFixed(2)+'</td><td class="num">$'+u(tl).toFixed(2)+'</td><td class="num">$'+u(tt).toFixed(2)+'</td><td class="num">$'+tm.toFixed(2)+'</td><td class="num">'+(tm/u(tb)).toFixed(1)+'×</td></tr>';$("iae").innerHTML=h}
+ iae();$("fx").addEventListener("input",iae)})();
+
+/* ---------- register ---------- */
+(function(){var h="";R.forEach(function(r){h+='<tr id="r-'+r.id+'" data-id="'+r.id+'" data-s="'+esc((r.id+" "+r.sec+" "+r.name+" "+r.val+" "+r.why+" "+r.int_+" "+r.src).toLowerCase())+'"><td>'+r.id+'<div class="note" style="font-weight:400">'+r.sec+'</div></td><td style="font-weight:400">'+esc(r.name)+'</td><td style="font-weight:400">'+esc(r.val)+'</td><td><span class="chip '+r.o+'">'+ORG[r.o].n+'</span></td><td><span class="acc a'+r.a+'">'+dots(r.a)+ACC[r.a].n+'</span></td><td style="font-weight:400;min-width:220px">'+esc(r.why)+'</td><td style="font-weight:400;min-width:220px">'+(r.int_?esc(r.int_):'<span class="note">none</span>')+'</td><td style="font-weight:400;min-width:140px">'+esc(r.src)+'</td><td style="font-weight:400;min-width:110px">'+esc(r.next)+'</td></tr>'});$("reg").innerHTML=h})();
+
+/* ---------- filters ---------- */
+var F={o:"ALL",a:0};
+function match(id){var r=IDX[id];if(!r)return true;if(F.o!=="ALL"){if(F.o==="INT"?(r.o!=="INT"&&r.o!=="BOTH"):F.o==="NET"?(r.o!=="NET"&&r.o!=="BOTH"):r.o!==F.o)return false}return r.a>=F.a}
+function apply(){var shown=0;document.querySelectorAll("[data-id]").forEach(function(e){if(e.tagName==="TR"&&e.id&&e.id.indexOf("r-")===0){var ok=match(e.dataset.id)&&(!Q||e.dataset.s.indexOf(Q)>-1);e.style.display=ok?"":"none";if(ok)shown++;return}
+  var ids=e.dataset.id.split(",");var m=ids.some(match);var active=F.o!=="ALL"||F.a>0;e.classList.toggle("dim",active&&!m)});$("regCount").textContent=shown+" of "+R.length+" rows shown"}
+var Q="";
+(function(){var h="",opts=[["ALL","All"],["NET","Internet"],["INT","Internal"],["ASM","Assumption"]];
+ $("fOrigin").innerHTML=opts.map(function(o){return '<button type="button" data-o="'+o[0]+'" aria-pressed="'+(o[0]==="ALL")+'">'+o[1]+'</button>'}).join("");
+ $("fOrigin").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;F.o=b.dataset.o;this.querySelectorAll("button").forEach(function(x){x.setAttribute("aria-pressed",x===b)});apply()});
+ $("fAcc").addEventListener("change",function(){F.a=+this.value;apply()});
+ $("fReset").addEventListener("click",function(){F={o:"ALL",a:0};$("fAcc").value="0";$("q").value="";Q="";document.querySelectorAll("#fOrigin button").forEach(function(x){x.setAttribute("aria-pressed",x.dataset.o==="ALL")});apply()});
+ $("q").addEventListener("input",function(){Q=this.value.toLowerCase().trim();apply()});
+ document.addEventListener("click",function(e){var a=e.target.closest('a[href^="#r-"]');if(!a)return;var t=document.querySelector(a.getAttribute("href"));if(t){e.preventDefault();t.style.display="";t.scrollIntoView({block:"center"});t.classList.add("flash");setTimeout(function(){t.classList.remove("flash")},2200)}});
+ $("csv").addEventListener("click",function(){function q(s){return '"'+String(s).replace(/"/g,'""')+'"'}
+  var lines=[["id","section","item","value_in_mockup","origin","accuracy","why_this_rating","internal_cross_check","source","next_review","last_reviewed"].join(",")];
+  R.forEach(function(r){lines.push([r.id,r.sec,r.name,r.val,ORG[r.o].n,ACC[r.a].n,r.why,r.int_,r.src,r.next,"2026-11-02"].map(q).join(","))});
+  var b=new Blob(["﻿"+lines.join("\n")],{type:"text/csv"}),u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download="lh2-vs-nh3-dashboard-register.csv";document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u)},500)});
+ apply()})();
+})();
+</script>
+</body>
+</html>

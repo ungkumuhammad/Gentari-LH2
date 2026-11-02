@@ -1715,3 +1715,15 @@ New `docs/reports/lh2-vs-ammonia-chain-summary.html` with notes in `docs/compari
 - **Headline at 100 ktpa:** LH2 7,849 / NH3 NG-fired 8,100 / NH3 clean fuel 8,880 GWh/y; cost USD 1,105.8 / 1,095.8 / 1,237.9 M/y; LH2 at 6 kWh/kg 7,523 GWh/y and USD 1,060.2 M/y; cost parity with the cheapest ammonia pathway at 7.46 kWh/kg.
 - **Flag:** the page keeps the original artifact's convention that counts burned boil-off H2 as shipping energy on top of its production energy; the repo's Section 13.7 already corrected that double count (75.59 / 76.35 / 80.53 kWh/kg). Decide which basis the dashboard should carry.
 - **Open:** electrolyser 60 kWh/kg, import-terminal power price, 20 sea days and Haber-Bosch ASU inclusion remain unsourced.
+
+### LH2 vs NH3 Cost and Credibility dashboard (2026-11-02): mock-up revamp with origin and accuracy marks
+
+New `docs/reports/lh2-vs-nh3-cost-credibility-dashboard.html` (single self-contained page, Gentari header, light/dark). Rebuilds Dan's 7-slide mock-up (`sources/raw/Project/Technology Intelligence Dashboard/`, registered as `gentari-lh2-nh3-dashboard-mockup`) and tags every figure with **origin** (Internal / Internet / Internet + internal / Assumption) and **accuracy** (High / Medium / Low / Unverified). A 58-row register on the page (exportable to CSV) is the Custodian's working file; charts and tags draw from it.
+
+- **Scope of review:** the mock-up's internet figures were NOT re-verified on the web. Marks reflect what the mock-up states plus our internal cross-check (KHI replies, IAE-2019 stack, Gentari cracker DB, chain-summary dashboard). Accuracy marks are a draft reviewer judgement for the Custodian to confirm.
+- **Result of the 52 mock-up figures:** 1 High, 9 Medium, 34 Low, 8 Unverified; 24 internet-only, 25 with an internal cross-check, 3 assumptions.
+- **Where our data differs from the mock-up:** KHI liquefier train 115 t/d vs mock-up 30 to 50 t/d; KHI tanks 64,000/65,000 m3 vs 43,100/47,700 m3; KHI claims no H2 loss vs mock-up $0.34/kg; IAE-2019 non-production LH2 cost about $2.0/kg (at [ASSUMPTION: 150 JPY/USD]) vs mock-up $4.65/kg; Gentari cracker DB lists Hanwha Impact 219 t/d H2 as "Operational" vs mock-up "no operating cracker above 30 t NH3/d" (to resolve).
+- **Where it agrees:** liquefier SEC path (8-9 kWh/kg today, 2035-2040 improvement window); 40,000 m3 carrier capacity (2,775 t vs 2,700 t); cracker CAPEX $1,900/t H2/yr is near the lowest licensor figure (Topsoe $2,000).
+- **Biggest gap:** the mock-up's top two levers (liquefier CAPEX $0.83, tank cost $0.80 per kg) rest on costs KHI has not disclosed (replies Q8, Q9, Q31). A pre-FEED or feasibility scope with KHI would raise accuracy most.
+- **Mock-up inconsistency:** grade C is "contractual guarantee" and the register has no grade C entries, yet LH2 reconversion is graded C "not assessed".
+- **Open:** Custodian not yet nominated (Ikhwan); review cadence (quarterly) and go-live plan are proposals; KHI-proprietary figures on the page are Gentari-confidential, so strip them before any external use.
