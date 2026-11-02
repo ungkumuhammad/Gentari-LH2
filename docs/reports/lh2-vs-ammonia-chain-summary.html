@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LH2 vs Ammonia Chain Summary</title>
+<style>
+:root{
+  --bg:#f4f6f7;--surface:#fff;--ink:#0f1a20;--ink2:#44545d;--muted:#6f7f88;--rule:#d8e0e4;--grid:#e8edf0;--accent:#0e6a86;
+  --el:#e87ba4;--up:#2a78d6;--ship:#eb6834;--down:#1baf7a;
+  --k1:#2a78d6;--k2:#eb6834;--k3:#1baf7a;--k4:#eda100;--k5:#e87ba4;--k6:#008300;--pu:#8a4fd6;--good:#1f7a4a;--warn:#9a5b00;
+  --font:Verdana,Geneva,sans-serif;--mono:Verdana,Geneva,sans-serif;--purple:#60269e;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0c1316;--surface:#131c20;--ink:#e7eef1;--ink2:#a8b7be;--muted:#7f8f97;--rule:#263439;--grid:#1c282d;--accent:#56b6d3;
+  --el:#d55181;--up:#3987e5;--ship:#d95926;--down:#199e70;--k1:#3987e5;--k2:#d95926;--k3:#199e70;--k4:#c98500;--k5:#d55181;--k6:#2f9e2f;--pu:#a98be8;--good:#6fd29c;--warn:#f0b454}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 var(--font)}
+.wrap{max-width:1180px;margin:0 auto;padding:0 16px 56px}
+.bar{position:sticky;top:0;z-index:10;background:#fff;color:#0f1a20;border-bottom:1px solid #d8e0e4;padding:12px 0;--ink:#0f1a20;--ink2:#44545d;--surface:#fff;--rule:#d8e0e4;--accent:#0e6a86;--bg:#fff;--muted:#6f7f88}
+.bar .in{max-width:1180px;margin:0 auto;padding:0 16px;display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center;justify-content:space-between}
+.bar h1{font-size:18px;margin:0;font-weight:700}
+.ctlw{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.dev{font-size:11px;color:var(--muted)}
+.ctl{display:flex;align-items:center;gap:10px}
+.ctl label{font-weight:600}
+.ctl input{width:110px;font:600 16px var(--mono);text-align:right;color:var(--ink);background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:6px 8px}
+.ctl input:focus-visible,nav a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+nav{display:flex;gap:6px;flex-wrap:wrap}
+nav a{color:var(--ink2);text-decoration:none;border:1px solid var(--rule);background:var(--surface);border-radius:99px;padding:4px 12px;font-weight:600;font-size:13px}
+nav a:hover{color:var(--accent)}
+.basis{font-size:12.5px;color:var(--muted);margin:14px 0 0}
+section{margin-top:34px}
+.num{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:var(--purple);color:#fff;font:700 14px var(--font);font-style:normal}
+.logo{height:46px;width:auto;display:block}
+.eyebrow{display:flex;align-items:center;gap:10px;font:700 15px var(--font);color:var(--ink)}
+h2{font-size:24px;margin:4px 0 4px;line-height:1.2}
+.sub{color:var(--ink2);margin:0 0 14px;max-width:80ch}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin-top:16px}
+.tile{background:var(--surface);border:1px solid var(--rule);border-radius:8px;padding:12px 14px}
+.tile .k{font-size:13px;color:var(--muted);font-weight:600}
+.tile .v{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.15;margin-top:2px}
+.tile .v small{font-size:13px;color:var(--ink2);font-weight:600}
+.tile .n{font-size:12.5px;color:var(--ink2);font-variant-numeric:tabular-nums;margin-top:2px}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:860px){.pair{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--rule);border-radius:8px;padding:14px 14px 8px}
+.card h3{margin:0 0 2px;font-size:15px}
+.card .u{font-size:12.5px;color:var(--muted);margin-bottom:6px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:13px;color:var(--ink2);margin:8px 0}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:Verdana,Geneva,sans-serif;font-size:11px;fill:var(--ink2)}
+svg .nm{fill:var(--ink);font-weight:600;font-size:12.5px}
+svg .tot{fill:var(--ink);font-weight:700;font-size:12.5px;font-variant-numeric:tabular-nums}
+svg .in{fill:#fff;font-weight:600;font-size:11.5px}
+svg .gl{stroke:var(--grid)}
+.tbl{overflow-x:auto;border:1px solid var(--rule);border-radius:8px;background:var(--surface);margin-top:12px}
+table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:620px}
+th,td{padding:7px 10px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap;font-variant-numeric:tabular-nums}
+th{background:var(--bg);color:var(--ink2);font-weight:600;font-size:12.5px}
+th:first-child,td:first-child{text-align:left}
+tr.t td{font-weight:700}
+.tip{position:fixed;pointer-events:none;background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:7px 10px;font-size:12.5px;box-shadow:0 4px 14px rgba(0,0,0,.15);z-index:20;line-height:1.45}
+.tip b{font-variant-numeric:tabular-nums}
+.take{margin:0 0 12px;padding:10px 14px;border-left:3px solid var(--accent);background:var(--surface);border-radius:0 6px 6px 0;font-size:14px}
+.assume{margin-top:12px;background:var(--surface);border:1px solid var(--rule);border-radius:8px;padding:12px 14px}
+.assume h3{margin:0 0 8px;font-size:14px}
+.ag{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:8px 24px}
+.ag h4{margin:0 0 3px;font:600 12px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+.ag ul{margin:0;padding:0;list-style:none;font-size:13px;color:var(--ink2)}
+.ag li{display:flex;justify-content:space-between;gap:10px;padding:2px 0;border-bottom:1px dotted var(--grid)}
+.ag li b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums;text-align:right}
+.note{font-size:12.5px;color:var(--muted);margin:8px 0 0}
+details{background:var(--surface);border:1px solid var(--rule);border-radius:8px;margin-top:10px}
+summary{cursor:pointer;padding:10px 14px;font-weight:600;list-style:none;display:flex;justify-content:space-between;gap:10px}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";color:var(--accent);font-weight:700}
+details[open] summary::after{content:"–"}
+summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+summary span{color:var(--ink2);font-weight:400;font-variant-numeric:tabular-nums}
+details .tbl{margin:0;border:0;border-top:1px solid var(--rule);border-radius:0}
+td.f{white-space:normal;text-align:left;color:var(--ink2);font-size:12.5px;min-width:260px}
+tr.sg td{background:var(--bg);font:600 12px var(--mono);letter-spacing:.05em;text-transform:uppercase;color:var(--accent);text-align:left}
+.caveat{margin-top:34px;padding:14px 16px;border-left:4px solid var(--purple);background:var(--surface);border-radius:0 8px 8px 0;font-size:13.5px;color:var(--ink2)}
+.caveat b{color:var(--ink)}
+.h3s{font-size:16px;margin:24px 0 8px}
+.asd .ag{padding:0 14px 12px}
+.asd summary{font-size:14px}
+#c7b,#c1{max-height:340px}
+.tl3{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-top:12px}
+.mc{background:var(--surface);border:1px solid var(--rule);border-radius:8px;padding:14px}
+.mc h4{margin:0;font-size:14px}
+.mc .src{font-size:12px;color:var(--muted);margin-bottom:8px}
+.mc .row{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:6px 0;border-top:1px solid var(--grid);font-size:13px;color:var(--ink2)}
+.mc .row b{color:var(--ink);font-size:15px;font-variant-numeric:tabular-nums}
+.mc .vs{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;padding-bottom:4px}
+.pill{display:inline-flex;gap:4px;font-size:11.5px;font-weight:700;padding:1px 8px;border-radius:99px;border:1.5px solid currentColor;white-space:nowrap}
+.pill.good{color:var(--good)}.pill.warn{color:var(--warn)}
+#tl{max-height:160px}
+</style>
+</head>
+<body>
+<div class="bar"><div class="in">
+  <div style="display:flex;align-items:center;gap:14px"><img class="logo" alt="Gentari" src="data:image/png;base64,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"><h1>LH₂ vs Ammonia Chain Summary</h1></div>
+  <div class="ctlw"><div class="ctl"><label for="kt">H₂ delivered, ktpa</label><input id="kt" type="number" min="1" step="5" value="100"></div><div class="dev">Develop by : Front End and H2 Technology Solutions</div></div>
+  <nav><a href="#up">Upstream</a><a href="#ship">Shipping</a><a href="#down">Downstream</a><a href="#sum">Summary</a><a href="#mat">Maturity</a></nav>
+</div></div>
+<div class="wrap">
+  <p class="basis">Electrolysis is included in every chain. Both carriers are 40,000 m³ with 20 sea days, and the electrolyser uses 60 kWh/kg H₂. Electricity costs USD 140/MWh, VLSFO USD 553/t, ammonia USD 700/t, gas USD 13/MMBtu, and H₂ USD 6/kg for boil-off only. Energy is on LHV with electricity as delivered. Energy cost only, with no charter, CapEx or carbon.</p>
+
+  <section id="up">
+    <span class="eyebrow"><i class="num">1</i>Upstream</span>
+    <h2>Liquefaction / Haber-Bosch and export tank</h2>
+    <p class="sub">Making one cargo at the export plant from gaseous H₂. Electrolysis is excluded here and shown in the Summary.</p>
+    <p class="take" id="takeUp"></p>
+    <div class="legend" id="lg-up"></div>
+    <div class="pair"><div class="card"><h3>Energy</h3><div class="u">GWh per year</div><svg id="e-up"></svg></div>
+    <div class="card"><h3>Energy cost</h3><div class="u">USD million per year</div><svg id="c-up"></svg></div></div>
+    <div id="asUp" style="margin-top:12px"></div>
+    <p class="take" id="takeNG" style="margin-top:12px"></p>
+    <h3 class="h3s">Liquefier efficiency needed to match Haber-Bosch (Chart 7B)</h3>
+    <p class="take" id="take7b"></p>
+    <div class="legend" id="lg-7b"></div>
+    <div class="card"><svg id="c7b"></svg></div>
+    <div class="tiles" id="t7b"></div>
+    <p class="note">Minimum liquefaction work 3.3 kWh/kg for normal-H₂ and 3.9 kWh/kg for para-H₂ (doe-2009-h2-liquefaction-energy). Para-H₂ is the floor, because LH₂ is stored as para. KHI discloses 8–9 kWh/kg (kawasaki-2026-questionnaire). The chart is annual upstream energy without electrolysis, at the ktpa above; the Haber-Bosch lines stay fixed while the liquefier SEC is swept.</p>
+  </section>
+
+  <section id="ship">
+    <span class="eyebrow"><i class="num">2</i>Shipping</span>
+    <h2>Fuel burned on the voyage</h2>
+    <p class="sub">Both carriers are 40,000 m³. Ship fuel bought plus any cargo burned as fuel (LH₂ boil-off). Each ammonia pathway is shown twice: with a dual-fuel ship (95 % NH₃ and 5 % VLSFO pilot) and with a ship burning only VLSFO.</p>
+    <div id="asShip" style="margin:0 0 12px"></div>
+    <div class="legend" id="lg-ship"></div>
+    <div class="pair"><div class="card"><h3>Energy required per vessel</h3><div class="u">kWh per kg H₂ delivered, one laden voyage</div><svg id="e-ship"></svg></div>
+    <div class="card"><h3>Energy cost</h3><div class="u">USD million per year</div><svg id="c-ship"></svg></div></div>
+    <div class="tbl"><table id="tShip"></table></div>
+    <p class="note" id="nShip"></p>
+    <h3 class="h3s">Boil-off against fuel demand (Chart 1)</h3>
+    <p class="take" id="take1"></p>
+    <div class="legend" id="lg-1"></div>
+    <div class="card"><svg id="c1"></svg></div>
+    <div class="tiles" id="t1"></div>
+  </section>
+
+  <section id="down">
+    <span class="eyebrow"><i class="num">3</i>Downstream</span>
+    <h2>Regasification and ammonia cracking</h2>
+    <p class="sub">Turning the delivered cargo into gaseous H₂ at the import terminal.</p>
+    <div class="legend" id="lg-down"></div>
+    <div class="pair"><div class="card"><h3>Energy</h3><div class="u">GWh per year</div><svg id="e-down"></svg></div>
+    <div class="card"><h3>LH₂ regas, zoomed</h3><div class="u">GWh per year, on its own scale</div><div class="legend" id="lg-regas"></div><svg id="e-regas"></svg></div></div>
+    <p class="note" id="nRegas"></p>
+  </section>
+
+  <section id="sum">
+    <span class="eyebrow"><i class="num">4</i>Summary, all stages</span>
+    <h2 id="sumTitle">Whole chain</h2>
+    <p class="sub">Electrolysis + upstream + shipping + downstream, five comparisons: LH₂, and each ammonia pathway with a dual-fuel ship and with a VLSFO-only ship.</p>
+    <div class="legend" id="lg-sum"></div>
+    <div class="pair"><div class="card"><h3>Energy</h3><div class="u">GWh per year</div><svg id="e-sum"></svg></div>
+    <div class="card"><h3>Energy cost</h3><div class="u">USD million per year</div><svg id="c-sum"></svg></div></div>
+    <div class="tbl"><table id="tE"></table></div>
+    <div class="tbl"><table id="tC"></table></div>
+    <div id="asSum" style="margin-top:12px"></div>
+  </section>
+  <section id="mat">
+    <span class="eyebrow"><i class="num">5</i>Liquefier maturity outlook</span>
+    <h2 id="matTitle">When does LH₂ become feasible?</h2>
+    <p class="sub">Liquefier energy use as the benchmark: today, the Air Liquide expectation and the KHI expectation. Each milestone is scored against the best ammonia pathway.</p>
+    <div class="card"><svg id="tl"></svg></div>
+    <div class="tl3" id="tlCards"></div>
+    <p class="note" id="nMat"></p>
+    <h3 class="h3s">High maturity LH₂ against the five comparisons</h3>
+    <div class="legend" id="lg-mat"></div>
+    <div class="pair"><div class="card"><h3>Energy</h3><div class="u">GWh per year</div><svg id="e-mat"></svg></div>
+    <div class="card"><h3>Energy cost</h3><div class="u">USD million per year</div><svg id="c-mat"></svg></div></div>
+  </section>
+  <div class="caveat"><b>Important caveat.</b> This page is an energy view only: it shows energy and energy cost, and nothing else. It does not include charter, CapEx, OpEx, carbon or financing. The LH₂ chain rests on a nascent vessel and early technology inputs, and the ammonia chains rest on placeholder assumptions where noted. A true comparison of the chains can only be made once proper pre-FEED deliverables are available.</div>
+</div>
+<div class="tip" id="tip" hidden></div>
+<script>
+const $=id=>document.getElementById(id);
+const f=(x,d=0)=>isFinite(x)?x.toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d}):"–";
+const fv=v=>v>=100?f(v,0):v>=10?f(v,1):f(v,2);
+
+/* ---- fixed basis (defaults of the LH2 vs Ammonia Energy Value Chain artifact) ---- */
+const B={vol:40000,lhvV:41,dutyL:39,rhoL:70.8,lhvH:120,borL:.40,dutyN:30,shareN:95,lhvN:18.6,rhoN:682,
+ secL:9,rlqL:3.94,secN:1,stoich:5.6,tank:60000,borTL:.1,borTN:.05,rlqN:.25,days:5,
+ duty:3.8,sendP:30,etaP:70,dT:5,cp:4,head:20,etaSW:75,feedNG:6.5,feedCl:7.2,elec:.29,hold:5,dBorL:.1,dSecL:3.94,dBorN:.05,dSecN:.25,
+ sea:20,elz:60,pEl:140,pV:553,pNG:13,pN:700,pH:6,MMBTU:1055.056};
+
+/* per-cargo line items: {s:stage,k:key,kwh,q,unit,price,pu,calc}; USD = q*price */
+B.port=1.25;B.avail=90;B.borN=0.15;
+function chains(){
+  const b=B,kV=b.lhvV/3.6,kH=b.lhvH/3.6,kN=b.lhvN/3.6;
+  const cargoL=b.vol*b.rhoL, cargoN=b.vol*b.rhoN, h2InN=cargoN/b.stoich;
+  const invL=b.tank*b.rhoL, invN=b.tank*b.rhoN;
+  const bogD=cargoL*b.borL/100, vlsfoD=b.dutyL-Math.min(bogD,b.dutyL*1000*b.lhvV/b.lhvH)*b.lhvH/b.lhvV/1000;
+  const nh3D=b.dutyN*b.shareN/100*b.lhvV/b.lhvN, pilotD=b.dutyN*(1-b.shareN/100);
+  const pumpL=(1/b.rhoL)*b.sendP*1e5/(b.etaP/100)/3.6e6, swKg=b.duty*1000/(b.cp*b.dT);
+  const pumpSW=swKg*9.81*b.head/(b.etaSW/100)/3.6e6, tankL=(1-Math.pow(1-b.dBorL/100,b.hold))*b.dSecL;
+  const tankN=cargoN*(1-Math.pow(1-b.dBorN/100,b.hold))*b.dSecN;
+  const el=(s,k,kwh,calc)=>({s,k,kwh,q:kwh/1000,unit:"MWh",price:b.pEl,pu:"USD/MWh",calc});
+  const out=[];
+  {const bog=bogD*b.sea, del=cargoL-bog, vt=vlsfoD*b.sea;
+   out.push({name:"LH₂",ship:"boil-off fuel",del,items:[
+    el("el","Electrolysis",cargoL*b.elz,`${f(cargoL)} kg H₂ per cargo (${f(b.vol)} m³ × ${b.rhoL} kg/m³) × ${b.elz} kWh/kg`),
+    el("up","Liquefaction / Haber-Bosch",cargoL*b.secL,`${f(cargoL)} kg H₂ per cargo × ${b.secL} kWh/kg (liquefaction)`),
+    el("up","Export-tank reliq",invL*b.borTL/100*b.days*b.rlqL,`${f(invL)} kg × ${b.borTL} %/d × ${b.days} d × ${b.rlqL} kWh/kg`),
+    {s:"ship",k:"VLSFO",kwh:vt*1000*kV,q:vt,unit:"t",price:b.pV,pu:"USD/t",calc:`${f(vlsfoD,3)} t/d × ${b.sea} d = ${f(vt,1)} t; × ${b.lhvV} MJ/kg ÷ 3.6`},
+    {s:"ship",k:"Cargo H₂ boil-off",kwh:bog*kH,q:bog,unit:"kg",price:b.pH,pu:"USD/kg",calc:`${f(bogD)} kg/d × ${b.sea} d = ${f(bog)} kg; × ${b.lhvH} MJ/kg ÷ 3.6`},
+    el("down","Regas pumps",(pumpL+pumpSW)*del,`(${f(pumpL,4)} + ${f(pumpSW,4)}) kWh/kg × ${f(del)} kg delivered`),
+    el("down","Import-tank reliq",tankL*del,`${f(tankL,4)} kWh/kg × ${f(del)} kg delivered`)]});}
+  const nh=(name,feed,ng,vo)=>{
+    const nT=nh3D*b.sea, vt=(vo?b.dutyN:pilotD)*b.sea, h2=cargoN/feed;
+    const cr=(feed-b.stoich)*h2, ngE=ng?(b.feedCl-feed)*h2:0;
+    return {name,ship:vo?"VLSFO-only ship":"dual-fuel ship",del:h2,items:[
+    el("el","Electrolysis",h2InN*b.elz,`${f(h2InN)} kg H₂ (= ${f(cargoN)} kg NH₃ ÷ ${b.stoich}) × ${b.elz} kWh/kg`),
+    el("up","Liquefaction / Haber-Bosch",h2InN*b.secN,`${f(h2InN)} kg H₂ × ${b.secN} kWh/kg (Haber-Bosch)`),
+    el("up","Export-tank reliq",invN*b.borTN/100*b.days*b.rlqN,`${f(invN)} kg × ${b.borTN} %/d × ${b.days} d × ${b.rlqN} kWh/kg`),
+    {s:"ship",k:"VLSFO",kwh:vt*1000*kV,q:vt,unit:"t",price:b.pV,pu:"USD/t",calc:vo?`${b.dutyN} t/d × ${b.sea} d = ${f(vt,1)} t; × ${b.lhvV} MJ/kg ÷ 3.6`:`pilot ${f(pilotD,2)} t/d × ${b.sea} d = ${f(vt,1)} t; × ${b.lhvV} MJ/kg ÷ 3.6`},
+    ...(vo?[]:[{s:"ship",k:"Ammonia fuel",kwh:nT*1000*kN,q:nT,unit:"t",price:b.pN,pu:"USD/t",calc:`${f(nh3D,2)} t/d × ${b.sea} d = ${f(nT,1)} t NH₃; × ${b.lhvN} MJ/kg ÷ 3.6`}]),
+    {s:"down",k:"NH₃ burned in cracker",kwh:cr*kN,q:cr/1000,unit:"t",price:b.pN,pu:"USD/t",calc:`(${feed} − ${b.stoich}) kg NH₃/kg H₂ × ${f(h2)} kg H₂ delivered; × ${b.lhvN} MJ/kg ÷ 3.6`},
+    {s:"down",k:"Natural gas",kwh:ngE*kN,q:ngE*b.lhvN/b.MMBTU,unit:"MMBtu",price:b.pNG,pu:"USD/MMBtu",calc:ng?`(${b.feedCl} − ${feed}) kg-eq/kg H₂ × ${f(h2)} kg; × ${b.lhvN} MJ/kg ÷ 3.6`:"not used in clean-fuel mode"},
+    el("down","Cracker electricity",b.elec*h2,`${b.elec} kWh/kg × ${f(h2)} kg H₂ delivered`),
+    el("down","Import-tank reliq",tankN,`${f(cargoN)} kg × (1 − (1 − ${b.dBorN} %)^${b.hold} d) × ${b.dSecN} kWh/kg`)]};};
+  out.regas={pumpL,pumpSW,tankL};
+  out.push(nh("NH₃ NG-fired",b.feedNG,true,false),nh("NH₃ clean fuel",b.feedCl,false,false),nh("NH₃ NG-fired",b.feedNG,true,true),nh("NH₃ clean fuel",b.feedCl,false,true));
+  return out;
+}
+
+const STG=[["el","Electrolysis","var(--el)"],["up","Upstream plant","var(--up)"],["ship","Shipping","var(--ship)"],["down","Downstream","var(--down)"]];
+const KEYC={"Electrolysis":"var(--k5)","Liquefaction / Haber-Bosch":"var(--k1)","Export-tank reliq":"var(--k6)",
+ "VLSFO":"var(--k2)","Ammonia fuel":"var(--k3)","Cargo H₂ boil-off":"var(--k4)",
+ "Regas pumps":"var(--k1)","NH₃ burned in cracker":"var(--k3)","Natural gas":"var(--k4)","Cracker electricity":"var(--k1)","Import-tank reliq":"var(--pu)"};
+const tip=$("tip");
+
+function hbars(svg,bars,o){
+  const W=560,ml=132,mr=74,bh=34,gap=16,mt=6,mb=30,H=mt+mb+bars.length*(bh+gap);
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  const max=Math.max(...bars.map(b=>b.tot))*1.02||1, X=v=>ml+v/max*(W-ml-mr);
+  let h="";
+  const step=(()=>{const r=max/4,m=Math.pow(10,Math.floor(Math.log10(r)));return [1,2,2.5,5,10].map(s=>s*m).find(s=>s>=r)})();
+  for(let v=0;v<=max;v+=step)h+=`<line class="gl" x1="${X(v)}" x2="${X(v)}" y1="${mt}" y2="${H-mb}"/><text x="${X(v)}" y="${H-mb+15}" text-anchor="middle">${f(v,step<1?1:0)}</text>`;
+  bars.forEach((b,i)=>{const y=mt+gap/2+i*(bh+gap);
+    h+=o.sub&&b.sub?`<text class="nm" x="${ml-8}" y="${y+bh/2-1}" text-anchor="end">${b.name}</text><text x="${ml-8}" y="${y+bh/2+12}" text-anchor="end" style="font-size:10.5px">${b.sub}</text>`:`<text class="nm" x="${ml-8}" y="${y+bh/2+4}" text-anchor="end">${b.name}</text>`;
+    let x=0;const segs=b.segs.filter(s=>s.v>0);
+    segs.forEach((s,j)=>{const x0=X(x),w=X(x+s.v)-x0,last=j===segs.length-1;
+      h+=`<rect data-b="${i}" data-s="${b.segs.indexOf(s)}" x="${x0}" y="${y}" width="${Math.max(w-(last?0:2),.8)}" height="${bh}" fill="${s.c}" rx="${last?3:0}"/>`;
+      if(w>46)h+=`<text class="in" x="${x0+w/2}" y="${y+bh/2+4}" text-anchor="middle" pointer-events="none">${fv(s.v)}</text>`;
+      x+=s.v});
+    h+=`<text class="tot" x="${X(b.tot)+7}" y="${y+bh/2+4}">${fv(b.tot)}</text>`;});
+  svg.innerHTML=h;
+  svg.querySelectorAll("rect[data-b]").forEach(r=>{
+    const mv=ev=>{const b=bars[+r.dataset.b],s=b.segs[+r.dataset.s];
+      tip.innerHTML=`<b>${b.name}</b><br>${s.k}: <b>${fv(s.v)}</b> ${o.unit}<br>Total: <b>${fv(b.tot)}</b> ${o.unit}`;
+      tip.hidden=false;tip.style.left=Math.min(ev.clientX+14,innerWidth-tip.offsetWidth-8)+"px";tip.style.top=(ev.clientY+14)+"px"};
+    r.addEventListener("pointermove",mv);r.addEventListener("pointerleave",()=>tip.hidden=true)});
+}
+const legend=(id,items)=>$(id).innerHTML=items.map(([t,c])=>`<span><i style="background:${c}"></i>${t}</span>`).join("");
+const asOpen={};
+document.addEventListener("toggle",e=>{const d=e.target;if(d.dataset&&d.dataset.as)asOpen[d.dataset.as]=d.open},true);
+function wrapAs(id){const el=$(id),t=el.querySelector("h3").textContent,ag=el.querySelector(".ag").outerHTML;
+  el.innerHTML=`<details class="asd" data-as="${id}" ${asOpen[id]?"open":""}><summary>${t}</summary>${ag}</details>`}
+function niceTicks(lo,hi,n=5){const span=hi-lo||1,st0=span/n,mag=Math.pow(10,Math.floor(Math.log10(st0)));const st=[1,2,2.5,5,10].map(x=>x*mag).find(x=>span/x<=n)||mag*10;const out=[];for(let v=Math.ceil(lo/st-1e-9)*st;v<=hi+st*1e-6;v+=st)out.push(+v.toFixed(10));return out}
+const NS="http://www.w3.org/2000/svg";
+function lineChart(svg,o){
+  const W=720,H=o.h||300,m={l:62,r:18,t:16,b:44};svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  const X=v=>m.l+(v-o.x0)/(o.x1-o.x0)*(W-m.l-m.r),Y=v=>H-m.b-(v-o.y0)/(o.y1-o.y0)*(H-m.t-m.b);
+  let h="";
+  niceTicks(o.y0,o.y1,5).forEach(v=>h+=`<line class="gl" x1="${m.l}" x2="${W-m.r}" y1="${Y(v)}" y2="${Y(v)}"/><text x="${m.l-8}" y="${Y(v)+4}" text-anchor="end">${o.yf(v)}</text>`);
+  niceTicks(o.x0,o.x1,o.xn||6).forEach(v=>h+=`<text x="${X(v)}" y="${H-m.b+17}" text-anchor="middle">${o.xf(v)}</text>`);
+  h+=`<line x1="${m.l}" x2="${W-m.r}" y1="${H-m.b}" y2="${H-m.b}" stroke="var(--muted)"/>`;
+  h+=`<text x="${(m.l+W-m.r)/2}" y="${H-6}" text-anchor="middle">${o.xlabel}</text><text transform="rotate(-90 14 ${(m.t+H-m.b)/2})" x="14" y="${(m.t+H-m.b)/2}" text-anchor="middle">${o.ylabel}</text>`;
+  h+=`<defs><clipPath id="cp${o.id}"><rect x="${m.l}" y="${m.t}" width="${W-m.l-m.r}" height="${H-m.t-m.b}"/></clipPath></defs><g clip-path="url(#cp${o.id})">`;
+  (o.areas||[]).forEach(a=>{let d="";a.xs.forEach((x,i)=>d+=(i?"L":"M")+X(x)+","+Y(a.top[i]));for(let i=a.xs.length-1;i>=0;i--)d+="L"+X(a.xs[i])+","+Y(a.bot[i]);h+=`<path d="${d}Z" fill="${a.fill}"/>`});
+  (o.vlines||[]).forEach(v=>h+=`<line x1="${X(v.x)}" x2="${X(v.x)}" y1="${m.t}" y2="${H-m.b}" stroke="${v.color}" stroke-dasharray="${v.dash||"3 3"}"/>`);
+  o.series.forEach(s=>{let d="";s.xs.forEach((x,i)=>d+=(i?"L":"M")+X(x).toFixed(1)+","+Y(s.ys[i]).toFixed(1));h+=`<path d="${d}" fill="none" stroke="${s.color}" stroke-width="${s.w||2.5}" stroke-dasharray="${s.dash||""}" stroke-linejoin="round"/>`});
+  h+=`</g>`;
+  (o.vlabels||[]).forEach(v=>h+=`<text x="${X(v.x)+(v.anchor==="end"?-6:6)}" y="${m.t+12+(v.dy||0)}" text-anchor="${v.anchor||"start"}">${v.text}</text>`);
+  (o.points||[]).forEach(pt=>{h+=`<circle cx="${X(pt.x)}" cy="${Y(pt.y)}" r="5" fill="${pt.color}" stroke="var(--surface)" stroke-width="2"/>`;
+    [].concat(pt.label||[]).forEach((L,i)=>h+=`<text class="${i?"":"nm"}" x="${X(pt.x)+(pt.anchor==="end"?-10:10)}" y="${Y(pt.y)+(pt.dy??-10)+i*15}" text-anchor="${pt.anchor||"start"}">${L}</text>`)});
+  h+=`<line id="hl${o.id}" y1="${m.t}" y2="${H-m.b}" stroke="var(--ink2)" visibility="hidden"/><rect id="ht${o.id}" x="${m.l}" y="${m.t}" width="${W-m.l-m.r}" height="${H-m.t-m.b}" fill="transparent"/>`;
+  svg.innerHTML=h;
+  const hl=svg.querySelector("#hl"+o.id),ht=svg.querySelector("#ht"+o.id);
+  ht.addEventListener("pointermove",ev=>{const r=svg.getBoundingClientRect();let xv=o.x0+((ev.clientX-r.left)/r.width*W-m.l)/(W-m.l-m.r)*(o.x1-o.x0);xv=Math.max(o.x0,Math.min(o.x1,xv));
+    hl.setAttribute("x1",X(xv));hl.setAttribute("x2",X(xv));hl.setAttribute("visibility","visible");tip.innerHTML=o.tip(xv);tip.hidden=false;
+    tip.style.left=Math.min(ev.clientX+14,innerWidth-tip.offsetWidth-8)+"px";tip.style.top=(ev.clientY+14)+"px"});
+  ht.addEventListener("pointerleave",()=>{tip.hidden=true;hl.setAttribute("visibility","hidden")});
+}
+const li=(k,v)=>`<li><span>${k}</span><b>${v}</b></li>`;
+const grp=(t,rows)=>`<div><h4>${t}</h4><ul>${rows.join("")}</ul></div>`;
+
+function render(){
+  const b=B, kt=Math.max(parseFloat($("kt").value)||0,0), T=kt*1e6, GWh=1e6;
+  const CH=chains(), RG=CH.regas;
+  const CA=CH.map(c=>{const n=T/c.del;c.n=n;
+    c.items=c.items.map(x=>({...x,E:x.kwh*n/GWh,U:x.q*x.price*n/1e6,Ec:x.kwh/c.del}));
+    c.tE=c.items.reduce((a,x)=>a+x.E,0);c.tU=c.items.reduce((a,x)=>a+x.U,0);
+    c.st=Object.fromEntries(STG.map(([s])=>[s,{E:0,U:0}]));c.items.forEach(x=>{c.st[x.s].E+=x.E;c.st[x.s].U+=x.U});return c});
+  const C=CA.slice(0,3);
+  const cargoL=b.vol*b.rhoL, cargoN=b.vol*b.rhoN;
+
+  const mkStage=(stage,pick,A=C)=>{const keys=[];A.forEach(c=>c.items.filter(x=>x.s===stage&&x[pick]>0).forEach(x=>{if(!keys.includes(x.k))keys.push(x.k)}));
+    return {keys,bars:A.map(c=>{const segs=keys.map(k=>({k,c:KEYC[k],v:c.items.filter(x=>x.k===k&&x.s===stage).reduce((a,x)=>a+x[pick],0)}));return {name:c.name,sub:c.ship,segs,tot:segs.reduce((a,z)=>a+z.v,0)}})}};
+
+  /* upstream */
+  {const E=mkStage("up","E"),U=mkStage("up","U");
+   legend("lg-up",E.keys.map(k=>[k,KEYC[k]]));
+   hbars($("e-up"),E.bars,{unit:"GWh/y"});hbars($("c-up"),U.bars,{unit:"USD M/y"});
+   const [L,N1,N2]=E.bars,[LU,NU1,NU2]=U.bars;
+   $("takeUp").innerHTML=`At ${f(kt,0)} ktpa, LH₂ upstream takes <b>${f(L.tot,0)} GWh/y</b> and <b>USD ${f(LU.tot,0)} M/y</b>; NH₃ takes <b>${f(N1.tot,0)}–${f(N2.tot,0)} GWh/y</b> and <b>USD ${f(NU1.tot,0)}–${f(NU2.tot,0)} M/y</b>. Liquefaction is about <b>${f(L.tot/N1.tot,1)}×</b> Haber-Bosch in energy (vs the NG-fired NH₃ chain); export-tank reliquefaction is under ${f(Math.max(...E.bars.map(x=>x.segs[1].v/x.tot))*100,1)} % of either.`;
+   $("asUp").innerHTML=`<h3>Upstream energy cost assumptions</h3><div class="ag">`+
+    grp("Cargo",[li("Vessel size, both",f(b.vol)+" m³"),li("LH₂ cargo",`${f(cargoL/1000)} t H₂ (${b.rhoL} kg/m³)`),li("NH₃ cargo",`${f(cargoN/1000)} t NH₃ (${b.rhoN} kg/m³)`),li("NH₃ per kg H₂",b.stoich+" kg")])+
+    grp("Plant energy",[li("Liquefaction",b.secL+" kWh/kg H₂"),li("Haber-Bosch",b.secN+" kWh/kg H₂"),li("Export tank, full",f(b.tank)+" m³"),li("Storage per cargo",b.days+" days"),li("Tank boil-off LH₂ / NH₃",`${b.borTL} / ${b.borTN} %/d`),li("Reliq LH₂ / NH₃",`${b.rlqL} / ${b.rlqN} kWh/kg`)])+
+    grp("Price",[li("Electricity (upstream)",`USD ${b.pEl}/MWh`),li("Liquefaction cost",`USD ${f(b.secL*b.pEl/1000,2)}/kg H₂`),li("Haber-Bosch cost",`USD ${f(b.secN*b.pEl/1000,2)}/kg H₂`)])+`</div>`;wrapAs("asUp");
+   const [,g1,g2]=C;
+   $("takeNG").innerHTML=`<b>Why NH₃ NG-fired uses less energy than clean fuel.</b> The cracker consumes ${b.feedNG} kg NH₃ per kg H₂ when NG-fired against ${b.feedCl} when clean-fuel (stoichiometric minimum ${b.stoich}). Clean fuel burns the extra ${f(b.feedCl-b.feedNG,1)} kg of ammonia instead of natural gas, so the same ${f(cargoN/1000)} t cargo yields ${f(g2.del/1000)} t H₂ instead of ${f(g1.del/1000)} t. For ${f(kt,0)} ktpa that needs ${f(g2.n,1)} cargoes a year against ${f(g1.n,1)}, and more hydrogen to electrolyse and synthesise: upstream ${f(g2.st.up.E,0)} vs ${f(g1.st.up.E,0)} GWh/y, whole chain ${f(g2.tE,0)} vs ${f(g1.tE,0)} GWh/y. It is the feed ratio ${b.feedCl} ÷ ${b.feedNG} = ${f(b.feedCl/b.feedNG,3)}, not a more efficient process.`;
+   /* chart 7B */
+   const cL=C[0], rlL=cL.items.find(x=>x.s==="up"&&x.k==="Export-tank reliq").kwh;
+   const LH=sec=>(sec*cargoL+rlL)*cL.n/1e6, P1=g1.st.up.E, P2=g2.st.up.E;
+   const par=P1*1e6/(cL.n*cargoL)-rlL/cargoL, MINP=3.9, MINN=3.3;
+   const xs=[];for(let v=0;v<=10+1e-9;v+=0.05)xs.push(+v.toFixed(2));
+   const ymax=Math.max(LH(10),P2)*1.08;
+   legend("lg-7b",[["LH₂ route: liquefaction + tank reliq","var(--up)"],["NH₃ NG-fired: Haber-Bosch + tank reliq","var(--ship)"],["NH₃ clean fuel","var(--ship)"],["Below minimum work (unreachable)","var(--grid)"]]);
+   lineChart($("c7b"),{id:"7b",x0:0,x1:10,y0:0,y1:ymax,xlabel:"Liquefaction SEC, kWh per kg H₂",ylabel:"Upstream energy, GWh/y",xf:v=>v,yf:v=>f(v,0),
+     areas:[{xs:[0,MINP],top:[ymax,ymax],bot:[0,0],fill:"var(--grid)"}],
+     series:[{xs,ys:xs.map(()=>P1),color:"var(--ship)"},{xs,ys:xs.map(()=>P2),color:"var(--ship)",dash:"6 5",w:2},{xs,ys:xs.map(LH),color:"var(--up)"}],
+     vlines:[{x:MINN,color:"var(--muted)"},{x:MINP,color:"var(--muted)"}],
+     vlabels:[{x:MINN,text:"3.3 normal-H₂",anchor:"end"},{x:MINP,text:"3.9 para-H₂ minimum"}],
+     points:[{x:b.secL,y:LH(b.secL),color:"var(--up)",label:[`Used here ${b.secL} kWh/kg`,`${f(LH(b.secL),0)} GWh/y`],anchor:"end",dy:-12},
+             ...(par>=0&&par<=10?[{x:par,y:P1,color:"var(--ink)",label:[`Parity ${f(par,2)} kWh/kg`],dy:-12}]:[])],
+     tip:v=>`<b>SEC ${f(v,2)} kWh/kg</b>${v<MINP?", unreachable":""}<br>LH₂ route: <b>${f(LH(v),0)}</b> GWh/y<br>NH₃ NG-fired: <b>${f(P1,0)}</b> GWh/y<br>NH₃ clean fuel: <b>${f(P2,0)}</b> GWh/y`});
+   $("take7b").innerHTML=par<MINP?`A liquefier would need <b>${f(par,2)} kWh/kg</b> to match Haber-Bosch, below the ${MINP} kWh/kg thermodynamic minimum. <b>Parity is unreachable</b>: even a perfect liquefier uses more upstream energy than Haber-Bosch.`:`A liquefier at <b>${f(par,2)} kWh/kg</b> would match Haber-Bosch, above the ${MINP} kWh/kg minimum, so parity is physically possible.`;
+   $("t7b").innerHTML=[["Parity liquefaction SEC",`${f(par,2)} <small>kWh/kg H₂</small>`,"equal upstream energy to NH₃ NG-fired"],["Minimum possible (para-H₂)",`${MINP} <small>kWh/kg</small>`,`normal-H₂ ${MINN} kWh/kg`],["Gap to the minimum",`${f(MINP-par,2)} <small>kWh/kg</small>`,par<MINP?"a perfect liquefier still uses more":"parity is above the floor"],["Liquefier used here",`${b.secL} <small>kWh/kg</small>`,`${f(MINP/b.secL*100,0)} % of ideal (para basis)`]].map(([k,v,n])=>`<div class="tile"><div class="k">${k}</div><div class="v">${v}</div><div class="n">${n}</div></div>`).join("");}
+
+  /* shipping */
+  {const E=mkStage("ship","Ec",CA),U=mkStage("ship","U",CA);
+   legend("lg-ship",E.keys.map(k=>[k,KEYC[k]]));
+   hbars($("e-ship"),E.bars,{unit:"kWh/kg H₂",sub:1});hbars($("c-ship"),U.bars,{unit:"USD M/y",sub:1});
+   const rt=2*b.sea+2*b.port, vps=365*b.avail/100/rt;
+   $("asShip").innerHTML=`<h3>Shipping assumptions</h3><div class="ag">`+
+    grp("Vessel (both carriers)",[li("Capacity",f(b.vol)+" m³"),li("LH₂ cargo",`${f(cargoL/1000)} t at ${b.rhoL} kg/m³`),li("NH₃ cargo",`${f(cargoN/1000)} t at ${b.rhoN} kg/m³`),li("Fill","100 %"),li("Fleet availability",b.avail+" %")])+
+    grp("Voyage",[li("Laden sea days",b.sea+" d"),li("Port days per call",b.port+" d"),li("Round trip",f(rt,1)+" d"),li("Voyages per ship per year",f(vps,2)),li("Ballast leg","not charged"),li("Distance / speed","not an input")])+
+    grp("Fuel",[li("LH₂ boil-off",`${b.borL.toFixed(2)} %/d, burned`),li("LH₂ fuel demand",`${b.dutyL} t/d VLSFO-eq`),li("NH₃ boil-off",`${b.borN.toFixed(2)} %/d, reliquefied`),li("NH₃ fuel demand",`${b.dutyN} t/d VLSFO-eq`),li("NH₃ / VLSFO pilot",`${b.shareN} / ${100-b.shareN} % energy`),li("NH₃ fuel source","bunkered"),li("VLSFO-only variant",`${b.dutyN} t/d VLSFO, no NH₃ fuel`)])+
+    grp("Price and LHV",[li("VLSFO",`USD ${b.pV}/t, ${b.lhvV} MJ/kg`),li("Ammonia",`USD ${b.pN}/t, ${b.lhvN} MJ/kg`),li("H₂ boil-off",`USD ${b.pH}/kg, ${b.lhvH} MJ/kg`)])+`</div>`;
+   wrapAs("asShip");
+   $("tShip").innerHTML=`<thead><tr><th>Per vessel</th><th>H₂ delivered per cargo, t</th><th>Voyage fuel energy, MWh</th><th>kWh/kg H₂ delivered</th><th>Cargoes per year</th><th>Ships needed</th></tr></thead><tbody>`+
+    CA.map((c,i)=>{const sh=c.items.filter(x=>x.s==="ship").reduce((a,x)=>a+x.kwh,0);return `<tr><td>${c.name}, ${c.ship}</td><td>${f(c.del/1000,0)}</td><td>${f(sh/1000,0)}</td><td><b>${f(sh/c.del,2)}</b></td><td>${f(c.n,1)}</td><td>${f(Math.ceil(c.n/vps-1e-9))}</td></tr>`}).join("")+"</tbody>";
+   $("nShip").textContent=`One laden voyage of ${b.sea} days. Ships needed = cargoes per year ÷ ${f(vps,2)} voyages per ship per year, rounded up. No corridor is fixed, so the voyage length is the sea-day input rather than a distance. The VLSFO-only ships burn the same fuel energy per day as the dual-fuel ships, so their energy is identical and only the cost changes: at these prices VLSFO costs USD ${f(b.pV/b.lhvV,1)} per GJ against USD ${f(b.pN/b.lhvN,1)} per GJ for ammonia fuel.`;}
+
+  /* chart 1: boil-off vs fuel demand */
+  {const hCap=b.dutyL*1000*b.lhvV/b.lhvH, bogOf=r=>cargoL*r/100, star=hCap/cargoL*100;
+   const xs=[];for(let v=0.1;v<=0.7+1e-9;v+=0.005)xs.push(+v.toFixed(3));
+   const bogs=xs.map(bogOf), cap=xs.map(()=>hCap), cur=bogOf(b.borL), surplus=Math.max(0,cur-hCap);
+   const vl=b.dutyL-Math.min(cur,hCap)*b.lhvH/b.lhvV/1000;
+   const ymax=Math.max(...bogs)*1.08;
+   legend("lg-1",[["H₂ boil-off available","var(--up)"],["H₂ the engine can burn (whole fuel demand)","var(--muted)"],["Surplus: GCU or vent","var(--up)"]]);
+   lineChart($("c1"),{id:"1",h:320,x0:0.1,x1:0.7,y0:0,y1:ymax,xlabel:"LH₂ voyage boil-off rate, %/day",ylabel:"H₂, kg/day",xf:v=>v.toFixed(1),yf:v=>f(v/1000,0)+"k",
+     areas:[{xs,top:bogs.map((v,i)=>Math.max(v,cap[i])),bot:cap,fill:"color-mix(in srgb, var(--up) 18%, transparent)"}],
+     series:[{xs,ys:cap,color:"var(--muted)",dash:"6 5",w:1.6},{xs,ys:bogs,color:"var(--up)"}],
+     vlines:[{x:star,color:"var(--up)"}],
+     points:[{x:star,y:hCap,color:"var(--up)",label:[`Crossover ${f(star,3)} %/d`,`${f(hCap,0)} kg/d H₂`],anchor:"end",dy:-26},
+             {x:b.borL,y:cur,color:"var(--ink)",label:[`Used here ${b.borL.toFixed(2)} %/d`,surplus>0?`${f(surplus,0)} kg/d surplus`:`${f(hCap-cur,0)} kg/d short`],anchor:"end",dy:24}],
+     tip:r=>`<b>${r.toFixed(3)} %/day</b><br>Boil-off: <b>${f(bogOf(r),0)}</b> kg/d<br>Engine can burn: <b>${f(hCap,0)}</b> kg/d<br>${bogOf(r)>hCap?"Surplus":"Shortfall"}: <b>${f(Math.abs(bogOf(r)-hCap),0)}</b> kg/d`});
+   $("take1").innerHTML=`Boil-off covers the whole fuel demand above <b>${f(star,3)} %/day</b>. At the ${b.borL.toFixed(2)} %/day used here it is <b>${f(cur,0)} kg/d</b>, ${f(cur/hCap*100,0)} % of the ${f(hCap,0)} kg/d the engine can burn, so there is ${surplus>0?"a surplus":"no surplus"} and the LH₂ ship still buys <b>${f(vl,2)} t/d</b> of VLSFO (of ${b.dutyL} t/d).`;
+   $("t1").innerHTML=[["Crossover boil-off rate",`${f(star,3)} <small>%/day</small>`,"below it the ship buys VLSFO"],[`Boil-off at ${b.borL.toFixed(2)} %/day`,`${f(cur,0)} <small>kg/d</small>`,`${f(cur/hCap*100,0)} % of what the engine can burn`],["VLSFO still bought",`${f(vl,2)} <small>t/d</small>`,`of ${b.dutyL} t/d demand`],["Surplus H₂",`${f(surplus,0)} <small>kg/d</small>`,surplus>0?"lost to GCU or vent":"none at this rate"]].map(([k,v,n])=>`<div class="tile"><div class="k">${k}</div><div class="v">${v}</div><div class="n">${n}</div></div>`).join("");}
+
+  /* downstream: energy only */
+  {const E=mkStage("down","E");legend("lg-down",E.keys.map(k=>[k,KEYC[k]]));hbars($("e-down"),E.bars,{unit:"GWh/y"});
+   const L=C[0], k=L.del*L.n/GWh;
+   const segs=[{k:"LH₂ send-out pump",c:"var(--k1)",v:RG.pumpL*k},{k:"Seawater pump",c:"var(--k4)",v:RG.pumpSW*k},{k:"Import-tank reliq",c:"var(--pu)",v:RG.tankL*k}];
+   const tot=segs.reduce((a,z)=>a+z.v,0);
+   legend("lg-regas",segs.map(z=>[z.k,z.c]));
+   hbars($("e-regas"),[{name:"LH₂ regas",segs,tot}],{unit:"GWh/y"});
+   $("nRegas").textContent=`LH₂ regas needs ${f(tot,1)} GWh/y, all of it electricity: ${f(tot*1e6/(L.del*L.n),3)} kWh/kg H₂ delivered, against ${f(C[1].st.down.E*1e6/T,1)} kWh/kg for NH₃ NG-fired cracking. The ORV heat comes from ambient seawater, so only the pumps and tank reliquefaction are purchased energy.`;}
+
+  /* summary */
+  legend("lg-sum",STG.map(([,t,c])=>[t,c]));
+  const mkS=pick=>CA.map(c=>{const segs=STG.map(([s,t,col])=>({k:t,c:col,v:c.st[s][pick]}));return {name:c.name,sub:c.ship,segs,tot:segs.reduce((a,z)=>a+z.v,0)}});
+  hbars($("e-sum"),mkS("E"),{unit:"GWh/y",sub:1});hbars($("c-sum"),mkS("U"),{unit:"USD M/y",sub:1});
+  const nm=c=>c.name+" ("+c.ship+")", lo=CA.reduce((a,c)=>c.tE<a.tE?c:a), loU=CA.reduce((a,c)=>c.tU<a.tU?c:a);
+  $("sumTitle").textContent=`At ${f(kt,0)} ktpa, ${nm(lo)} uses the least energy (${f(lo.tE,0)} GWh/y) and ${nm(loU)} the lowest energy cost (USD ${f(loU.tU,0)} M/y)`;
+  const tbl=(id,pick,unit,d)=>$(id).innerHTML=`<thead><tr><th>${unit}</th>${STG.map(s=>`<th>${s[1]}</th>`).join("")}<th>Total</th><th>${pick==="E"?"kWh/kg H₂":"USD/kg H₂"}</th></tr></thead><tbody>`+
+    CA.map(c=>`<tr><td>${c.name}, ${c.ship}</td>${STG.map(([s])=>`<td>${f(c.st[s][pick],d)}</td>`).join("")}<td><b>${f(pick==="E"?c.tE:c.tU,d)}</b></td><td>${f((pick==="E"?c.tE*1e6:c.tU*1e6)/Math.max(T,1e-9),2)}</td></tr>`).join("")+"</tbody>";
+  tbl("tE","E","Energy, GWh/y",0);tbl("tC","U","Energy cost, USD M/y",1);
+
+  $("asSum").innerHTML=`<h3>Energy cost assumptions</h3><div class="ag">`+
+    grp("Prices",[li("Electricity, upstream",`USD ${b.pEl}/MWh`),li("Electricity, import terminal",`USD ${b.pEl}/MWh (set = upstream)`),li("VLSFO",`USD ${b.pV}/t`),li("Ammonia",`USD ${b.pN}/t`),li("Natural gas",`USD ${b.pNG}/MMBtu on LHV`),li("H₂ boil-off (LH₂ ship)",`USD ${b.pH}/kg`)])+
+    grp("Energy basis",[li("Electrolyser",b.elz+" kWh/kg H₂"),li("LHV H₂ / NH₃ / VLSFO",`${b.lhvH} / ${b.lhvN} / ${b.lhvV} MJ/kg`),li("Gas conversion",f(b.MMBTU,3)+" MJ/MMBtu"),li("Cracker NH₃ feed NG / clean",`${b.feedNG} / ${b.feedCl} kg/kg H₂`),li("Cracker electricity",b.elec+" kWh/kg H₂"),li("Sea days, laden",b.sea+" d")])+
+    grp("Scope",[li("Charged","power, ship fuel, cracker NH₃ and gas, boil-off"),li("Electrolysis","power cost only"),li("Not charged","charter, CapEx, OpEx, carbon, port fees"),li("Price year","none stated")])+`</div>`;
+  wrapAs("asSum");
+
+
+  /* liquefier maturity outlook */
+  {const k=cargoL*C[0].n/GWh, kU=k*b.pEl/1000;           // GWh/y and USD M/y per 1 kWh/kg of liquefier SEC
+   const lh=sec=>({E:C[0].tE-(b.secL-sec)*k,U:C[0].tU-(b.secL-sec)*kU});
+   const NH=CA.slice(1), bE=NH.reduce((a,c)=>c.tE<a.tE?c:a), bU=NH.reduce((a,c)=>c.tU<a.tU?c:a);
+   const MIL=[{y:"2026",t:2026,sec:9,who:"Current",src:"Liquefier today"},{y:"2030",t:2030,sec:7.5,who:"Air Liquide",src:"Air Liquide expectation"},{y:"2035–2040",t:2037.5,t0:2035,t1:2040,sec:6,who:"KHI",src:"KHI expectation"}];
+   const W=720,H=135,x0=44,x1=W-44,Xy=y=>x0+(y-2025)/(2041-2025)*(x1-x0),ay=92;
+   let h=`<line x1="${x0}" x2="${x1}" y1="${ay}" y2="${ay}" stroke="var(--rule)" stroke-width="3" stroke-linecap="round"/>`;
+   [2026,2030,2035,2040].forEach(y=>h+=`<line x1="${Xy(y)}" x2="${Xy(y)}" y1="${ay+8}" y2="${ay+14}" stroke="var(--muted)"/><text x="${Xy(y)}" y="${ay+28}" text-anchor="middle">${y}</text>`);
+   h+=`<line x1="${Xy(2026)}" x2="${Xy(2030)}" y1="${ay}" y2="${ay}" stroke="var(--purple)" stroke-width="3"/>`;
+   h+=`<rect x="${Xy(2035)}" y="${ay-9}" width="${Xy(2040)-Xy(2035)}" height="18" rx="9" fill="var(--purple)"/>`;
+   h+=`<text x="${(Xy(2026)+Xy(2030))/2}" y="${ay-8}" text-anchor="middle" style="font-size:10.5px">−${f(9-7.5,1)} kWh/kg</text>`;
+   h+=`<text x="${(Xy(2030)+Xy(2035))/2}" y="${ay-8}" text-anchor="middle" style="font-size:10.5px">−${f(7.5-6,1)} kWh/kg</text>`;
+   h+=`<circle cx="${Xy(2026)}" cy="${ay}" r="9" fill="var(--purple)" stroke="var(--surface)" stroke-width="3"/><circle cx="${Xy(2030)}" cy="${ay}" r="9" fill="var(--purple)" stroke="var(--surface)" stroke-width="3"/>`;
+   MIL.forEach(m=>{const cx=m.t0?(Xy(m.t0)+Xy(m.t1))/2:Xy(m.t);h+=`<text class="nm" x="${cx}" y="${ay-46}" text-anchor="middle" style="font-size:15px">${m.sec} kWh/kg</text><text x="${cx}" y="${ay-30}" text-anchor="middle">${m.who}</text>`});
+   $("tl").setAttribute("viewBox",`0 0 ${W} ${H}`);$("tl").innerHTML=h;
+   const pill=(d,unit)=>d<=0?`<span class="pill good">▼ lower</span>`:`<span class="pill warn">▲ higher</span>`;
+   const sg=(v,d)=>(v>0?"+":v<0?"−":"")+f(Math.abs(v),d);
+   $("tlCards").innerHTML=MIL.map(m=>{const r=lh(m.sec),dE=r.E-bE.tE,dU=r.U-bU.tU;return `<div class="mc"><h4>${m.y}</h4><div class="src">${m.src}, ${m.sec} kWh/kg H₂</div>
+     <div class="row"><span>LH₂ chain energy</span><b>${f(r.E,0)} GWh/y</b></div><div class="vs">${pill(dE)} ${sg(dE,0)} GWh/y (${sg(dE/bE.tE*100,1)} %) vs ${bE.name}, ${bE.ship}</div>
+     <div class="row"><span>LH₂ chain cost</span><b>USD ${f(r.U,0)} M/y</b></div><div class="vs">${pill(dU)} ${sg(dU,1)} M/y (${sg(dU/bU.tU*100,1)} %) vs ${bU.name}, ${bU.ship}</div></div>`}).join("");
+   const parU=b.secL-(C[0].tU-bU.tU)/kU, parE=b.secL-(C[0].tE-bE.tE)/k;
+   $("matTitle").textContent=parU>=6?`LH₂ matches the cheapest ammonia pathway on cost once the liquefier reaches ${f(parU,2)} kWh/kg`:`LH₂ needs a liquefier at ${f(parU,2)} kWh/kg to match the cheapest ammonia pathway on cost, below the 6 kWh/kg expected`;
+   $("nMat").textContent=`Cost parity is at a liquefier energy use of ${f(parU,2)} kWh/kg H₂ (against ${bU.name}, ${bU.ship}). On energy, LH₂ already wins at ${b.secL} kWh/kg and keeps winning up to ${f(parE,1)} kWh/kg. Each 1 kWh/kg of liquefier energy is worth ${f(k,0)} GWh/y and USD ${f(kU,1)} M/y at ${f(kt,0)} ktpa. The 7.5 and 6 kWh/kg milestones are the team's figures for Air Liquide and KHI, and the thermodynamic minimum for para-H₂ is 3.9 kWh/kg. Everything else is held at today's basis: tank reliquefaction, H₂ price USD ${b.pH}/kg and power USD ${b.pEl}/MWh.`;
+   const hm=lh(6), d6=C[0].tE-hm.E, u6=C[0].tU-hm.U;
+   const HM={name:"LH₂ 6 kWh/kg",ship:"high maturity",tE:hm.E,tU:hm.U,st:{el:C[0].st.el,up:{E:C[0].st.up.E-d6,U:C[0].st.up.U-u6},ship:C[0].st.ship,down:C[0].st.down}};
+   const ALL=[HM,{...CA[0],name:"LH₂ 9 kWh/kg"},...CA.slice(1)];
+   legend("lg-mat",STG.map(([,t,c])=>[t,c]));
+   const mk=pick=>ALL.map(c=>{const segs=STG.map(([s,t,col])=>({k:t,c:col,v:c.st[s][pick]}));return {name:c.name,sub:c.ship,segs,tot:segs.reduce((a,z)=>a+z.v,0)}}).sort((a,z)=>a.tot-z.tot);
+   hbars($("e-mat"),mk("E"),{unit:"GWh/y",sub:1});hbars($("c-mat"),mk("U"),{unit:"USD M/y",sub:1});}
+}
+$("kt").addEventListener("input",render);
+render();
+</script>
+</body>
+</html>

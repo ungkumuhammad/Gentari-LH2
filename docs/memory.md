@@ -4,7 +4,7 @@
 > Updated every session. `CLAUDE.md` points here — read this at the start of
 > any session where the user references prior work or continuing a task.
 >
-> Last updated: 2026-10-11
+> Last updated: 2026-11-02
 
 ---
 
@@ -1706,3 +1706,12 @@ size still "xx m³" (Section 10.2); no cost year for any USD figure. Chart on th
 
 **Open items:** electrolyser energy (60 kWh/kg H2) still needs a sourced value; deck numbers follow the Word document, so a
 later change to Section 13 means rebuilding the deck.
+
+### One-input chain summary dashboard, five comparisons, maturity timeline (2026-11-02, from the `taurusgentari` session)
+
+New `docs/reports/lh2-vs-ammonia-chain-summary.html` with notes in `docs/comparison/03-chain-summary-dashboard.md` (basis, tags, results, open items). One input (ktpa, default 100); Upstream, Shipping, Downstream, Summary and a liquefier maturity outlook; five comparisons (LH2; NH3 NG-fired and clean fuel, each with a dual-fuel ship and a VLSFO-only ship). Gentari header, Verdana, white header.
+
+- **User changes this session:** H2 boil-off price 4 to 6 USD/kg; VLSFO-only ammonia ship variants added; timeline of liquefier SEC 9 (2026) / 7.5 (Air Liquide, 2030) / 6 (KHI, 2035-2040) kWh/kg H2 (user-provided figures, not independently sourced).
+- **Headline at 100 ktpa:** LH2 7,849 / NH3 NG-fired 8,100 / NH3 clean fuel 8,880 GWh/y; cost USD 1,105.8 / 1,095.8 / 1,237.9 M/y; LH2 at 6 kWh/kg 7,523 GWh/y and USD 1,060.2 M/y; cost parity with the cheapest ammonia pathway at 7.46 kWh/kg.
+- **Flag:** the page keeps the original artifact's convention that counts burned boil-off H2 as shipping energy on top of its production energy; the repo's Section 13.7 already corrected that double count (75.59 / 76.35 / 80.53 kWh/kg). Decide which basis the dashboard should carry.
+- **Open:** electrolyser 60 kWh/kg, import-terminal power price, 20 sea days and Haber-Bosch ASU inclusion remain unsourced.
