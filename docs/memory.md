@@ -1727,3 +1727,13 @@ New `docs/reports/lh2-vs-nh3-cost-credibility-dashboard.html` (single self-conta
 - **Biggest gap:** the mock-up's top two levers (liquefier CAPEX $0.83, tank cost $0.80 per kg) rest on costs KHI has not disclosed (replies Q8, Q9, Q31). A pre-FEED or feasibility scope with KHI would raise accuracy most.
 - **Mock-up inconsistency:** grade C is "contractual guarantee" and the register has no grade C entries, yet LH2 reconversion is graded C "not assessed".
 - **Open:** Custodian not yet nominated (Ikhwan); review cadence (quarterly) and go-live plan are proposals; KHI-proprietary figures on the page are Gentari-confidential, so strip them before any external use.
+
+### LH2 vs NH3 dashboard, internal-data-only version (2026-11-02)
+
+New `docs/reports/lh2-vs-nh3-internal-dashboard.html` (v0.2): same seven-part framework as Dan's mock-up, filled **only** from repo data; anything we do not hold is shown as **GAP** (user instruction: no assumptions). It supersedes the mock-up review page (`lh2-vs-nh3-cost-credibility-dashboard.html`, v0.1), which stays for reference.
+
+- **Data added:** NH3 Base and Large rows (and totals) of the IAE-2019 stack, from KHI supplemental slide 3, appended to `data/costs/lh2-cost-stack.csv` (cited, `iae-2019-gigaton`). Data-table tests pass (41). Four other test modules fail to collect on missing dependencies, unrelated to this change.
+- **Only internal result:** IAE-2019 totals, JPY/Nm3: LH2 37.6 / 30.7 / 26.1 (Base / Large / Tech); NH3 36.3 / 34.8 (Base / Large; no Tech). Gap LH2 minus NH3: +1.3 at Base (225 kt/y), -4.1 at Large (900 kt/y). The sign flips because LH2's terminal penalty falls from +10.2 to +4.1 while NH3's cracking credit stays at -8.6 to -8.9.
+- **GAP by design:** USD/kg and cost year, any 2026-2045 path, parity year, crossover scale, tank cost per m3, liquefier CAPEX/OPEX (KHI Q8, Q9), carrier price (Q31), voyage boil-off, every demonstrated unit size except the 1,250 m3 Suiso Frontier, NH3 Tech case, KBR SEC (database cell holds the electrical value).
+- **Flags found in our own data:** KHI supplemental liquefier power 0.55 kWh/Nm3 (= 6.1 kWh/kg, density citation pending) vs questionnaire 8-9 kWh/kg, so the IAE stack is not a "today" cost; IAE basis compares 160,000 m3 LH2 ships with 38,000 m3 NH3 ships; Gentari cracker DB lists Hanwha Impact as "Operational" while COD is unconfirmed.
+- **Rule used:** only `cited` rows are shown; ASSUMPTION and ESTIMATE rows (53 across tables) are excluded. The page has a 41-row register with CSV export.
