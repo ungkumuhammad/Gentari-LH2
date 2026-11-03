@@ -219,8 +219,12 @@ td.gapc{background:repeating-linear-gradient(135deg,transparent 0 6px,rgba(194,6
 <section id="stack">
   <h2>2. Where the cost sits, and which stages have a demonstrated size to compare with the design size</h2>
   <div class="card">
-    <h3>Cost by stage, JPY per Nm³ H₂</h3><div id="chStack"></div><div class="lg" id="lgStack"></div>
-    <p class="foot">IAE stage columns as held in <code>data/costs/lh2-cost-stack.csv</code>. NH₃ Tech is not in the source. "Conversion" is liquefaction for LH₂ and NH₃ synthesis for NH₃; "Reconversion" is cracking for NH₃ (LH₂ has none, 0.0).</p>
+    <h3>Cost by stage, USD per kg H₂ (converted from the IAE stack in JPY per Nm³)</h3>
+    <div class="callout" style="margin-bottom:12px"><b>How it is calculated.</b> <code>USD/kg H₂ = IAE cost (JPY/Nm³) ÷ 0.0899 kg/Nm³ ÷ JPY per USD</code>. The IAE stack is only available in JPY per Nm³; the kg basis uses the gas density in <code>data/properties/lh2-properties.csv</code> (citation pending), and the yen rate is the one input we do not hold. <span id="calcLive"></span></div>
+    <div class="filters" style="margin-top:0;border-top:0;padding-top:0;margin-bottom:10px"><label><b>JPY per USD</b> <input type="number" id="fx2" value="150" min="80" max="220" step="1"></label><span class="note"><span class="gap">GAP</span> in our data. 150 is a display placeholder, not a Gentari rate: set the rate you want to use and every figure below recalculates. Prices are ~2019 vintage and are converted at one rate, so the cost year is also a <span class="gap">GAP</span>.</span></div>
+    <div id="chStack"></div><div class="lg" id="lgStack"></div>
+    <div class="tw" style="margin-top:12px"><table class="cov"><thead><tr><th>Stage</th><th class="num">LH₂ Base</th><th class="num">LH₂ Large</th><th class="num">LH₂ Tech</th><th class="num">NH₃ Base</th><th class="num">NH₃ Large</th></tr></thead><tbody id="stackTab"></tbody></table></div>
+    <p class="foot">Each cell: USD/kg H₂ (bold), then the IAE source value in JPY/Nm³. IAE stage columns as held in <code>data/costs/lh2-cost-stack.csv</code>. NH₃ Tech is not in the source (GAP). "Conversion" is liquefaction for LH₂ and NH₃ synthesis for NH₃; "Reconversion" is cracking for NH₃ (LH₂ has none, 0.0). Volume basis: Base 225,000 t/y, Large and Tech 900,000 t/y.</p>
     <div class="strip" id="stC"></div>
   </div>
   <div class="card" style="margin-top:12px">
@@ -364,6 +368,8 @@ add("C1","IAE cost stack, LH₂ Base / Large / Tech (7 stage values each)","Tota
 add("C2","IAE cost stack, NH₃ Base / Large","Total 36.3 / 34.8 JPY/Nm³","I","data/costs/lh2-cost-stack.csv (rows added 2 Nov 2026); "+SUP,"NH₃ Tech: GAP (not in the source).");
 add("C3","NH₃ Tech case","","G","—","Not in the KHI/IAE slide. Close with the internal NH₃ dataset (D4) or a Tech-case request.");
 add("C4","Cost in USD/kg and cost year","","G","—","No internal exchange rate or cost year. Close with the primary IAE document and a Gentari-approved FX basis.");
+add("F1","Yen rate for USD conversion","User-set input, display default 150 JPY/USD","G","—","Not in our data. Close with the rate Gentari approves, and the rate/cost year matching the 2019 IAE prices.");
+add("F2","Gas density used for Nm³ to kg","0.0899 kg/Nm³ (0 °C, 1.013 bar)","Q","data/properties/lh2-properties.csv","Value is in our table but tagged needs-source (NIST/CODATA citation pending).");
 add("C5","Cost path 2026–2045, NH₃ improvement path, conservative case, parity year","","G","—","No dated cost path in our data. Close with a feasibility/pre-FEED scope and the NH₃ dataset.");
 add("C6","Volume basis, Base / Large","225,000 / 900,000 t/y (2.5 / 10 bn Nm³/y)","K","kawasaki-2026-supplemental (slides 2–3)","");
 add("G1","Gap LH₂ − NH₃, Base","+1.3 JPY/Nm³ (+3.6% of NH₃)","Q","37.6 − 36.3; 1.3 ÷ 36.3","");
@@ -441,16 +447,27 @@ $("kpis").innerHTML=[
   s+='<text x="'+(L+i*pw+pw/2)+'" y="'+(H-10)+'" font-size="12" text-anchor="middle">'+c[0]+'</text>'});
  $("chCase").innerHTML='<div class="hatch">'+svg(W,H,s,"Delivered supply cost by scale case for LH2 and NH3 in JPY per Nm3")+'</div>';strip("stH",["C1","C2","C3","C4","C5"])})();
 
-/* ---------- stacked bars ---------- */
-(function(){var rows=[["LH₂ Base","LH₂ Base"],["NH₃ Base","NH₃ Base"],["LH₂ Large","LH₂ Large"],["NH₃ Large","NH₃ Large"],["LH₂ Tech","LH₂ Tech"],["NH₃ Tech",null]];
- var col=["#64748b","#4a3aa7","#2977d6","#00c8e8","#21c45d","#1f2933","#f59f0a"],W=640,H=300,L=96,Rr=56,T=10,sc=(W-L-Rr)/40,s="";
- for(var g=0;g<=40;g+=10)s+='<line x1="'+(L+g*sc)+'" x2="'+(L+g*sc)+'" y1="'+T+'" y2="'+(H-26)+'" stroke="'+css("grid")+'"/><text x="'+(L+g*sc)+'" y="'+(H-8)+'" font-size="11" text-anchor="middle">'+g+'</text>';
+/* ---------- stacked bars, USD/kg ---------- */
+var RHO=0.0899;
+function usd(j){var fx=parseFloat($("fx2").value)||150;return j/RHO/fx}
+function drawStack(){var rows=[["LH₂ Base","LH₂ Base"],["NH₃ Base","NH₃ Base"],["LH₂ Large","LH₂ Large"],["NH₃ Large","NH₃ Large"],["LH₂ Tech","LH₂ Tech"],["NH₃ Tech",null]];
+ var fx=parseFloat($("fx2").value)||150;
+ var col=["#64748b","#4a3aa7","#2977d6","#00c8e8","#21c45d","#1f2933","#f59f0a"],W=640,H=300,L=96,Rr=60,T=10,s="";
+ var mx=Math.max.apply(null,Object.keys(TOT).map(function(k){return usd(TOT[k])})),axis=Math.ceil(mx*2)/2,sc=(W-L-Rr)/axis;
+ for(var g=0;g<=axis+1e-9;g+=0.5)s+='<line x1="'+(L+g*sc)+'" x2="'+(L+g*sc)+'" y1="'+T+'" y2="'+(H-26)+'" stroke="'+css("grid")+'"/><text x="'+(L+g*sc)+'" y="'+(H-8)+'" font-size="11" text-anchor="middle">$'+g.toFixed(1)+'</text>';
  rows.forEach(function(r,i){var y=T+i*46,x=L;s+='<text x="'+(L-8)+'" y="'+(y+24)+'" font-size="12" font-weight="700" text-anchor="end" style="fill:'+css("ink")+'">'+r[0]+'</text>';
-  if(!r[1]){s+='<rect class="gapbar" x="'+L+'" y="'+y+'" width="'+(30*sc)+'" height="34" rx="3"/><text x="'+(L+15*sc)+'" y="'+(y+22)+'" font-size="12" font-weight="700" text-anchor="middle" style="fill:var(--bad)">GAP (not in source)</text>';return}
-  IAE[r[1]].forEach(function(v,j){var w=v*sc;if(w<=0)return;s+='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="34" fill="'+col[j]+'"><title>'+ST[j]+': '+v.toFixed(1)+' JPY/Nm³</title></rect>';if(w>26)s+='<text x="'+(x+w/2)+'" y="'+(y+21)+'" font-size="10.5" text-anchor="middle" style="fill:#fff">'+v.toFixed(1)+'</text>';x+=w});
-  s+='<text x="'+(x+6)+'" y="'+(y+22)+'" font-size="12" font-weight="700" style="fill:'+css("ink")+'">'+TOT[r[1]].toFixed(1)+'</text>'});
- $("chStack").innerHTML='<div class="hatch">'+svg(W,H,s,"Stacked cost by stage for LH2 and NH3 cases in JPY per Nm3")+'</div>';
- $("lgStack").innerHTML=ST.map(function(n,i){return '<span><span class="sw" style="background:'+col[i]+'"></span>'+n+'</span>'}).join("");strip("stC",["C1","C2","C3"])})();
+  if(!r[1]){s+='<rect class="gapbar" x="'+L+'" y="'+y+'" width="'+(axis*0.75*sc)+'" height="34" rx="3"/><text x="'+(L+axis*0.375*sc)+'" y="'+(y+22)+'" font-size="12" font-weight="700" text-anchor="middle" style="fill:var(--bad)">GAP (not in source)</text>';return}
+  IAE[r[1]].forEach(function(v,j){var u=usd(v),w=u*sc;if(w<=0)return;s+='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="34" fill="'+col[j]+'"><title>'+ST[j]+': $'+u.toFixed(2)+'/kg ('+v.toFixed(1)+' JPY/Nm³)</title></rect>';if(w>34)s+='<text x="'+(x+w/2)+'" y="'+(y+21)+'" font-size="10.5" text-anchor="middle" style="fill:#fff">'+u.toFixed(2)+'</text>';x+=w});
+  s+='<text x="'+(x+6)+'" y="'+(y+22)+'" font-size="12" font-weight="700" style="fill:'+css("ink")+'">$'+usd(TOT[r[1]]).toFixed(2)+'</text>'});
+ $("chStack").innerHTML='<div class="hatch">'+svg(W,H,s,"Stacked cost by stage for LH2 and NH3 cases in USD per kg H2")+'</div>';
+ var ks=["LH₂ Base","LH₂ Large","LH₂ Tech","NH₃ Base","NH₃ Large"],h="";
+ ST.forEach(function(n,i){h+='<tr><td>'+n+'</td>'+ks.map(function(k){var v=IAE[k][i];return '<td class="num">'+(v>0?'<b>$'+usd(v).toFixed(2)+'</b><br><span class="note">'+v.toFixed(1)+' JPY/Nm³</span>':'<span class="note">0.0 (none)</span>')+'</td>'}).join("")+'</tr>'});
+ h+='<tr class="hl"><td>Total</td>'+ks.map(function(k){return '<td class="num"><b>$'+usd(TOT[k]).toFixed(2)+'</b><br><span class="note">'+TOT[k].toFixed(1)+' JPY/Nm³</span></td>'}).join("")+'</tr>';
+ $("stackTab").innerHTML=h;
+ var ex=IAE["LH₂ Base"][1],kg=ex/RHO;
+ $("calcLive").innerHTML='<br><b>Worked example</b> (LH₂ Base, liquefaction): '+ex.toFixed(1)+' JPY/Nm³ ÷ '+RHO+' kg/Nm³ = '+kg.toFixed(1)+' JPY/kg; ÷ '+fx+' JPY/USD = <b>$'+(kg/fx).toFixed(2)+'/kg</b>. Conversion factor: 1 JPY/Nm³ = $'+(1/RHO/fx).toFixed(4)+'/kg.'}
+$("fx2").addEventListener("input",drawStack);drawStack();
+$("lgStack").innerHTML=ST.map(function(n,i){var c=["#64748b","#4a3aa7","#2977d6","#00c8e8","#21c45d","#1f2933","#f59f0a"][i];return '<span><span class="sw" style="background:'+c+'"></span>'+n+'</span>'}).join("");strip("stC",["C1","C2","C3","C4","F1","F2"]);
 
 /* ---------- matrix ---------- */
 (function(){function c(cls,id,lines){return '<div class="c '+cls+'" data-id="'+id+'">'+lines.map(function(l){return '<div class="l">'+l+'</div>'}).join("")+chip(id)+'</div>'}
